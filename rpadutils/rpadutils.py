@@ -24,15 +24,10 @@ from redbot.core.utils.chat_formatting import box, pagify
 
 logger = logging.getLogger('red.misc-cogs.rpadutils')
 
-RPADCOG = None
-
 class RpadUtils(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
-
-        global RPADCOG
-        RPADCOG = self
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -197,10 +192,6 @@ async def boxPagifySay(say_fn, msg):
         await say_fn(box(page))
 
 
-def default_check(payload):
-    return payload.user_id != RPADCOG.bot.user.id and not (payload.guild_id and payload.member.bot)
-
-
 class EmojiUpdater(object):
     # a pass-through class that does nothing to the emoji dictionary
     # or to the selected emoji
@@ -305,6 +296,9 @@ class Menu():
                     pass
 
         def check(payload):
+            def default_check(payload):
+                return payload.user_id != self.bot.user.id and not (payload.guild_id and payload.member.bot)
+
             return (kwargs.get('check', default_check)(payload) and
                     str(payload.emoji.name) in list(emoji_to_message.emoji_dict.keys()) and
                     payload.user_id == ctx.author.id and
