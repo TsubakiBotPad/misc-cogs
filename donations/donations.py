@@ -45,19 +45,18 @@ def roll(chance: int):
     return random.randrange(100) < chance
 
 def is_patron(ctx):
-    tsubaki_guild = ctx.bot.get_guild(746131494875168770)
-    patron_role = tsubaki_guild.get_role(749849451769757726)
-    author = tsubaki_guild.get_member(ctx.author.id)
-    if author is None or patron_role not in author.roles:
+    DCOG = ctx.bot.get_cog("Donations")
+    if not DCOG.tsubaki_guild: return False
+    author = DCOG.tsubaki_guild.get_member(ctx.author.id)
+    if author is None or DCOG.patron_role not in author.roles:
         return False
     return True
 
 def is_donor(ctx):
-    tsubaki_guild = ctx.bot.get_guild(746131494875168770)
-    donor_role = tsubaki_guild.get_role(749849518467580015)
-    patron_role = tsubaki_guild.get_role(749849451769757726)
-    author = tsubaki_guild.get_member(ctx.author.id)
-    if author is None or (donor_role not in author.roles and patron_role not in author.roles):
+    DCOG = ctx.bot.get_cog("Donations")
+    if not DCOG.tsubaki_guild: return False
+    author = DCOG.tsubaki_guild.get_member(ctx.author.id)
+    if author is None or (DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
         return False
     return True
 
@@ -114,9 +113,10 @@ class Donations(commands.Cog):
 
     async def set_server_attributes(self):
         await self.bot.wait_until_ready()
-        self.tsubaki_guild = self.bot.get_guild(746131494875168770)
-        self.donor_role = self.tsubaki_guild.get_role(749849518467580015)
-        self.patron_role = self.tsubaki_guild.get_role(749849451769757726)
+        drole,prole,server = self.settings.getDPS()
+        self.tsubaki_guild = self.bot.get_guild(server)
+        self.donor_role = self.tsubaki_guild.get_role(drole)
+        self.patron_role = self.tsubaki_guild.get_role(prole)
 
     @commands.command()
     async def donate(self, ctx):
@@ -255,8 +255,19 @@ class Donations(commands.Cog):
 
         await ctx.send(box(msg))
 
+    @donations.command()
+    @checks.is_owner()
+    async def setup(self, ctx, donor_role: discord.Role, patron_role: discord.Role):
+        """Setup the Donor and Patron role from your Patreon enabled server."""
+        self.settings.setDPS(donor_role.id, patron_role.id, ctx.guild.id)
+        await self.set_server_attributes()
+        await ctx.send(inline("Done."))
+
     @commands.Cog.listener("on_message")
     async def checkCC(self, message):
+        if not self.tsubaki_guild:
+            return
+
         if len(message.content) < 2:
             return
 
@@ -345,6 +356,7 @@ class DonationsSettings(CogSettings):
             'custom_embeds': {},
             'disabled_servers': [],
             'insults_enabled': [],
+            'dps': (0,0,None),
         }
         return config
 
@@ -413,6 +425,13 @@ class DonationsSettings(CogSettings):
         if user_id in insults_enabled:
             insults_enabled.remove(user_id)
             self.save_settings()
+
+    def setDPS(self, d, p, s):
+        self.bot_settings['dps'] = (d,p,s)
+        self.save_settings()
+
+    def getDPS(self):
+        return self.bot_settings['dps']
 
     # GDPR Compliance Functions
     def getUserData(self, user_id):
