@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import discord
 from redbot.core import checks
@@ -9,6 +10,7 @@ from redbot.core.utils.chat_formatting import inline
 from rpadutils import rpadutils
 from rpadutils import char_to_emoji
 
+logger = logging.getLogger('red.misc-cogs.fancysay')
 
 class FancySay(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
@@ -66,7 +68,6 @@ class FancySay(commands.Cog):
             await role.edit(mentionable=False)
         except Exception as ex:
             await ctx.send(inline('Error: failed to set role unmentionable'))
-            print(ex)
             return
 
     @fancysay.command()
@@ -86,6 +87,7 @@ class FancySay(commands.Cog):
             await ctx.send(new_msg)
 
     @fancysay.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
 
@@ -114,7 +116,7 @@ class FancySay(commands.Cog):
             await ctx.send(embed=embed)
             await ctx.message.delete()
         except Exception as error:
-            print("failed to fancysay", error)
+            logger.error("failed to fancysay:", exc_info=1)
 
 
 

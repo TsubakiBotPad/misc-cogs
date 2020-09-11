@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import discord
-from redbot.core import commands, Config
+from redbot.core import commands, checks, Config
 from redbot.core.utils.chat_formatting import inline, box
 from functools import reduce
 
@@ -59,6 +59,7 @@ class Calculator(commands.Cog):
         await ctx.author.send(box(help_msg))
 
     @commands.command(aliases=['calc'])
+    @checks.bot_has_permissions(embed_links=True)
     async def calculator(self, ctx, *, inp):
         '''Evaluate equations. Use helpcalc for more info.'''
         inp = inp.lower()
@@ -109,6 +110,7 @@ class Calculator(commands.Cog):
             await ctx.send(embed=em)
 
     @commands.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def add(self, ctx, *, inp):
         """Adds a string of numbers"""
         em = discord.Embed(color=discord.Color.greyple())
@@ -117,6 +119,7 @@ class Calculator(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def multiply(self, ctx, *, inp):
         """Multiplies a string of numbers"""
         em = discord.Embed(color=discord.Color.greyple())

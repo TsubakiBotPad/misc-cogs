@@ -12,7 +12,7 @@ from redbot.core.utils.chat_formatting import inline
 
 from rpadutils import CogSettings, corowrap
 
-logger = logging.getLogger('red.tsubaki.speech')
+logger = logging.getLogger('red.misc-cogs.speech')
 
 try:
     if not discord.opus.is_loaded():
@@ -57,7 +57,7 @@ class Speech(commands.Cog):
                 credentials = service_account.Credentials.from_service_account_file(api_key_file)
                 self.service = texttospeech.TextToSpeechClient(credentials=credentials)
             except:
-                print('speech setup failed')
+                logger.warning('speech setup failed')
 
     @commands.group()
     @checks.is_owner()
@@ -127,7 +127,7 @@ class Speech(commands.Cog):
             voice_client.play(audio_source, after = corowrap(voice_client.disconnect(), self.bot.loop))
             return True
         except Exception as e:
-            print(e)
+            logging.error(e)
             if voice_client:
                 try:
                     await voice_client.disconnect()

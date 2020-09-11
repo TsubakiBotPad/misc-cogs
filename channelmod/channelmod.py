@@ -13,6 +13,8 @@ from redbot.core.utils.chat_formatting import inline
 
 from rpadutils import rpadutils, CogSettings, box
 
+logger = logging.getLogger('red.misc-cogs.channelmod')
+
 # Three hour cooldown
 ATTRIBUTION_TIME_SECONDS = 60 * 60 * 3
 
@@ -97,15 +99,15 @@ class ChannelMod(commands.Cog):
             for (chid, mid) in mirrored_messages:
                 dest_channel = self.bot.get_channel(chid)
                 if not dest_channel:
-                    print('could not locate channel {}'.format(chid))
+                    logger.warning('could not locate channel {}'.format(chid))
                     continue
                 dest_message = await dest_channel.fetch_message(mid)
                 if not dest_message:
-                    print('could not locate message {}'.format(mid))
+                    logger.warning('could not locate message {}'.format(mid))
                     continue
                 dest_reaction = discord.utils.find(lambda r: r == react, dest_message.reactions)
                 if not dest_reaction:
-                    print('could not locate reaction {}'.format(react))
+                    logger.warning('could not locate reaction {}'.format(react))
                     continue
                 reacts[str(react)] += dest_reaction.count - 1
         o = ""
@@ -171,14 +173,13 @@ class ChannelMod(commands.Cog):
                 elif message.content:
                     dest_message = await dest_channel.send(fmessage)
                 else:
-                    print('Failed to mirror message from', channel.id, 'no action to take')
+                    logger.warning('Failed to mirror message from {} no action to take'.format(channel.id))
                     continue
 
                 self.settings.add_mirrored_message(
                     channel.id, message.id, dest_channel.id, dest_message.id)
             except Exception as ex:
-                print('Failed to mirror message from ', channel.id, 'to', dest_channel_id, ':', ex)
-                traceback.print_exc()
+                logger.warning('Failed to mirror message from {} to {}:'.format(channel.id, dest_channel_id), exc_info=1)
 
         if attachment_bytes:
             attachment_bytes.close()
@@ -219,11 +220,11 @@ class ChannelMod(commands.Cog):
             try:
                 dest_channel = self.bot.get_channel(dest_channel_id)
                 if not dest_channel:
-                    print('could not locate channel to mod')
+                    logger.warning('could not locate channel to mod')
                     continue
                 dest_message = await dest_channel.fetch_message(dest_message_id)
                 if not dest_message:
-                    print('could not locate message to mod')
+                    logger.warning('could not locate message to mod')
                     continue
 
                 if new_message_content:
@@ -236,8 +237,7 @@ class ChannelMod(commands.Cog):
                 elif delete_message_reaction:
                     await dest_message.remove_reaction(delete_message_reaction, dest_message.guild.me)
             except Exception as ex:
-                print('Failed to mirror message edit from ',
-                      channel.id, 'to', dest_channel_id, ':', ex)
+                logger.warning('Failed to mirror message edit from {} to {}:'.format(channel.id, dest_channel_id), exc_info=1)
 
     def makeheader(self, message):
         return 'Posted by **{}** in *{} - #{}*:\n{}'.format(message.author.name,
@@ -250,12 +250,12 @@ class ChannelMod(commands.Cog):
         for link, mid in re.findall(frMESSAGE_LINK.format(from_channel), text):
             from_link = await from_channel.fetch_message(mid)
             if not from_link:
-                print('could not locate link to copy')
+                logger.warning('could not locate link to copy')
                 continue
             mirrored_messages = self.settings.get_mirrored_messages(from_link.channel.id, from_link.id)
             to_link_id = [dmid for dcid, dmid in mirrored_messages if dcid == dest_channel.id]
             if not to_link_id:
-                print('could not locate link to mod')
+                logger.warning('could not locate link to mod')
                 continue
             to_link_id = to_link_id[0]
             dest_link = await dest_channel.fetch_message(to_link_id)
@@ -266,7 +266,7 @@ class ChannelMod(commands.Cog):
         for rtext, rid in re.findall(r'(<@&(\d+)>)', text):
             target = from_channel.guild.get_role(int(rid))
             if target is None:
-                print('could not locate role to mod')
+                logger.warning('could not locate role to mod')
                 continue
             dest = discord.utils.get(dest_channel.guild.roles, name=target.name)
             if dest is None:
@@ -278,14 +278,14 @@ class ChannelMod(commands.Cog):
         for utext, uid in re.findall(r'(<@!(\d+)>)', text):
             target = from_channel.guild.get_member(int(uid))
             if target is None:
-                print('could not locate user to mod')
+                logger.warning('could not locate user to mod')
                 continue
             text = text.replace(utext, target.name)
         # CHANNELS
         for ctext, cid in re.findall(r'(<#(\d+)>)', text):
             target = from_channel.guild.get_channel(int(cid))
             if target is None:
-                print('could not locate channel to mod')
+                logger.warning('could not locate channel to mod')
                 continue
             text = text.replace(ctext, "\\#"+target.name)
         #EVERYONE

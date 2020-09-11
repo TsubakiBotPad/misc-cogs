@@ -1,3 +1,5 @@
+import logging
+
 import discord
 import romkan
 
@@ -6,6 +8,7 @@ from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
+logger = logging.getLogger('red.misc-cogs.translate')
 
 class Translate(commands.Cog):
     """Translation utilities."""
@@ -41,9 +44,10 @@ class Translate(commands.Cog):
             assert api_key
             self.service = build('translate', 'v2', developerKey=api_key)
         except:
-            print("Google API key not found or invalid")
+            logging.error("Google API key not found or invalid")
 
     @commands.command(aliases=['jaus', 'jpen', 'jpus'])
+    @checks.bot_has_permissions(embed_links=True)
     async def jaen(self, ctx, *, query):
         """Translates from Japanese to English"""
         if not self.service:
@@ -54,6 +58,7 @@ class Translate(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command(aliases=['zhus'])
+    @checks.bot_has_permissions(embed_links=True)
     async def zhen(self, ctx, *, query):
         """Translates from Chinese to English"""
         if not self.service:

@@ -2,6 +2,7 @@ import os
 import sqlite3 as lite
 import textwrap
 import timeit
+import logging
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -14,6 +15,7 @@ from redbot.core.utils.chat_formatting import inline, box, pagify
 
 import rpadutils
 
+logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
 
 def mod_help(self, ctx, help_type):
     hs = getattr(self, help_type)
@@ -463,7 +465,7 @@ class SqlActivityLogger(commands.Cog):
     def purge(self):
         before = datetime.today() - timedelta(days=(7 * 3))
         values = dict(before=before)
-        print('Purging old logs')
+        logger.debug('Purging old logs')
         cursor = self.con.execute(DELETE_BEFORE_QUERY, values)
         self.con.commit()
-        print('Purged', cursor.rowcount)
+        logger.debug('Purged {}'.format(cursor.rowcount))

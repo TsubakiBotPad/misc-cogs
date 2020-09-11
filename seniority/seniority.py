@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import timeit
+import logging
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -17,6 +18,8 @@ from redbot.core.utils.chat_formatting import inline, pagify, box
 
 import rpadutils
 from rpadutils import CogSettings, NA_TZ_OBJ
+
+logger = logging.getLogger('red.misc-cogs.seniority')
 
 CREATE_TABLE = '''
 CREATE TABLE IF NOT EXISTS seniority(
@@ -143,20 +146,20 @@ class Seniority(commands.Cog):
                 await cur.execute(REPLACE_POINTS_QUERY, user_id)
 
     def cog_unload(self):
-        print('Seniority: unloading')
+        logger.debug('Seniority: unloading')
         self.lock = True
         if self.pool:
             self.pool.close()
             self.bot.loop.create_task(self.pool.wait_closed())
             self.pool = None
         else:
-            print('unexpected error: pool was None')
-        print('Seniority: unloading complete')
+            logger.error('unexpected error: pool was None')
+        logger.debug('Seniority: unloading complete')
 
     async def init(self):
-        print('Seniority: init')
+        logger.debug('Seniority: init')
         if not self.lock:
-            print('Seniority: bailing on unlock')
+            logger.info('Seniority: bailing on unlock')
             return
 
         if os.name != 'nt' and sys.platform != 'win32':
@@ -173,7 +176,7 @@ class Seniority(commands.Cog):
                 await cur.execute(CREATE_INDEX_4)
         self.lock = False
 
-        print('Seniority: init complete')
+        logger.debug('Seniority: init complete')
 
     @commands.group()
     @commands.guild_only()
@@ -204,7 +207,7 @@ class Seniority(commands.Cog):
     @seniority.command()
     @commands.guild_only()
     async def printconfig(self, ctx):
-        """Print the configuration for the server."""
+        """Display the configuration for the server."""
         server = ctx.guild
         server_id = server.id
         msg = 'Config:'
@@ -342,7 +345,7 @@ class Seniority(commands.Cog):
                                 lookback_days: int,
                                 check_name: str,
                                 points_greater_than: bool):
-        await ctx.send(inline('Printing info for all roles'))
+        await ctx.send(inline('Displaying info for all roles'))
 
         for role_id, role, amount in self.roles_and_amounts(server, check_name):
             if role is None:
@@ -444,7 +447,7 @@ class Seniority(commands.Cog):
     @seniority.command()
     @commands.guild_only()
     async def userhistory(self, ctx, user: discord.User, limit=30):
-        """Print the points per day for a user."""
+        """Display the points per day for a user."""
         limit = min(limit, 90)
         server = ctx.guild
         args = [server.id, user.id, limit]
@@ -453,7 +456,7 @@ class Seniority(commands.Cog):
     @seniority.command()
     @commands.guild_only()
     async def usercurrent(self, ctx, user: discord.User):
-        """Print the current day's points for a user."""
+        """Display the current day's points for a user."""
         server = ctx.guild
         args = [now_date(), server.id, user.id]
         await self.queryAndPrint(ctx, server, GET_DATE_POINTS_QUERY, args)
@@ -558,7 +561,7 @@ class Seniority(commands.Cog):
 
         role_name: Role name to configure
         remove_amount: Automatic role removal threshold. Set to 0 to disable.
-        warn_amount: Print a warning in the announcement channel when exceeded. Set to 0 to disable.
+        warn_amount: Display a warning in the announcement channel when exceeded. Set to 0 to disable.
         grant_amount: Automatic role grant threshold. Set to 0 to disable.
 
         remove_amount must be less than grant_amount.

@@ -3,6 +3,7 @@ Utilities for managing misbehaving users and facilitating administrator
 communication about role changes.
 """
 
+import logging
 from collections import defaultdict
 from collections import deque
 
@@ -13,6 +14,8 @@ from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
 from rpadutils import CogSettings, get_role, get_role_from_id
+
+logger = logging.getLogger('red.misc-cogs.baduser')
 
 LOGS_PER_USER = 10
 
@@ -77,7 +80,7 @@ class BadUser(commands.Cog):
         * User with a strike leaves the server
         * User with a strike joins the server (includes a ping to @here)
 
-        Besides the automatic tracking, you can manually add strikes, print them, and clear them.
+        Besides the automatic tracking, you can manually add strikes, display them, and clear them.
         """
 
     @baduser.command(name="addnegativerole")
@@ -169,7 +172,7 @@ class BadUser(commands.Cog):
     @commands.check(opted_in)
     @checks.mod_or_permissions(manage_guild=True)
     async def config(self, ctx):
-        """Print the baduser configuration."""
+        """Display the baduser configuration."""
         server = ctx.guild
         output = 'Punishment roles:\n'
         for role_id in self.settings.getPunishmentRoles(server.id):
@@ -206,7 +209,7 @@ class BadUser(commands.Cog):
     @commands.check(opted_in)
     @checks.mod_or_permissions(manage_guild=True)
     async def strikes(self, ctx, user: discord.User):
-        """Print the strike count for a user."""
+        """Display the strike count for a user."""
         strikes = self.settings.countUserStrikes(ctx.guild.id, user.id)
         await ctx.send(box('User {} has {} strikes'.format(user.name, strikes)))
 
@@ -238,7 +241,7 @@ class BadUser(commands.Cog):
     @commands.check(opted_in)
     @checks.mod_or_permissions(manage_guild=True)
     async def printstrikes(self, ctx, user: discord.User):
-        """Print all strikes for a user."""
+        """Display all strikes for a user."""
         strikes = self.settings.getUserStrikes(ctx.guild.id, user.id)
         if not strikes:
             await ctx.send(box('No strikes for {}'.format(user.name)))
@@ -499,7 +502,7 @@ class BadUser(commands.Cog):
                     followup_msg = 'Hey @here please leave a note explaining why this role was modified'
                     await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
             except:
-                print('Failed to notify in', update_channel, msg)
+                logger.warning('Failed to notify in {} {}'.format(update_channel, msg))
 
 
 class BadUserSettings(CogSettings):

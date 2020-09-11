@@ -199,6 +199,7 @@ class TrUtils(commands.Cog):
             await ctx.author.send(box(page))
 
     @commands.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def credits(self, ctx):
         """Shows info about this bot"""
         author_repo = "https://github.com/Twentysix26"
@@ -298,6 +299,7 @@ class TrUtils(commands.Cog):
 
     @commands.command()
     @checks.is_owner()
+    @checks.bot_has_permissions(ban_members=True)
     async def superfuckingban(self, ctx, user: discord.User, *, reason: str):
         """Really fucking bans someone.
 

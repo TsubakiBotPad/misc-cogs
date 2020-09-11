@@ -51,6 +51,7 @@ class GlobalBan(commands.Cog):
 
     @globalban.command()
     @checks.is_owner()
+    @checks.bot_has_permissions(ban_members=True)
     async def ban(self, ctx, user, *, reason=""):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
@@ -60,6 +61,7 @@ class GlobalBan(commands.Cog):
 
     @globalban.command()
     @checks.is_owner()
+    @checks.bot_has_permissions(ban_members=True)
     async def unban(self, ctx, user):
         """Globally Unban a user across all opted-in servers."""
         async with self.config.banned() as banned:
