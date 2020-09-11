@@ -1,6 +1,7 @@
 import asyncio
 import random
 import traceback
+import logging
 
 import discord
 from redbot.core import checks
