@@ -87,6 +87,7 @@ class FancySay(commands.Cog):
             await ctx.send(new_msg)
 
     @fancysay.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
 

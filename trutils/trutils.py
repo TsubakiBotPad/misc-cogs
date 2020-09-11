@@ -199,6 +199,7 @@ class TrUtils(commands.Cog):
             await ctx.author.send(box(page))
 
     @commands.command()
+    @checks.bot_has_permissions(embed_links=True)
     async def credits(self, ctx):
         """Shows info about this bot"""
         author_repo = "https://github.com/Twentysix26"
