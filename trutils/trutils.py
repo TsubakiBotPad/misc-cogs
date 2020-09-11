@@ -299,6 +299,7 @@ class TrUtils(commands.Cog):
 
     @commands.command()
     @checks.is_owner()
+    @checks.bot_has_permissions(ban_members=True)
     async def superfuckingban(self, ctx, user: discord.User, *, reason: str):
         """Really fucking bans someone.
 
