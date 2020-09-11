@@ -46,16 +46,16 @@ def roll(chance: int):
 
 def is_patron(ctx):
     DCOG = ctx.bot.get_cog("Donations")
-    if not DCOG.tsubaki_guild: return False
-    author = DCOG.tsubaki_guild.get_member(ctx.author.id)
+    if not DCOG.support_guild: return False
+    author = DCOG.support_guild.get_member(ctx.author.id)
     if author is None or DCOG.patron_role not in author.roles:
         return False
     return True
 
 def is_donor(ctx):
     DCOG = ctx.bot.get_cog("Donations")
-    if not DCOG.tsubaki_guild: return False
-    author = DCOG.tsubaki_guild.get_member(ctx.author.id)
+    if not DCOG.support_guild: return False
+    author = DCOG.support_guild.get_member(ctx.author.id)
     if author is None or (DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
         return False
     return True
@@ -83,7 +83,7 @@ class Donations(commands.Cog):
         self.sexy_list = love_json.get('sexy', DEFAULT_LOVE['sexy'])
         self.perverted_list = love_json.get('perverted', DEFAULT_LOVE['perverted'])
 
-        self.tsubaki_guild = None
+        self.support_guild = None
         self.donor_role = None
         self.patron_role = None
 
@@ -114,15 +114,15 @@ class Donations(commands.Cog):
     async def set_server_attributes(self):
         await self.bot.wait_until_ready()
         drole,prole,server = self.settings.getDPS()
-        self.tsubaki_guild = self.bot.get_guild(server)
-        self.donor_role = self.tsubaki_guild.get_role(drole)
-        self.patron_role = self.tsubaki_guild.get_role(prole)
+        self.support_guild = self.bot.get_guild(server)
+        self.donor_role = self.support_guild.get_role(drole)
+        self.patron_role = self.support_guild.get_role(prole)
 
     @commands.command()
     async def donate(self, ctx):
         """Prints information about donations."""
         donor_names = set()
-        for user in self.tsubaki_guild.members:
+        for user in self.support_guild.members:
             if self.donor_role in user.roles or self.patron_role in user.roles:
                 donor_names.add(user.name)
 
@@ -226,8 +226,8 @@ class Donations(commands.Cog):
     @checks.is_owner()
     async def info(self, ctx):
         """Print donation related info."""
-        patrons = [user for user in self.tsubaki_guild.members if self.patron_role in user.roles]
-        donors = [user for user in self.tsubaki_guild.members if self.donor_role in user.roles
+        patrons = [user for user in self.support_guild.members if self.patron_role in user.roles]
+        donors = [user for user in self.support_guild.members if self.donor_role in user.roles
                                                              and self.patron_role not in user.roles]
         cmds = self.settings.customCommands()
         embeds = self.settings.customEmbeds()
@@ -265,7 +265,7 @@ class Donations(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def checkCC(self, message):
-        if not self.tsubaki_guild:
+        if not self.support_guild:
             return
 
         if len(message.content) < 2:
@@ -274,8 +274,8 @@ class Donations(commands.Cog):
         prefix = (await self.bot.get_prefix(message))[0]
 
         user_id = message.author.id
-        if user_id not in [user.id for user in self.tsubaki_guild.members if self.donor_role in user.roles] and \
-           user_id not in [user.id for user in self.tsubaki_guild.members if self.patron_role in user.roles]:
+        if user_id not in [user.id for user in self.support_guild.members if self.donor_role in user.roles] and \
+           user_id not in [user.id for user in self.support_guild.members if self.patron_role in user.roles]:
             return
 
         if message.guild and message.guild.id in self.settings.disabledServers():
