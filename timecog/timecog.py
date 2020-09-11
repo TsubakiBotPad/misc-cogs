@@ -87,7 +87,7 @@ class TimeCog(commands.Cog):
         if not udata:
             data = "No data is stored for user with ID {}.\n".format(user_id)
 
-        return {"user_data.txt": BytesIO("data".encode())}
+        return {"user_data.txt": BytesIO(data.encode())}
 
     async def red_delete_data_for_user(self, *, requester, user_id):
         """Delete a user's personal data."""

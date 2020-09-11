@@ -134,7 +134,7 @@ class Seniority(commands.Cog):
                 rows = await cur.fetchall()
         guilds = len({r[1] for r in rows})
         data = "You have activity data stored in {} guilds.\n".format(guilds)
-        return {"user_data.txt": BytesIO("data".encode())}
+        return {"user_data.txt": BytesIO(data.encode())}
 
     async def red_delete_data_for_user(self, *, requester, user_id):
         """Delete a user's personal data."""
