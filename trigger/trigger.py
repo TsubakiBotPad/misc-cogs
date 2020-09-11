@@ -42,7 +42,7 @@ class Trigger(commands.Cog):
             if trigger.owner == user_id:
                 c += 1
         data = "You own {} triggers.\n".format(c)
-        return {"user_data.txt": BytesIO("data".encode())}
+        return {"user_data.txt": BytesIO(data.encode())}
 
     async def red_delete_data_for_user(self, *, requester, user_id):
         """Delete a user's personal data."""
