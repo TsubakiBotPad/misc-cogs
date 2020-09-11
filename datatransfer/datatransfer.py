@@ -73,7 +73,6 @@ class DataTransfer(commands.Cog):
             await self.bot.get_cog("Core").reload(ctx, "alias")
             await ctx.send(inline("Done."))
         except Exception as e:
-            print(e)
             await ctx.send(inline("Invalid file."))
 
     @_export.command(name="alias")
@@ -115,7 +114,6 @@ class DataTransfer(commands.Cog):
             await self.bot.get_cog("Core").reload(ctx, "customcom")
             await ctx.send(inline("Done."))
         except Exception as e:
-            print(e)
             await ctx.send(inline("Invalid file."))
 
     @_export.command(name="customcom", aliases=["cc", "customcommands", "customcommand"])
@@ -155,7 +153,6 @@ class DataTransfer(commands.Cog):
             json.dump(self.bot.get_cog("Memes").c_commands, open(self.bot.get_cog("Memes").file_path, 'w+'))
             await ctx.send(inline("Done."))
         except Exception as e:
-            print(e)
             await ctx.send(inline("Invalid file."))
 
     @_export.command(name="memes", aliases=["meme"])

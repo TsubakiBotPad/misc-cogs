@@ -6,6 +6,7 @@ If a violation occurs, the message will be deleted and the user notified.
 """
 import asyncio
 import re
+import logging
 from collections import defaultdict
 from collections import deque
 from datetime import datetime
@@ -19,6 +20,8 @@ from redbot.core.utils.chat_formatting import inline, box, pagify
 
 import rpadutils
 from rpadutils import CogSettings, boxPagifySay
+
+logger = logging.getLogger('red.misc-cogs.automod2')
 
 LOGS_PER_CHANNEL_USER = 5
 
@@ -593,16 +596,15 @@ class AutoMod2(commands.Cog):
             watchdog_channel = self.bot.get_channel(watchdog_channel_id)
             await watchdog_channel.send(output_msg)
         except Exception as ex:
-            print('failed to watchdog', str(ex))
+            logger.error('failed to watchdog', exc_info=1)
 
     async def deleteAndReport(self, delete_msg, outgoing_msg):
         try:
             await delete_msg.delete()
             await delete_msg.author.send(outgoing_msg)
         except Exception as e:
-            print('Failure while deleting message from {}, tried to send : {}'.format(
-                delete_msg.author.name, outgoing_msg))
-            print(str(e))
+            logger.error('Failure while deleting message from {}, tried to send : {}'.format(
+                         delete_msg.author.name, outgoing_msg), exc_info=1)
 
     def patternsToTableText(self, patterns):
         tbl = prettytable.PrettyTable(["Rule Name", "Include regex", "Exclude regex"])

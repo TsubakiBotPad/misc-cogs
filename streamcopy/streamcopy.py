@@ -10,6 +10,7 @@ from redbot.core.utils.chat_formatting import inline, box
 
 from rpadutils import CogSettings, get_role, get_role_from_id
 
+logger = logging.getLogger('red.misc-cogs.streamcopy')
 
 class StreamCopy(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
@@ -37,10 +38,10 @@ class StreamCopy(commands.Cog):
                 await self.do_refresh()
                 await self.do_ensure_roles()
             except Exception as e:
-                traceback.print_exc()
+                logger.error("Error: ", exc_info=1)
 
             await asyncio.sleep(60 * 3)
-        print("done refresh_stream")
+        logger.info("done refresh_stream")
 
     @commands.group()
     @checks.mod_or_permissions(manage_guild=True)
@@ -125,7 +126,7 @@ class StreamCopy(commands.Cog):
 
             await self.do_refresh()
         except Exception as ex:
-            print("Stream checking failed", ex)
+            logger.error("Stream checking failed", exc_info=1)
 
     async def ensure_user_streaming_role(self, server, streamer_role_id: discord.Role, user: discord.Member):
         user_is_playing = self.is_playing(user)

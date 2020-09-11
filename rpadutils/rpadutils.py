@@ -9,6 +9,7 @@ import io
 import signal
 import time
 import unicodedata
+import logging
 from functools import wraps
 from typing import List, Optional
 
@@ -20,6 +21,8 @@ from discord.ext.commands import CommandNotFound
 from redbot.core import commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
+
+logger = logging.getLogger('red.misc-cogs.rpadutils')
 
 RPADCOG = None
 
@@ -79,7 +82,7 @@ def get_role(roles, role_string):
         lambda r: r.name.lower() == role_string.lower(), roles)
 
     if role is None:
-        print("Could not find role named " + role_string)
+        logger.error("Could not find role named " + role_string)
         raise commands.UserFeedbackCheckFailure("Could not find role named " + role_string)
 
     return role
@@ -112,16 +115,14 @@ def normalizeServer(server):
 
 def should_download(file_path, expiry_secs):
     if not os.path.exists(file_path):
-        print("file does not exist, downloading " + file_path)
+        logger.debug("file does not exist, downloading " + file_path)
         return True
 
     ftime = os.path.getmtime(file_path)
     file_age = time.time() - ftime
-    #print("for " + file_path + " got " + str(ftime) + ", age " +
-    #      str(file_age) + " against expiry of " + str(expiry_secs))
 
     if file_age > expiry_secs:
-        print("file {} too old, download it".format(file_path))
+        logger.debug("file {} too old, download it".format(file_path))
         return True
     else:
         return False
@@ -141,19 +142,19 @@ def safe_read_json(file_path):
     try:
         return readJsonFile(file_path)
     except Exception as ex:
-        print('failed to read', file_path, 'got exception', ex)
+        logger.error('failed to read {} got exception'.format(filepath), exc_info=1)
     return {}
 
 
 def ensure_json_exists(file_dir, file_name):
     if not os.path.exists(file_dir):
-        print("Creating dir: ", file_dir)
+        logger.debug("Creating dir: ", file_dir)
         os.makedirs(file_dir)
     file_path = os.path.join(file_dir, file_name)
     try:
         readJsonFile(file_path)
     except:
-        print('File missing or invalid json:', file_path)
+        logger.error('File missing or invalid json: {}'.format(file_path))
         writeJsonFile(file_path, {})
 
 
@@ -498,7 +499,7 @@ class CogSettings(object):
 
         self.default_settings = self.make_default_settings()
         if not os.path.isfile(self.file_path):
-            print("CogSettings config for {} not found.  Creating default...".format(self.file_path))
+            logger.warning("CogSettings config for {} not found.  Creating default...".format(self.file_path))
             self.bot_settings = self.default_settings
             self.save_settings()
         else:
@@ -515,7 +516,7 @@ class CogSettings(object):
 
     def check_folder(self):
         if not os.path.exists(self.folder):
-            print("Creating " + self.folder)
+            logger.info("Creating {}".format(self.folder))
             os.makedirs(self.folder)
 
     def save_settings(self):

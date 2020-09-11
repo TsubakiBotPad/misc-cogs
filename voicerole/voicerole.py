@@ -1,3 +1,5 @@
+import logging
+
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -5,6 +7,7 @@ from redbot.core.utils.chat_formatting import *
 
 from rpadutils import CogSettings, get_role_from_id
 
+logger = logging.getLogger('red.misc-cogs.voicerole')
 
 class VoiceRole(commands.Cog):
     """Gives a custom to anyone who enters a voice channel.
@@ -47,8 +50,7 @@ class VoiceRole(commands.Cog):
             else:
                 await member.remove_roles(role)
         except Exception as ex:
-            print('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id))
-            print(ex)
+            logger.error('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id), exc_info=1)
 
     @commands.group()
     @commands.guild_only()

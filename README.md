@@ -1,4 +1,4 @@
-# padbot-cogs
+# misc-cogs
 
 Red v3 Cogs developed originally for Miru Bot, now for Tsubaki Bot.
 
@@ -15,7 +15,7 @@ Code should be pep8 formatted with a 100 character line limit.
 
 ## Check out the repo
 
-Fork this repo (you are probably already on the page, but if not [go here](https://github.com/TsubakiBotPad/padbot-cogs).
+Fork this repo (you are probably already on the page, but if not [go here](https://github.com/TsubakiBotPad/misc-cogs).
 You will need a GitHub account to do this. Click the button that says "Fork" in the upper-right-hand corner of the page.
 
 I suggest using [PyCharm Community](https://www.jetbrains.com/pycharm/download) for development. Change into the
@@ -23,7 +23,7 @@ I suggest using [PyCharm Community](https://www.jetbrains.com/pycharm/download) 
 
 ```shell script
 # Clone your repo, not this one!!!!!!!! You will want to load your own changes!!!!
-git clone https://github.com/TsubakiBotPad/padbot-cogs.git
+git clone https://github.com/TsubakiBotPad/misc-cogs.git
 ```
 
 ## Set up your bot
@@ -41,7 +41,7 @@ If you are running on a cloud server for the first time and aren't sure what Lin
 ## Installing dependencies
 First download `requirements.txt` so that you can run it from your Red venv. In Linux this is done by running the following from the directory holding the folder `name-of-bot` that you created during the Red setup process:
 ```shell script
-wget https://raw.githubusercontent.com/TsubakiBotPad/padbot-cogs/master/requirements.txt
+wget https://raw.githubusercontent.com/TsubakiBotPad/misc-cogs/master/requirements.txt
 ```
 Then run:
 ```shell script
@@ -72,22 +72,6 @@ Once the bot is launched, set it to use your repo directory as a cog path. Type 
 * There are three emoji servers: the main Tsubaki support server, `miru_extra_emoji`, and `miru_monsters_1`. River has access to these, talk to her if you think you need access to them. HOSTING YOUR OWN TSUBAKI/MIRU CLONE IS NOT REASON TO GET ACCESS TO THEM. In-depth development of the `^id` command may be reason to get access to them.
 * You will use use `^padinfo setemojiservers` with the IDs she gives you.
 
-# Puzzle and Dragons
-
-Most cogs here relate to the mobile game 'Puzzle and Dragons'. Data is sourced from the
-DadGuide mobile app.
-
-| Cog        | Purpose                                                         |
-| ---        | ---                                                             |
-| damagecalc | Simple attack damage calculator                                 |
-| padboard   | Converts board images to dawnglare board/solved board links     |
-| padglobal  | Global PAD info commands                                        |
-| dadguide   | Utility classes relating to DadGuide data                       |
-| padinfo    | Monster lookup and info display                                 |
-| padrem     | Rare Egg Machine simulation                                     |
-| padvision  | Utilities relating to PAD image scanning                        |
-| profile    | Global user PAD profile storage and lookup                      |
-
 
 # Admin/util cogs
 
@@ -97,20 +81,11 @@ contain utility libraries.
 | Cog            | Purpose                                                     |
 | ---            | ---                                                         |
 | baduser        | Tracks misbehaving users, other misc user tracking          |   
-| calculator     | Replacement for the calculator cog that doesnt suck         |  
+| calculator     | Replacement for the calculator cog that doesnt suck         |
+| donations      | Tracks users who have donated for hosting fees              |
 | fancysay       | Make the bot say special things                             |
 | memes          | CustomCommands except role-limited                          |    
 | rpadutils      | Utility library shared by many other libraries              |    
 | sqlactivitylog | Archives messages in sqlite, allows for lookup              |    
-| timecog        | Convert/print time in different timezones                   |
+| timecog        | Convert/show time in different timezones and set reminders  |
 | trutils        | Misc utilities intended for my usage only                   |
-| twitter2       | Mirrors a twitter feed to a channel                         |
-
-
-# Other/deprecated cogs
-
-Cogs not intended for normal use, or superceded.
-
-| Cog            | Purpose                                                     |
-| ---            | ---                                                         |
-| donations      | Tracks users who have donated for hosting fees              |
