@@ -718,3 +718,11 @@ class aobject(object):
 
     async def __init__(self):
         pass
+
+def auth_check(perm, default=False):
+    def check(ctx):
+        authcog = ctx.bot.get_cog("GlobalAdmin")
+        if not authcog:
+            return default
+        return authcog.settings.get_perm(ctx.author.id, perm, default=default)
+    return commands.check(check)
