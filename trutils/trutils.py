@@ -439,7 +439,10 @@ class TrUtils(commands.Cog):
             await ctx.send("Invalid Command: {}".format(full_cmd))
             return
         _send = ctx.send
-        async def fakesend(*args, **kwargs): pass
+        async def fakesend(*args, **kwargs):
+            if "Reloaded " in args[0]:
+                return
+            await _send(*args, **kwargs)
 
         ctx.send = fakesend
         await self.bot.get_cog("Core").reload(ctx, cmd.cog.__module__.split('.')[0])
