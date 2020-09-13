@@ -137,7 +137,7 @@ def safe_read_json(file_path):
     try:
         return readJsonFile(file_path)
     except Exception as ex:
-        logger.error('failed to read {} got exception'.format(filepath), exc_info=1)
+        logger.error('failed to read {} got exception'.format(file_path), exc_info=1)
     return {}
 
 
