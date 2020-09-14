@@ -1,6 +1,6 @@
 {
     "author": ["Aradia Megido#2552"],
-    "description": "Set up authentication for admins for other cogs via rpadutils.",
+    "description": "Set up authentication for admins for other cogs via tsutils.",
     "end_user_data_statement": "No personal data is stored.",
     "install_msg": "",
     "short": "Authentication",
@@ -9,7 +9,7 @@
     "min_python_version" : [3,8,1],
     "hidden": false,
     "disabled": false,
-    "require_cogs": {"rpadutils": "https://github.com/TsubakiBotPad/misc-cogs"},
-    "requirements": [],
+    "require_cogs": {},
+    "requirements": ["tsutils"],
     "tags": ["authentication", "administration"]
 }

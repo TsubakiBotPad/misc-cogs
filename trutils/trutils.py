@@ -7,7 +7,7 @@ import discord
 from redbot.core import checks, modlog, commands
 from redbot.core.utils.chat_formatting import inline, box, pagify
 
-from rpadutils import CogSettings
+from tsutils import CogSettings
 
 
 USER_HELP = """
@@ -150,7 +150,7 @@ class TrUtils(commands.Cog):
     @commands.command()
     @checks.is_owner()
     async def loadallcogs(self, ctx):
-        cogs = ['RpadUtils', 'AutoMod2', 'ChannelMod', 'Donations', 'FancySay', 'Memes',
+        cogs = ['tsutils', 'AutoMod2', 'ChannelMod', 'Donations', 'FancySay', 'Memes',
                 'PadBoard', 'Profile', 'Stickers', 'StreamCopy', 'Translate', 'VoiceRole',
                 'Dadguide', 'PadGlobal', 'PadInfo']
 

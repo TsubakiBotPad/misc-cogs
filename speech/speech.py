@@ -10,7 +10,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
-from rpadutils import CogSettings, corowrap
+from tsutils import CogSettings, corowrap
 
 logger = logging.getLogger('red.misc-cogs.speech')
 

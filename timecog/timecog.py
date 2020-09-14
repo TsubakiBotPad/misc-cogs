@@ -11,7 +11,7 @@ from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, pagify, box
 
-import rpadutils
+import tsutils
 
 tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
                   for x in pytz.all_timezones])
@@ -442,7 +442,7 @@ class TimeCog(commands.Cog):
 
     async def reminderloop(self):
         await self.bot.wait_until_ready()
-        async for _ in rpadutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
+        async for _ in tsutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
             urs = await self.config.all_users()
             gds = await self.config.all_guilds()
             now = datetime.utcnow()

@@ -85,7 +85,6 @@ contain utility libraries.
 | donations      | Tracks users who have donated for hosting fees              |
 | fancysay       | Make the bot say special things                             |
 | memes          | CustomCommands except role-limited                          |    
-| rpadutils      | Utility library shared by many other libraries              |    
 | sqlactivitylog | Archives messages in sqlite, allows for lookup              |    
 | timecog        | Convert/show time in different timezones and set reminders  |
 | trutils        | Misc utilities intended for my usage only                   |
