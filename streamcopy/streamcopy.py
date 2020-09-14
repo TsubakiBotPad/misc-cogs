@@ -39,7 +39,7 @@ class StreamCopy(commands.Cog):
                 await self.do_refresh()
                 await self.do_ensure_roles()
             except Exception as e:
-                logger.error("Error: ", exc_info=1)
+                logger.exception("Error: ")
 
             await asyncio.sleep(60 * 3)
         logger.info("done refresh_stream")
@@ -127,7 +127,7 @@ class StreamCopy(commands.Cog):
 
             await self.do_refresh()
         except Exception as ex:
-            logger.error("Stream checking failed", exc_info=1)
+            logger.exception("Stream checking failed")
 
     async def ensure_user_streaming_role(self, server, streamer_role_id: discord.Role, user: discord.Member):
         user_is_playing = self.is_playing(user)

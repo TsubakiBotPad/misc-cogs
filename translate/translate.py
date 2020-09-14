@@ -44,7 +44,7 @@ class Translate(commands.Cog):
             assert api_key
             self.service = build('translate', 'v2', developerKey=api_key)
         except:
-            logging.error("Google API key not found or invalid")
+            logger.error("Google API key not found or invalid")
 
     @commands.command(aliases=['jaus', 'jpen', 'jpus'])
     @checks.bot_has_permissions(embed_links=True)

@@ -127,7 +127,7 @@ class Speech(commands.Cog):
             voice_client.play(audio_source, after = corowrap(voice_client.disconnect(), self.bot.loop))
             return True
         except Exception as e:
-            logging.error(e)
+            logger.exception("Exception:")
             if voice_client:
                 try:
                     await voice_client.disconnect()

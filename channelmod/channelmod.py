@@ -267,7 +267,7 @@ class ChannelMod(commands.Cog):
                 elif delete_message_reaction:
                     await dest_message.remove_reaction(delete_message_reaction, dest_message.guild.me)
             except Exception as ex:
-                logger.warning('Failed to mirror message edit from {} to {}:'.format(channel.id, dest_channel_id), exc_info=1)
+                logger.exception('Failed to mirror message edit from {} to {}:'.format(channel.id, dest_channel_id))
 
     def makeheader(self, message):
         return 'Posted by **{}** in *{} - #{}*:\n{}'.format(message.author.name,
