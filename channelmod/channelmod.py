@@ -11,7 +11,7 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import inline
 
-from tsutils import tsutils, CogSettings, box
+from tsutils import tsutils, CogSettings, box, auth_check
 
 logger = logging.getLogger('red.misc-cogs.channelmod')
 
@@ -30,6 +30,9 @@ class ChannelMod(commands.Cog):
         self.bot = bot
         self.settings = ChannelModSettings("channelmod")
         self.channel_last_spoke = {}
+
+        GACOG = self.bot.get_cog("GlobalAdmin")
+        if GACOG: self.bot.get_cog("GlobalAdmin").register_perm("channelmod")
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -117,6 +120,7 @@ class ChannelMod(commands.Cog):
         await ctx.send(o)
 
     @channelmod.command()
+    @auth_check('channelmod')
     async def catchup(self, ctx, channel, from_message, to_message = None):
         """Catch up a mirror for all messages after from_message (inclusive)"""
         if channel.isdigit():
@@ -139,7 +143,7 @@ class ChannelMod(commands.Cog):
         await self.mirror_msg(from_message)
         async for message in channel.history(limit=None, after=from_message, before=to_message):
             await self.mirror_msg(message)
-        await self.mirror_msg(to_message)    
+        await self.mirror_msg(to_message)
         await ctx.tick()
 
     @commands.Cog.listener('on_message')
