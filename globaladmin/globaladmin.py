@@ -67,7 +67,7 @@ class GlobalAdmin(commands.Cog):
         msg = "Perms:\n"
         mlen = max([len(k) for k in self.settings.get_perms().keys()])
         for perm, default in self.settings.get_perms().items():
-            msg += " - {}{}{}\n".format(perm, " "*(mlen-len(perm)+3), default)
+            msg += " - {}{}(default: {})\n".format(perm, " "*(mlen-len(perm)+3), default)
         for page in pagify(msg):
             await ctx.send(box(page))
 
