@@ -71,7 +71,7 @@ class DataTransfer(commands.Cog):
                 await self.bot.get_cog("Alias").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "alias")
-            await ctx.send(inline("Done."))
+            await ctx.tick()
         except Exception as e:
             await ctx.send(inline("Invalid file."))
 
@@ -112,7 +112,7 @@ class DataTransfer(commands.Cog):
                 await self.bot.get_cog("CustomCommands").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "customcom")
-            await ctx.send(inline("Done."))
+            await ctx.tick()
         except Exception as e:
             await ctx.send(inline("Invalid file."))
 
@@ -151,7 +151,7 @@ class DataTransfer(commands.Cog):
             self.bot.get_cog("Memes").settings.bot_settings['configs'][ctx.guild.id] = data['configs']
             self.bot.get_cog("Memes").c_commands[ctx.guild.id] = data['commands']
             json.dump(self.bot.get_cog("Memes").c_commands, open(self.bot.get_cog("Memes").file_path, 'w+'))
-            await ctx.send(inline("Done."))
+            await ctx.tick()
         except Exception as e:
             await ctx.send(inline("Invalid file."))
 

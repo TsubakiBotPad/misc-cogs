@@ -58,7 +58,7 @@ class Stickers(commands.Cog):
         """
         command = command.lower()
         if command in self.bot.all_commands.keys():
-            await self.bot.say("That is already a standard command.")
+            await ctx.send("That is already a standard command.")
             return
 
         self.settings.update_sticker(command, text)
@@ -119,7 +119,7 @@ class Stickers(commands.Cog):
     async def addadmin(self, ctx, user: discord.Member):
         """Adds a user to the stickers admin"""
         self.settings.add_admin(user.id)
-        await ctx.send("done")
+        await ctx.tick()
 
     @sticker.command()
     @checks.is_owner()
@@ -135,7 +135,7 @@ class Stickers(commands.Cog):
             except ValueError:
                 await ctx.send(inline("Invalid user id."))
                 return
-        await ctx.send("done")
+        await ctx.tick()
 
     @commands.Cog.listener("on_message")
     async def check_for_sticker_request(self, message):

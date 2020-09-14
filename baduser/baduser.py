@@ -349,26 +349,26 @@ class BadUser(commands.Cog):
     @checks.is_owner()
     async def addban(self, ctx, user_id: int, *, reason: str):
         self.settings.addBannedUser(user_id, reason)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @baduser.command()
     @checks.is_owner()
     async def rmban(self, ctx, user_id: int):
         user_id = str(user_id)
         self.settings.rmBannedUser(user_id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @baduser.command()
     @checks.is_owner()
     async def opt_in(self, ctx):
         self.settings.addBuEnabled(ctx.guild.id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @baduser.command()
     @checks.is_owner()
     async def opt_out(self, ctx):
         self.settings.rmBuEnabled(ctx.guild.id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @commands.Cog.listener('on_message')
     async def log_message(self, message):

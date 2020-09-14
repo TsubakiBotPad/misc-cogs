@@ -145,7 +145,7 @@ class TrUtils(commands.Cog):
     async def revertname(self, ctx):
         """Unsets your nickname"""
         await ctx.author.edit(nick=None)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @commands.command()
     @checks.is_owner()
@@ -164,7 +164,7 @@ class TrUtils(commands.Cog):
                     await ctx.invoke(owner_cog.load, cog_name.lower())
                 except Exception as e:
                     await ctx.send(box("Loading cog failed: {}: {}".format(e.__class__.__name__, str(e))))
-        await ctx.send('Done!')
+        await ctx.tick()
 
     @commands.command(hidden=True)
     async def traceback2(self, ctx: commands.Context, public: bool = False):
@@ -396,7 +396,7 @@ class TrUtils(commands.Cog):
     async def setfeedbackchannel(self, ctx, channel: discord.TextChannel):
         """Set the feedback destination channel."""
         self.settings.set_feedback_channel(channel.id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @commands.command(aliases=['mamafeedback', 'renifeedback'])
     @commands.cooldown(1, 60, commands.BucketType.user)
@@ -415,7 +415,7 @@ class TrUtils(commands.Cog):
     async def setblogfeedbackchannel(self, ctx, channel: discord.TextChannel):
         """Set the blog feedback destination channel."""
         self.settings.set_blog_feedback_channel(channel.id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @commands.command()
     @commands.guild_only()
@@ -474,7 +474,7 @@ class TrUtils(commands.Cog):
             await ctx.author.send("Error updating:\n" + stderr)
             await ctx.send(inline("Error (sent via DM)"))
         else:
-            await ctx.send(inline('Done'))
+            await ctx.tick()
 
     @commands.command(hidden=True, aliases=["make_aa", "makearadia"])
     async def makeaa(self, ctx, *, task):

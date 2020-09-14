@@ -122,7 +122,7 @@ class Memes(commands.Cog):
         [p]setmemerole Regular"""
 
         self.settings.setPrivileged(ctx.guild.id, role.id)
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @commands.command()
     @commands.guild_only()

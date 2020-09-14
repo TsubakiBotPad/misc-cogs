@@ -502,21 +502,21 @@ class Seniority(commands.Cog):
     async def announcechannel(self, ctx, channel: discord.TextChannel):
         """Set the announcement channel."""
         self.settings.set_announce_channel(ctx.guild.id, channel.id)
-        await ctx.send(inline('Done.'))
+        await ctx.tick()
 
     @config.command()
     @commands.guild_only()
     async def messagecap(self, ctx, cap_amount: int):
         """Set the number of messages required to reach maximum points for a channel."""
         self.settings.set_message_cap(ctx.guild.id, cap_amount)
-        await ctx.send(inline('Done.'))
+        await ctx.tick()
 
     @config.command()
     @commands.guild_only()
     async def serverpointcap(self, ctx, cap_amount: int):
         """Set the maximum number of points per day a user can receive in the server."""
         self.settings.set_server_point_cap(ctx.guild.id, cap_amount)
-        await ctx.send(inline('Done.'))
+        await ctx.tick()
 
     @config.command()
     @commands.guild_only()
