@@ -116,6 +116,31 @@ class ChannelMod(commands.Cog):
             o += "{{}}: {{:{}}}\n".format(maxlen).format(r,c)
         await ctx.send(o)
 
+    @channelmod.command()
+    async def catchup(self, ctx, channel, from_message, to_message = None):
+        """Catch up a mirror for all messages after from_message (inclusive)"""
+        if channel.isdigit():
+            channel = self.bot.get_channel(int(channel))
+        else:
+            channel = await self.catchup.do_conversion(ctx, discord.TextChannel, channel, "channel")
+
+        if from_message.isdigit():
+            from_message = await channel.fetch_message(int(from_message))
+        else:
+            from_message = await self.catchup.do_conversion(ctx, discord.Message, from_message, "from_message")
+
+        if to_digit is None:
+            pass
+        elif to_message.isdigit():
+            to_message = await channel.fetch_message(int(to_message))
+        else:
+            to_message = await self.catchup.do_conversion(ctx, discord.Message, to_message, "to_message")
+
+        await self.mirror_msg(from_message)
+        async for message in channel.history(limit=None, after=from_message, before=to_message):
+            await self.mirror_msg(message)
+        await self.mirror_msg(to_message)    
+        await ctx.tick()
 
     @commands.Cog.listener('on_message')
     async def mirror_msg(self, message):
