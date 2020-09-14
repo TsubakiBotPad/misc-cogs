@@ -5,7 +5,7 @@ from redbot.core.utils.chat_formatting import box, pagify, inline
 
 from tsutils import CogSettings, tsutils
 
-logger = logging.getLogger('red.misc-cogs.authcog')
+logger = logging.getLogger('red.misc-cogs.globaladmin')
 
 class GlobalAdmin(commands.Cog):
     def __init__(self, bot, *args, **kwargs):

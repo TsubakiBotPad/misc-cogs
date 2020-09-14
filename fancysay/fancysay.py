@@ -116,7 +116,7 @@ class FancySay(commands.Cog):
             await ctx.send(embed=embed)
             await ctx.message.delete()
         except Exception as error:
-            logger.error("failed to fancysay:", exc_info=1)
+            logger.exception("failed to fancysay:")
 
 
 

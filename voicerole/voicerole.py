@@ -50,7 +50,7 @@ class VoiceRole(commands.Cog):
             else:
                 await member.remove_roles(role)
         except Exception as ex:
-            logger.error('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id), exc_info=1)
+            logger.exception('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id))
 
     @commands.group()
     @commands.guild_only()

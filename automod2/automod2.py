@@ -596,15 +596,15 @@ class AutoMod2(commands.Cog):
             watchdog_channel = self.bot.get_channel(watchdog_channel_id)
             await watchdog_channel.send(output_msg)
         except Exception as ex:
-            logger.error('failed to watchdog', exc_info=1)
+            logger.exception('failed to watchdog')
 
     async def deleteAndReport(self, delete_msg, outgoing_msg):
         try:
             await delete_msg.delete()
             await delete_msg.author.send(outgoing_msg)
         except Exception as e:
-            logger.error('Failure while deleting message from {}, tried to send : {}'.format(
-                         delete_msg.author.name, outgoing_msg), exc_info=1)
+            logger.exception('Failure while deleting message from {}, tried to send : {}'.format(
+                             delete_msg.author.name, outgoing_msg))
 
     def patternsToTableText(self, patterns):
         tbl = prettytable.PrettyTable(["Rule Name", "Include regex", "Exclude regex"])
