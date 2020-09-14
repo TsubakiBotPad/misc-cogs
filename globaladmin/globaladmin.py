@@ -38,7 +38,7 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def setdefault(self, ctx, perm_name, default: bool = False):
         """Set the default value of a permission"""
-        self.register_perm(perm_name, default)
+        self.settings.register_perm(perm_name, default)
         await ctx.end(inline("Done."))
 
     def register_perm(self, perm_name, default=False):
@@ -47,26 +47,27 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def reset(self, ctx, perm_name):
         """Restore defaults for a perm for all users"""
-        if not await tsutils.confirm_message("Are you sure you want to reset this perm to defaults?"):
+        if not await tsutils.confirm_message(ctx, "Are you sure you want to reset this perm to defaults?"):
             return
-        self.refresh_perm(perm_name)
-        await ctx.end(inline("Done."))
+        self.settings.refresh_perm(perm_name)
+        await ctx.tick()
 
     @perms.command()
     async def unregister(self, ctx, perm_name):
         """Completely remove a perm from storage"""
-        if not await tsutils.confirm_message("Are you sure you want to unregister this perm?"):
+        if not await tsutils.confirm_message(ctx, "Are you sure you want to unregister this perm?"):
             return
-        self.refresh_perm(perm_name)
-        self.rm_perm(perm_name)
-        await ctx.end(inline("Done."))
+        self.settings.refresh_perm(perm_name)
+        self.settings.rm_perm(perm_name)
+        await ctx.tick()
 
     @perms.command(name="list")
     async def perm_list(self, ctx):
         """List the avaliable perms"""
         msg = "Perms:\n"
+        mlen = max([len(k) for k in self.settings.get_perms().keys()])
         for perm, default in self.settings.get_perms().items():
-            msg += " - {}\t\t{}\n".format(perm, default)
+            msg += " - {}{}(default: {})\n".format(perm, " "*(mlen-len(perm)+3), default)
         for page in pagify(msg):
             await ctx.send(box(page))
 
@@ -76,7 +77,7 @@ class GlobalAdmin(commands.Cog):
         if self.settings.add_user_perm(user.id, perm, value):
             await ctx.send(inline("Invalid perm name."))
             return
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @globaladmin.command()
     async def deny(self, ctx, user: discord.User, perm, value: bool = False):
@@ -84,7 +85,7 @@ class GlobalAdmin(commands.Cog):
         if self.settings.add_user_perm(user.id, perm, value):
             await ctx.send(inline("Invalid perm name."))
             return
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @globaladmin.command()
     async def listusers(self, ctx, perm_name):
