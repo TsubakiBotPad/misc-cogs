@@ -67,13 +67,13 @@ class StreamCopy(commands.Cog):
     @checks.mod_or_permissions(manage_guild=True)
     async def clearStreamerRole(self, ctx):
         self.settings.clear_streamer_role(ctx.guild.id)
-        await self.bot.say(inline('Done'))
+        await ctx.tick()
 
     @streamcopy.command(name="adduser")
     @checks.is_owner()
     async def addUser(self, ctx, user: discord.User):
         self.settings.add_user(user.id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @streamcopy.command(name="rmuser")
     @checks.is_owner()
@@ -88,7 +88,7 @@ class StreamCopy(commands.Cog):
             except ValueError:
                 await ctx.send(inline("Invalid user id."))
                 return
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @streamcopy.command(name="list")
     @checks.is_owner()

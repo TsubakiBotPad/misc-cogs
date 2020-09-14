@@ -39,7 +39,7 @@ class GlobalAdmin(commands.Cog):
     async def setdefault(self, ctx, perm_name, default: bool = False):
         """Set the default value of a permission"""
         self.settings.register_perm(perm_name, default)
-        await ctx.end(inline("Done."))
+        await ctx.tick()
 
     def register_perm(self, perm_name, default=False):
         self.settings.add_perm(perm_name, default)

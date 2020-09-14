@@ -37,7 +37,7 @@ class GlobalBan(commands.Cog):
         async with self.config.opted() as opted:
             opted.append(ctx.guild.id)
         await self.update_gbs()
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @globalban.command()
     @checks.mod_or_permissions(administrator=True)
@@ -47,7 +47,7 @@ class GlobalBan(commands.Cog):
             while ctx.guild.id in opted:
                 opted.remove(ctx.guild.id)
         await self.remove_gbs_guild(ctx.guild.id)
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @globalban.command()
     @checks.is_owner()
@@ -57,7 +57,7 @@ class GlobalBan(commands.Cog):
         async with self.config.banned() as banned:
             banned[user] = reason
         await self.update_gbs()
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @globalban.command()
     @checks.is_owner()
@@ -68,7 +68,7 @@ class GlobalBan(commands.Cog):
             if user in banned:
                 del banned[user]
         await self.remove_gbs_user(user)
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
 
     async def update_gbs(self):

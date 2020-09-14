@@ -222,13 +222,13 @@ class TimeCog(commands.Cog):
             return
         async with self.config.user(ctx.author).reminders() as rms:
             rms.remove(rlist[no - 1])
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @remindme.command()
     async def purge(self, ctx):
         """Delete all pending reminders."""
         await self.config.user(ctx.author).reminders.set([])
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
 
     @commands.group(invoke_without_command=True)
@@ -283,7 +283,7 @@ class TimeCog(commands.Cog):
                 return
             schedules[name]['start'] = time.timestamp()
             schedules[name]['time'] = time.timestamp()
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.command()
     async def end(self, ctx, name, *, time):
@@ -296,7 +296,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("There is no schedule with this name.")
                 return
             schedules[name]['end'] = time.timestamp()
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.command()
     async def interval(self, ctx, name, *, time):
@@ -312,7 +312,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("There is no schedule with this name.")
                 return
             schedules[name]['interval'] = interval.seconds
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.command()
     async def message(self, ctx, name, *, message):
@@ -322,7 +322,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("There is no schedule with this name.")
                 return
             schedules[name]['message'] = message
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.group()
     async def channel(self, ctx):
@@ -339,7 +339,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("This channel is already registered.")
                 return
             schedules[name]['channels'].append(channel.id)
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @channel.command(name="remove")
     async def channel_remove(self, ctx, name, channel):
@@ -361,7 +361,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("This channel is not registered.")
                 return
             schedules[name]['channels'].remove(channel_id)
-        await ctx.send(inline("Done"))
+        await ctx.tick()
 
     @channel.command(name="list")
     async def channel_list(self, ctx, name):
@@ -391,7 +391,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("There is no schedule with this name.")
                 return
             schedules[name]['enabled'] = True
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.command()
     async def disable(self, ctx, name):
@@ -401,7 +401,7 @@ class TimeCog(commands.Cog):
                 await ctx.send("There is no schedule with this name.")
                 return
             schedules[name]['enabled'] = False
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @schedule.command(name="remove")
     async def schedule_remove(self, ctx, name):

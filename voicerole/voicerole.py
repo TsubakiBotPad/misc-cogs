@@ -72,13 +72,13 @@ class VoiceRole(commands.Cog):
         To reference a role, make it pingable.
         """
         self.settings.add_channel_role(ctx.guild.id, channel.id, role.id)
-        await ctx.send('done')
+        await ctx.tick()
 
     @voicerole.command()
     async def clear(self, ctx, channel: discord.VoiceChannel):
         """Clear the role associated with a channel"""
         self.settings.rm_channel_role(ctx.guild.id, channel.id)
-        await ctx.send('done')
+        await ctx.tick()
 
     @voicerole.command()
     async def list(self, ctx):

@@ -48,7 +48,7 @@ class MsgUtils(commands.Cog):
             return
 
         await msg.edit(content=new_msg)
-        await ctx.send(inline('done'))
+        await ctx.tick()
 
     @commands.command()
     @checks.mod_or_permissions(manage_guild=True)

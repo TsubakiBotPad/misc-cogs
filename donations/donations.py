@@ -261,7 +261,7 @@ class Donations(commands.Cog):
         """Setup the Donor and Patron role from your Patreon enabled server."""
         self.settings.setDPS(donor_role.id, patron_role.id, ctx.guild.id)
         await self.set_server_attributes()
-        await ctx.send(inline("Done."))
+        await ctx.tick()
 
     @commands.Cog.listener("on_message")
     async def checkCC(self, message):

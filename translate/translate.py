@@ -85,7 +85,7 @@ class Translate(commands.Cog):
     async def setkey(self, ctx, api_key):
         """Sets the google api key."""
         await self.config.api_key.set(api_key)
-        await ctx.send(inline("done"))
+        await ctx.tick()
 
     @translate.command()
     async def getkey(self, ctx):

@@ -58,7 +58,7 @@ class ChannelMod(commands.Cog):
             await ctx.send(inline('Check your channel IDs, or maybe the bot is not in those servers'))
             return
         self.settings.add_mirrored_channel(source_channel_id, dest_channel_id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @channelmod.command()
     @checks.is_owner()
@@ -68,7 +68,7 @@ class ChannelMod(commands.Cog):
             await ctx.send(inline('Check your channel IDs, or maybe the bot is not in those servers'))
             return
         self.settings.rm_mirrored_channel(source_channel_id, dest_channel_id)
-        await ctx.send(inline('Done'))
+        await ctx.tick()
 
     @channelmod.command()
     @checks.is_owner()
