@@ -7,7 +7,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
 
-from rpadutils import CogSettings
+from tsutils import CogSettings
 
 STICKER_COG = None
 

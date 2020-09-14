@@ -13,7 +13,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
-from rpadutils import CogSettings, get_role, get_role_from_id
+from tsutils import CogSettings, get_role, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.baduser')
 

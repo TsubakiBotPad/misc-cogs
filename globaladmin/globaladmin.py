@@ -3,7 +3,7 @@ import logging
 from redbot.core import commands, checks, Config
 from redbot.core.utils.chat_formatting import box, pagify, inline
 
-from rpadutils import CogSettings, rpadutils
+from tsutils import CogSettings, tsutils
 
 logger = logging.getLogger('red.misc-cogs.authcog')
 
@@ -47,7 +47,7 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def reset(self, ctx, perm_name):
         """Restore defaults for a perm for all users"""
-        if not await rpadutils.confirm_message("Are you sure you want to reset this perm to defaults?"):
+        if not await tsutils.confirm_message("Are you sure you want to reset this perm to defaults?"):
             return
         self.refresh_perm(perm_name)
         await ctx.end(inline("Done."))
@@ -55,7 +55,7 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def unregister(self, ctx, perm_name):
         """Completely remove a perm from storage"""
-        if not await rpadutils.confirm_message("Are you sure you want to unregister this perm?"):
+        if not await tsutils.confirm_message("Are you sure you want to unregister this perm?"):
             return
         self.refresh_perm(perm_name)
         self.rm_perm(perm_name)

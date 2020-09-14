@@ -8,7 +8,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box
 
-from rpadutils import CogSettings, clean_global_mentions
+from tsutils import CogSettings, clean_global_mentions
 
 DONATE_MSG = """
 To donate to cover bot hosting fees you can use one of:

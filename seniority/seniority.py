@@ -16,8 +16,8 @@ from redbot.core.bot import Red
 from redbot.core.commands import Context
 from redbot.core.utils.chat_formatting import inline, pagify, box
 
-import rpadutils
-from rpadutils import CogSettings, NA_TZ_OBJ
+import tsutils
+from tsutils import CogSettings, NA_TZ_OBJ
 
 logger = logging.getLogger('red.misc-cogs.seniority')
 
@@ -241,7 +241,7 @@ class Seniority(commands.Cog):
         msg += 'Roles:'
         for role_id, config in self.settings.roles(server_id).items():
             try:
-                role = rpadutils.get_role_from_id(self.bot, server, role_id)
+                role = tsutils.get_role_from_id(self.bot, server, role_id)
                 role_name = role.name
             except:
                 role_name = role_id
@@ -381,7 +381,7 @@ class Seniority(commands.Cog):
         for role_id, role_config in self.settings.roles(server.id).items():
             amount = role_config[check_name]
             try:
-                role = rpadutils.get_role_from_id(self.bot, server, role_id)
+                role = tsutils.get_role_from_id(self.bot, server, role_id)
             except:
                 role = None
             yield role_id, role, amount
@@ -407,7 +407,7 @@ class Seniority(commands.Cog):
         return grant_users, ignored_users
 
     async def get_lookback_points(self, server: discord.Guild, lookback_days: int):
-        lookback_date = datetime.now(rpadutils.NA_TZ_OBJ) - timedelta(days=lookback_days)
+        lookback_date = datetime.now(tsutils.NA_TZ_OBJ) - timedelta(days=lookback_days)
         lookback_date_str = lookback_date.date().isoformat()
 
         async with self.pool.acquire() as conn:
@@ -568,7 +568,7 @@ class Seniority(commands.Cog):
         Set all three to 0 to delete the entry.
         """
         server = ctx.guild
-        role = rpadutils.get_role(server.roles, role_name)
+        role = tsutils.get_role(server.roles, role_name)
         self.settings.set_role(server.id, role.id, remove_amount, warn_amount, grant_amount)
 
         if remove_amount == 0 and grant_amount == 0:
@@ -655,7 +655,7 @@ class Seniority(commands.Cog):
         server = message.guild
         server_id = server.id
         if self.settings.ignore_commands(server_id):
-            if await rpadutils.get_prefix(self.bot, message):
+            if await tsutils.get_prefix(self.bot, message):
                 return False, text, 'Ignored command'
 
         if self.settings.ignore_room_codes(server_id):
@@ -814,7 +814,7 @@ def ensure_map(item, key, default_value):
 
 
 def now_date():
-    return datetime.now(rpadutils.NA_TZ_OBJ).date().isoformat()
+    return datetime.now(tsutils.NA_TZ_OBJ).date().isoformat()
 
 
 class SenioritySettings(CogSettings):

@@ -9,7 +9,7 @@ from redbot.core import checks, data_manager, commands
 from redbot.core.utils.chat_formatting import inline, box, pagify
 
 
-from rpadutils import CogSettings, get_role_from_id, safe_read_json
+from tsutils import CogSettings, get_role_from_id, safe_read_json
 
 
 def _data_file(file_name: str) -> str:

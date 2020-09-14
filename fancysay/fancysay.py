@@ -7,8 +7,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
-from rpadutils import rpadutils
-from rpadutils import char_to_emoji
+from tsutils import tsutils
+from tsutils import char_to_emoji
 
 logger = logging.getLogger('red.misc-cogs.fancysay')
 
@@ -154,5 +154,5 @@ class FancySay(commands.Cog):
         emojis = list()
         for guild in self.bot.guilds:
             emojis.extend(guild.emojis)
-        message = rpadutils.replace_emoji_names_with_code(emojis, message)
-        return rpadutils.fix_emojis_for_server(emojis, message)
+        message = tsutils.replace_emoji_names_with_code(emojis, message)
+        return tsutils.fix_emojis_for_server(emojis, message)

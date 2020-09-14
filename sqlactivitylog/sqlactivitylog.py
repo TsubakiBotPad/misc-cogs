@@ -13,7 +13,7 @@ from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box, pagify
 
-import rpadutils
+import tsutils
 
 logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
 
@@ -386,7 +386,7 @@ class SqlActivityLogger(commands.Cog):
                     # Assign a UTC timezone to the datetime
                     raw_value = raw_value.replace(tzinfo=pytz.utc)
                     # Change the UTC timezone to PT
-                    raw_value = rpadutils.NA_TZ_OBJ.normalize(raw_value)
+                    raw_value = tsutils.NA_TZ_OBJ.normalize(raw_value)
                     value = raw_value.strftime("%F %X")
                 if col == 'channel_id':
                     channel = server.get_channel(value) if server else None

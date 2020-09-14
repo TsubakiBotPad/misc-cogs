@@ -5,7 +5,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import *
 
-from rpadutils import CogSettings, get_role_from_id
+from tsutils import CogSettings, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.voicerole')
 

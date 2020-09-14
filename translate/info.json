@@ -9,8 +9,9 @@
     "min_python_version" : [3,8,1],
     "hidden": false,
     "disabled": false,
-    "require_cogs": {"rpadutils": "https://github.com/TsubakiBotPad/misc-cogs"},
+    "require_cogs": {},
     "requirements": [
+        "tsutils",
         "romkan",
         "google-api",
         "google-api-python-client",
