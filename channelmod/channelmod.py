@@ -133,7 +133,7 @@ class ChannelMod(commands.Cog):
         else:
             from_message = await self.catchup.do_conversion(ctx, discord.Message, from_message, "from_message")
 
-        if to_digit is None:
+        if to_message is None:
             pass
         elif to_message.isdigit():
             to_message = await channel.fetch_message(int(to_message))
@@ -143,7 +143,8 @@ class ChannelMod(commands.Cog):
         await self.mirror_msg(from_message)
         async for message in channel.history(limit=None, after=from_message, before=to_message):
             await self.mirror_msg(message)
-        await self.mirror_msg(to_message)
+        if to_message:
+            await self.mirror_msg(to_message)
         await ctx.tick()
 
     @commands.Cog.listener('on_message')
@@ -208,7 +209,7 @@ class ChannelMod(commands.Cog):
                 self.settings.add_mirrored_message(
                     channel.id, message.id, dest_channel.id, dest_message.id)
             except Exception as ex:
-                logger.warning('Failed to mirror message from {} to {}:'.format(channel.id, dest_channel_id), exc_info=1)
+                logger.warning('Failed to mirror message from {} to {}: {}'.format(channel.id, dest_channel_id, str(ex)))
 
         if attachment_bytes:
             attachment_bytes.close()
