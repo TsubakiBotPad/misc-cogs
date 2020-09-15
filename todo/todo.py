@@ -1,9 +1,8 @@
+import asyncio
 import json
 import re
-import asyncio
-
-from redbot.core import checks, commands, Config
-from redbot.core.utils.chat_formatting import box, pagify, inline
+from redbot.core import Config, checks, commands
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 
 class Todo(commands.Cog):
@@ -57,7 +56,7 @@ class Todo(commands.Cog):
             if len(todo) < number or number < 1:
                 await ctx.send(inline("Your todo list isn't that long"))
                 return
-            item = todo.pop(number-1)
+            item = todo.pop(number - 1)
             await ctx.send(inline("Removed '{}' from your todo list.".format(item)))
 
     @todo.command()
@@ -67,8 +66,8 @@ class Todo(commands.Cog):
             if len(todo) < number or number < 1:
                 await ctx.send(inline("Your todo list isn't that long"))
                 return
-            old_item = todo[number-1]
-            todo[number-1] = new_item
+            old_item = todo[number - 1]
+            todo[number - 1] = new_item
             await ctx.send(inline("Edited '{}' to '{}'.".format(old_item, new_item)))
 
     @todo.command()
@@ -78,6 +77,6 @@ class Todo(commands.Cog):
             if len(todo) < number or number < 1:
                 await ctx.send(inline("Your todo list isn't that long"))
                 return
-            item = todo.pop(number-1)
+            item = todo.pop(number - 1)
             todo.insert(0, item)
             await ctx.send(inline("Moved '{}' to the top of your todo list.".format(item)))

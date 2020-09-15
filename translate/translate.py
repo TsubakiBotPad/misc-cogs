@@ -1,14 +1,13 @@
-import logging
-
 import discord
+import logging
 import romkan
-
 from googleapiclient.discovery import build
-from redbot.core import commands, Config, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
 logger = logging.getLogger('red.misc-cogs.translate')
+
 
 class Translate(commands.Cog):
     """Translation utilities."""

@@ -1,13 +1,13 @@
 import asyncio
-import discord
 import datetime
+import discord
 import logging
-
-from redbot.core import commands, Config, checks, modlog
+from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
 logger = logging.getLogger('red.misc-cogs.globalban')
+
 
 class GlobalBan(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
@@ -71,7 +71,6 @@ class GlobalBan(commands.Cog):
                 del banned[user]
         await self.remove_gbs_user(user)
         await ctx.tick()
-
 
     async def update_gbs(self):
         for gid in await self.config.opted():

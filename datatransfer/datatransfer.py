@@ -1,16 +1,16 @@
+import aiohttp
+import base64
+import discord
+import io
 import json
 import os
 import re
-import base64
-import io
-import aiohttp
-
-import discord
-from redbot.core import checks, data_manager, commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
+from redbot.core import checks, commands, data_manager
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 R_MESSAGE_LINK = r"https://discordapp.com/channels/(\d+)/(\d+)/(\d+)"
 R_ATTATCH_LINK = r"https://cdn.discordapp.com/attachments/\d+/\d+/.+"
+
 
 class DataTransfer(commands.Cog):
     """Transfer cog data."""
@@ -67,7 +67,7 @@ class DataTransfer(commands.Cog):
         try:
             data = json.loads(base64.b64decode(raw_data).decode())
 
-            for k,v in data.items():
+            for k, v in data.items():
                 await self.bot.get_cog("Alias").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "alias")
@@ -108,7 +108,7 @@ class DataTransfer(commands.Cog):
         try:
             data = json.loads(base64.b64decode(raw_data).decode())
 
-            for k,v in data.items():
+            for k, v in data.items():
                 await self.bot.get_cog("CustomCommands").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "customcom")

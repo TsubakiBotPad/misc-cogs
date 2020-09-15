@@ -1,11 +1,11 @@
+import asyncio
+import discord.utils
 import json
 import re
-import discord.utils
-import asyncio
-
-from redbot.core import checks, Config
+from redbot.core import Config, checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box, pagify
+
 
 class SelfRoleConverterOverride(commands.Converter):
     async def convert(self, ctx: commands.Context, arg: str) -> discord.Role:
@@ -32,11 +32,10 @@ class SelfRoleConverterOverride(commands.Converter):
                                "possibilities.  Please inform a moderator.")
             role = pool[0]
 
-
-
         if role.id not in selfroles:
             raise commands.BadArgument("The provided role is not a valid selfrole.")
         return role
+
 
 class SelfRoleOverride(commands.Cog):
     """Overrides of builtin commands"""

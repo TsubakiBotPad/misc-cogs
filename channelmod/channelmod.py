@@ -1,17 +1,15 @@
+import aiohttp
+import discord
 import io
-import re
 import logging
+import re
 import time
 import traceback
 from datetime import datetime
-
-import aiohttp
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import inline
-
-from tsutils import tsutils, CogSettings, box, auth_check
+from tsutils import CogSettings, auth_check, box, tsutils
 
 logger = logging.getLogger('red.misc-cogs.channelmod')
 
@@ -116,12 +114,12 @@ class ChannelMod(commands.Cog):
         o = ""
         maxlen = len(str(max(reacts.values(), key=lambda x: len(str(x)))))
         for r, c in reacts.items():
-            o += "{{}}: {{:{}}}\n".format(maxlen).format(r,c)
+            o += "{{}}: {{:{}}}\n".format(maxlen).format(r, c)
         await ctx.send(o)
 
     @channelmod.command()
     @auth_check('channelmod')
-    async def catchup(self, ctx, channel, from_message, to_message = None):
+    async def catchup(self, ctx, channel, from_message, to_message=None):
         """Catch up a mirror for all messages after from_message (inclusive)"""
         if channel.isdigit():
             channel = self.bot.get_channel(int(channel))
@@ -209,7 +207,8 @@ class ChannelMod(commands.Cog):
                 self.settings.add_mirrored_message(
                     channel.id, message.id, dest_channel.id, dest_message.id)
             except Exception as ex:
-                logger.warning('Failed to mirror message from {} to {}: {}'.format(channel.id, dest_channel_id, str(ex)))
+                logger.warning(
+                    'Failed to mirror message from {} to {}: {}'.format(channel.id, dest_channel_id, str(ex)))
 
         if attachment_bytes:
             attachment_bytes.close()
@@ -300,7 +299,7 @@ class ChannelMod(commands.Cog):
                 continue
             dest = discord.utils.get(dest_channel.guild.roles, name=target.name)
             if dest is None:
-                repl = "\\@"+target.name
+                repl = "\\@" + target.name
             else:
                 repl = "<@&{}>".format(dest.id)
             text = text.replace(rtext, repl)
@@ -317,11 +316,11 @@ class ChannelMod(commands.Cog):
             if target is None:
                 logger.warning('could not locate channel to mod')
                 continue
-            text = text.replace(ctext, "\\#"+target.name)
-        #EVERYONE
+            text = text.replace(ctext, "\\#" + target.name)
+        # EVERYONE
         text = re.sub(r"@everyone\b", "@\u200beveryone", text)
         text = re.sub(r"@here\b", "@\u200bhere", text)
-        #EMOJI
+        # EMOJI
         # text = self.emojify(text)
         return text
 
@@ -331,6 +330,7 @@ class ChannelMod(commands.Cog):
             emojis.extend(guild.emojis)
         message = tsutils.replace_emoji_names_with_code(emojis, message)
         return tsutils.fix_emojis_for_server(emojis, message)
+
 
 class ChannelModSettings(CogSettings):
     def make_default_settings(self):

@@ -1,16 +1,15 @@
 import asyncio
-import logging
-
 import discord
+import logging
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
-
-from tsutils import tsutils
 from tsutils import char_to_emoji
+from tsutils import tsutils
 
 logger = logging.getLogger('red.misc-cogs.fancysay')
+
 
 class FancySay(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
@@ -118,18 +117,14 @@ class FancySay(commands.Cog):
         except Exception as error:
             logger.exception("failed to fancysay:")
 
-
-
-
-
-    @commands.command(aliases = ["parrot", "repeat"])
+    @commands.command(aliases=["parrot", "repeat"])
     @checks.mod_or_permissions(manage_messages=True)
     async def say(self, ctx, *, message):
         """Make the bot parrot a phrase."""
         message = self.emojify(message)
         await ctx.send(message)
 
-    @commands.command(aliases = ["testparrot", "testrepeat"])
+    @commands.command(aliases=["testparrot", "testrepeat"])
     @checks.mod_or_permissions(manage_messages=True)
     async def testsay(self, ctx, *, message):
         """Make the bot parrot a phrase without smart emoji replacements."""
@@ -148,7 +143,7 @@ class FancySay(commands.Cog):
     async def yell(self, ctx, *, message):
         """Yells some text."""
         message = self.emojify(message)
-        await ctx.send(message.upper().rstrip(",.!?")+"!!!!!!")
+        await ctx.send(message.upper().rstrip(",.!?") + "!!!!!!")
 
     def emojify(self, message):
         emojis = list()

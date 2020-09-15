@@ -5,20 +5,18 @@ or blacklists to a channel.
 If a violation occurs, the message will be deleted and the user notified.
 """
 import asyncio
-import re
+import discord
 import logging
+import prettytable
+import re
+import tsutils
 from collections import defaultdict
 from collections import deque
 from datetime import datetime
 from io import BytesIO
-
-import discord
-import prettytable
 from redbot.core import checks
 from redbot.core import commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
-
-import tsutils
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, boxPagifySay
 
 logger = logging.getLogger('red.misc-cogs.automod2')
@@ -604,7 +602,7 @@ class AutoMod2(commands.Cog):
             await delete_msg.author.send(outgoing_msg)
         except Exception as e:
             logger.exception('Failure while deleting message from {}, tried to send : {}'.format(
-                             delete_msg.author.name, outgoing_msg))
+                delete_msg.author.name, outgoing_msg))
 
     def patternsToTableText(self, patterns):
         tbl = prettytable.PrettyTable(["Rule Name", "Include regex", "Exclude regex"])
@@ -861,10 +859,12 @@ class AutoMod2Settings(CogSettings):
 
         for gid in self.bot_settings['configs']:
             for uid in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
-                if user_id == tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
+                if user_id == tsutils.deepget(self.bot_settings,
+                                              ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
                     o['bannings'] += 1
             for phr in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases'], []):
-                if user_id == tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
+                if user_id == tsutils.deepget(self.bot_settings,
+                                              ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
                     o['phrases'] += 1
             if user_id in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
                 o['baduser'].append(self.bot_settings['configs'][gid]['watchdog']['users'][user_id]['reason'])
@@ -875,10 +875,12 @@ class AutoMod2Settings(CogSettings):
         # Anonymize requesting banners and phrasemakers
         for gid in self.bot_settings['configs']:
             for uid in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
-                if user_id == tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
+                if user_id == tsutils.deepget(self.bot_settings,
+                                              ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
                     self.bot_settings['configs'][gid]['watchdog']['users'][uid]['request_user_id'] = -1
             for phr in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases'], []):
-                if user_id == tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
+                if user_id == tsutils.deepget(self.bot_settings,
+                                              ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
                     self.bot_settings['configs'][gid]['watchdog']['phrases'][phr]['request_user_id'] = -1
         self.save_settings()
 

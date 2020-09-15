@@ -3,24 +3,24 @@ Utilities for managing misbehaving users and facilitating administrator
 communication about role changes.
 """
 
+import discord
 import logging
 from collections import defaultdict
 from collections import deque
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
-
 from tsutils import CogSettings, get_role, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.baduser')
 
 LOGS_PER_USER = 10
 
+
 def opted_in(ctx):
     return ctx.guild.id in ctx.bot.get_cog("BadUser").settings.buEnabled()
+
 
 class BadUser(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):

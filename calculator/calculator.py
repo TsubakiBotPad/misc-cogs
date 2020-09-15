@@ -2,21 +2,20 @@
 A cloned and improved version of paddo's calculator cog.
 """
 
+import discord
 import numbers
 import os
 import re
 import shlex
 import subprocess
 import sys
-
-import discord
-from redbot.core import commands, checks, Config
-from redbot.core.utils.chat_formatting import inline, box
 from functools import reduce
+from redbot.core import Config, checks, commands
+from redbot.core.utils.chat_formatting import box, inline
 
 ACCEPTED_TOKENS = r'[\[\]\-()*+/0-9=.,% |&<>~_^]|>=|<=|==|!=|factorial|randrange|isfinite|copysign|radians|isclose|degrees|randint|lgamma|choice|random|round|log1p|log10|ldexp|isnan|isinf|hypot|gamma|frexp|floor|expm1|atanh|atan2|asinh|acosh|False|range|tanh|sqrt|sinh|modf|log2|fmod|fabs|erfc|cosh|ceil|atan|asin|acos|else|True|fsum|tan|sin|pow|nan|log|inf|gcd|sum|exp|erf|cos|for|not|and|ans|pi|in|is|or|if|e|x'
 
-ALTERED_TOKENS = {'^': '**', '_':'ans'}
+ALTERED_TOKENS = {'^': '**', '_': 'ans'}
 
 HELP_MSG = '''
 This calculator works by first validating the content of your query against a whitelist, and then
@@ -93,7 +92,6 @@ class Calculator(commands.Cog):
             await ctx.send(inline(e.output.decode("utf-8").strip().split('\n')[-1]))
             return
 
-
         if len(str(calc_result)) > 1024:
             await ctx.send(inline("The result is obnoxiously long!  Try a request under 1k characters!"))
         elif len(str(calc_result)) > 0:
@@ -114,8 +112,8 @@ class Calculator(commands.Cog):
     async def add(self, ctx, *, inp):
         """Adds a string of numbers"""
         em = discord.Embed(color=discord.Color.greyple())
-        em.add_field(name='Input', value='`{}`'.format('+'.join(filter(None,re.split(r'\D', inp)))))
-        em.add_field(name='Result', value=sum(map(lambda x: int('0'+x), re.split(r'\D', inp))))
+        em.add_field(name='Input', value='`{}`'.format('+'.join(filter(None, re.split(r'\D', inp)))))
+        em.add_field(name='Result', value=sum(map(lambda x: int('0' + x), re.split(r'\D', inp))))
         await ctx.send(embed=em)
 
     @commands.command()
@@ -123,6 +121,6 @@ class Calculator(commands.Cog):
     async def multiply(self, ctx, *, inp):
         """Multiplies a string of numbers"""
         em = discord.Embed(color=discord.Color.greyple())
-        em.add_field(name='Input', value='`{}`'.format('*'.join(filter(None,re.split(r'\D', inp)))))
-        em.add_field(name='Result', value=reduce(lambda x, y: x*int(y) if y else x, re.split(r'\D', inp), 1))
+        em.add_field(name='Input', value='`{}`'.format('*'.join(filter(None, re.split(r'\D', inp)))))
+        em.add_field(name='Result', value=reduce(lambda x, y: x * int(y) if y else x, re.split(r'\D', inp), 1))
         await ctx.send(embed=em)

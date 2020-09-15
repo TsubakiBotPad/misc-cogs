@@ -1,21 +1,20 @@
+import discord
+import logging
 import os
+import prettytable
+import pytz
 import sqlite3 as lite
 import textwrap
 import timeit
-import logging
+import tsutils
 from collections import deque
 from datetime import datetime, timedelta
-
-import discord
-import prettytable
-import pytz
 from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, box, pagify
-
-import tsutils
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
+
 
 def mod_help(self, ctx, help_type):
     hs = getattr(self, help_type)
@@ -153,6 +152,7 @@ DELETE
 FROM messages
 WHERE user_id = :user_id
 '''
+
 
 class SqlActivityLogger(commands.Cog):
     """Log activity seen by bot"""
