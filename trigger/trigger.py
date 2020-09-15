@@ -4,8 +4,8 @@ import discord
 import os
 import re
 from random import choice
-from redbot.core import checks, commands, Config
-from redbot.core.utils.chat_formatting import box, pagify, escape
+from redbot.core import Config, checks, commands
+from redbot.core.utils.chat_formatting import box, escape, pagify
 
 
 class TriggerError(Exception):
@@ -138,8 +138,7 @@ class Trigger(commands.Cog):
             else:
                 if r_list != current_list.content:
                     await current_list.edit(content=r_list + quit_msg)
-            msg = await self.bot.wait_for("message", timeout=15.0, check=lambda
-                m: m.author == ctx.author)
+            msg = await self.bot.wait_for("message", timeout=15.0, check=lambda m: m.author == ctx.author)
             if msg is None:
                 await ctx.send("Nothing else to remove I guess.")
                 break
@@ -173,8 +172,7 @@ class Trigger(commands.Cog):
         trigger = self.get_trigger_by_name(trigger_name)
         if trigger:
             msg = "Name: {}\n".format(trigger.name)
-            owner_name = discord.utils.get(self.bot.get_all_members(),
-                                           id=trigger.owner)
+            owner_name = discord.utils.get(self.bot.get_all_members(), id=trigger.owner)
             owner_name = owner_name if owner_name is not None else "not found"
             msg += "Owner: {} ({})\n".format(owner_name, trigger.owner)
             trigger_type = "all responses" if trigger.type == "all" else "random response"
@@ -186,8 +184,7 @@ class Trigger(commands.Cog):
             regex = "yes" if trigger.regex else "no"
             msg += "Regex: {}\n".format(regex)
             msg += "Cooldown: {} seconds\n".format(trigger.cooldown)
-            msg += "Triggered By: \"{}\"\n".format(
-                trigger.triggered_by.replace("`", "\\`"))
+            msg += "Triggered By: \"{}\"\n".format(trigger.triggered_by.replace("`", "\\`"))
             msg += "Payload: {} responses\n".format(len(trigger.responses))
             msg += "Triggered: {} times\n".format(trigger.triggered)
             await ctx.send(box(msg, lang="xl"))
@@ -276,8 +273,7 @@ class Trigger(commands.Cog):
             return
         trigger.triggered_by = triggered_by
         await self.save_triggers()
-        await ctx.send(
-            "The trigger will be activated by `{}`.".format(triggered_by))
+        await ctx.send("The trigger will be activated by `{}`.".format(triggered_by))
 
     @triggerset.command()
     async def response(self, ctx, trigger_name: str, _type: str):
@@ -316,8 +312,7 @@ class Trigger(commands.Cog):
         await ctx.send("Influence set to {}.".format(_type))
 
     @triggerset.command()
-    async def channels(self, ctx, trigger_name: str,
-                       *channels: discord.TextChannel):
+    async def channels(self, ctx, trigger_name: str, *channels: discord.TextChannel):
         """Sets the channel(s) in which the trigger will be active
 
         Not entering any channel will revert the trigger to server-wide"""
@@ -445,8 +440,7 @@ class Trigger(commands.Cog):
         await ctx.send("Everything you type will be added as response "
                        "to the trigger. Type 'exit' to quit.")
         while msg is not None:
-            msg = await self.bot.wait_for("message", timeout=60.0, check=lambda
-                m: m.author == ctx.author)
+            msg = await self.bot.wait_for("message", timeout=60.0, check=lambda m: m.author == ctx.author)
             if msg is None:
                 await ctx.send("No more responses then. "
                                "Your changes have been saved.")
@@ -548,11 +542,9 @@ class TriggerObj:
         self.owner = kwargs.get("owner")
         self.triggered_by = kwargs.get("triggered_by")
         self.responses = kwargs.get("responses", [])
-        self.server = kwargs.get(
-            "server")  # if it's None, the trigger will be implicitly global
+        self.server = kwargs.get("server")  # if it's None, the trigger will be implicitly global
         self.channels = kwargs.get("channels", {})
-        self.type = kwargs.get("type",
-                               "all")  # Type of payload. Types: all, random
+        self.type = kwargs.get("type", "all")  # Type of payload. Types: all, random
         self.case_sensitive = kwargs.get("case_sensitive", False)
         self.regex = kwargs.get("regex", False)
         self.cooldown = kwargs.get("cooldown", 1)  # Seconds

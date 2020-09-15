@@ -16,7 +16,7 @@ from datetime import datetime
 from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, boxPagifySay
 
 logger = logging.getLogger('red.misc-cogs.automod2')
@@ -85,8 +85,7 @@ class AutoMod2(commands.Cog):
 
         self.settings = AutoMod2Settings("automod2", bot)
         self.settings.cleanup()
-        self.channel_user_logs = defaultdict(
-            lambda: deque(maxlen=LOGS_PER_CHANNEL_USER))
+        self.channel_user_logs = defaultdict(lambda: deque(maxlen=LOGS_PER_CHANNEL_USER))
 
         self.server_user_last = defaultdict(dict)
         self.server_phrase_last = defaultdict(dict)
@@ -97,11 +96,9 @@ class AutoMod2(commands.Cog):
 
         data = "Stored data for user with ID {}:\n".format(user_id)
         if udata['bannings']:
-            data += " - You have setup watchdogs for {} user(s).\n".format(
-                udata['bannings'])
+            data += " - You have setup watchdogs for {} user(s).\n".format(udata['bannings'])
         if udata['phrases']:
-            data += " - You have created {} phrase(s).\n".format(
-                udata['phrases'])
+            data += " - You have created {} phrase(s).\n".format(udata['phrases'])
         if udata['baduser']:
             data += (" - You have been watchlisted in {} servers. "
                      "(This data is sensitive and cannot be cleared automatically due to abuse. "
@@ -129,8 +126,7 @@ class AutoMod2(commands.Cog):
     @checks.mod_or_permissions(manage_guild=True)
     async def automodhelp(self, ctx):
         """Sends you info on how to use automod."""
-        for page in pagify(AUTOMOD_HELP.format(ctx.prefix), delims=['\n'],
-                           shorten_by=8):
+        for page in pagify(AUTOMOD_HELP.format(ctx.prefix), delims=['\n'], shorten_by=8):
             await ctx.author.send(box(page))
 
     @commands.group()
@@ -148,12 +144,10 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def addpattern(self, ctx, name, include_pattern, exclude_pattern='',
-                         error=None):
+    async def addpattern(self, ctx, name, include_pattern, exclude_pattern='', error=None):
         """Add a pattern for use in this server."""
         if error is not None:
-            await ctx.send(
-                inline('Too many inputs detected, check your quotes'))
+            await ctx.send(inline('Too many inputs detected, check your quotes'))
             return
         try:
             re.compile(include_pattern)
@@ -161,8 +155,7 @@ class AutoMod2(commands.Cog):
         except Exception as ex:
             await ctx.send(inline(str(ex)))
             return
-        self.settings.addPattern(ctx.guild.id, name, include_pattern,
-                                 exclude_pattern)
+        self.settings.addPattern(ctx.guild.id, name, include_pattern, exclude_pattern)
         await ctx.send(inline('Added pattern'))
 
     @automod2.command()
@@ -236,8 +229,7 @@ class AutoMod2(commands.Cog):
             blacklists = config['blacklist']
             image_limit = config.get('image_limit', 0)
             auto_emojis_type = config.get('auto_emojis_type', None)
-            if len(
-                    whitelists + blacklists) + image_limit == 0 and not auto_emojis_type:
+            if len(whitelists + blacklists) + image_limit == 0 and not auto_emojis_type:
                 continue
 
             output += '\n#{}'.format(channel.name)
@@ -280,16 +272,13 @@ class AutoMod2(commands.Cog):
         elif limit == -1:
             await ctx.send(inline('I will only allow images in this channel'))
         else:
-            await ctx.send(
-                inline('I will delete excess images in this channel'))
+            await ctx.send(inline('I will delete excess images in this channel'))
 
     @commands.Cog.listener('on_message')
     async def mod_message_images(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel,
-                                                               discord.abc.PrivateChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.abc.PrivateChannel):
             return
-        image_limit = self.settings.getImageLimit(message.guild.id,
-                                                  message.channel.id)
+        image_limit = self.settings.getImageLimit(message.guild.id, message.channel.id)
         if image_limit == 0:
             return
         elif image_limit > 0:
@@ -317,8 +306,7 @@ class AutoMod2(commands.Cog):
                     except:
                         pass
 
-            msg = m.author.mention + inline(
-                ' Upload multiple images to an imgur gallery #endimagespam')
+            msg = m.author.mention + inline(' Upload multiple images to an imgur gallery #endimagespam')
             alert_msg = await message.channel.send(msg)
             await asyncio.sleep(10)
             await alert_msg.delete()
@@ -327,8 +315,7 @@ class AutoMod2(commands.Cog):
                 return
             if len(message.embeds) or len(message.attachments):
                 return
-            msg_template = box(
-                'Your message in {} was deleted for not containing an image')
+            msg_template = box('Your message in {} was deleted for not containing an image')
             msg = msg_template.format(message.channel.name)
             await self.deleteAndReport(message, msg)
 
@@ -347,12 +334,10 @@ class AutoMod2(commands.Cog):
         if message.channel.permissions_for(message.author).manage_messages:
             return
 
-        whitelists, blacklists = self.settings.getRulesForChannel(
-            message.guild.id, message.channel.id)
+        whitelists, blacklists = self.settings.getRulesForChannel(message.guild.id, message.channel.id)
 
-        msg_template = box(
-            'Your message in {} was deleted for violating the following policy: {}\n'
-            'Message content: {}')
+        msg_template = box('Your message in {} was deleted for violating the following policy: {}\n'
+                           'Message content: {}')
 
         msg_content = message.clean_content
         for value in blacklists:
@@ -360,8 +345,7 @@ class AutoMod2(commands.Cog):
             include_pattern = value['include_pattern']
             exclude_pattern = value['exclude_pattern']
 
-            if not matchesIncludeExclude(include_pattern, exclude_pattern,
-                                         msg_content):
+            if not matchesIncludeExclude(include_pattern, exclude_pattern, msg_content):
                 continue
 
             msg = msg_template.format(message.channel.name, name, msg_content)
@@ -374,8 +358,7 @@ class AutoMod2(commands.Cog):
                 include_pattern = value['include_pattern']
                 exclude_pattern = value['exclude_pattern']
 
-                if matchesIncludeExclude(include_pattern, exclude_pattern,
-                                         msg_content):
+                if matchesIncludeExclude(include_pattern, exclude_pattern, msg_content):
                     return
                 failed_whitelists.append(name)
 
@@ -406,8 +389,7 @@ class AutoMod2(commands.Cog):
 
     @commands.Cog.listener('on_message')
     async def add_auto_emojis(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel,
-                                                               discord.abc.PrivateChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.abc.PrivateChannel):
             return
         key = self.settings.getAutoEmojis(message.guild.id, message.channel.id)
         if not key:
@@ -442,8 +424,7 @@ class AutoMod2(commands.Cog):
             msg += '\nChannel not set'
 
         msg += '\n\nUsers'
-        for user_id, user_settings in self.settings.getWatchdogUsers(
-                server_id).items():
+        for user_id, user_settings in self.settings.getWatchdogUsers(server_id).items():
             user_cooldown = user_settings['cooldown']
             request_user_id = user_settings['request_user_id']
             reason = user_settings['reason'] or 'no reason'
@@ -453,12 +434,10 @@ class AutoMod2(commands.Cog):
             member = ctx.guild.get_member(int(user_id))
             if user_cooldown and member:
                 msg += '\n{} ({})\n\tcooldown {}\n\tby {} because [{}]'.format(
-                    member.name, member.id, user_cooldown, request_user_txt,
-                    reason)
+                    member.name, member.id, user_cooldown, request_user_txt, reason)
 
         msg += '\n\nPhrases'
-        for name, phrase_settings in self.settings.getWatchdogPhrases(
-                server_id).items():
+        for name, phrase_settings in self.settings.getWatchdogPhrases(server_id).items():
             phrase_cooldown = phrase_settings['cooldown']
             request_user_id = phrase_settings['request_user_id']
             phrase = phrase_settings['phrase']
@@ -475,8 +454,7 @@ class AutoMod2(commands.Cog):
     @watchdog.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def user(self, ctx, user: discord.User, cooldown: int = None, *,
-                   reason: str = ''):
+    async def user(self, ctx, user: discord.User, cooldown: int = None, *, reason: str = ''):
         """Keep an eye on a user.
 
         Whenever the user speaks in this server, a note will be printed to the watchdog
@@ -484,31 +462,24 @@ class AutoMod2(commands.Cog):
         """
         server_id = ctx.guild.id
         if cooldown is None:
-            user_settings = self.settings.getWatchdogUsers(server_id).get(
-                user.id, {})
+            user_settings = self.settings.getWatchdogUsers(server_id).get(user.id, {})
             existing_cd = user_settings.get('cooldown', 0)
             if existing_cd == 0:
                 await ctx.send(inline('No watchdog for that user'))
             else:
-                await ctx.send(inline(
-                    'Watchdog set with cooldown of {} seconds'.format(
-                        existing_cd)))
+                await ctx.send(inline('Watchdog set with cooldown of {} seconds'.format(existing_cd)))
         else:
             self.settings.setWatchdogUser(
                 server_id, user.id, ctx.author.id, cooldown, reason)
             if cooldown == 0:
-                await ctx.send(
-                    inline('Watchdog cleared for {}'.format(user.name)))
+                await ctx.send(inline('Watchdog cleared for {}'.format(user.name)))
             else:
-                await ctx.send(inline(
-                    'Watchdog set on {} with cooldown of {} seconds'.format(
-                        user.name, cooldown)))
+                await ctx.send(inline('Watchdog set on {} with cooldown of {} seconds'.format(user.name, cooldown)))
 
     @watchdog.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def phrase(self, ctx, name: str, cooldown: int, *,
-                     phrase: str = None):
+    async def phrase(self, ctx, name: str, cooldown: int, *, phrase: str = None):
         """Keep an eye out for a phrase (regex).
 
         Whenever the regex is matched, a note will be printed to the watchdog
@@ -521,8 +492,7 @@ class AutoMod2(commands.Cog):
         if cooldown == 0:
             self.settings.setWatchdogPhrase(
                 server_id, name, None, None, None)
-            await ctx.send(
-                inline('Watchdog phrase cleared for {}'.format(name)))
+            await ctx.send(inline('Watchdog phrase cleared for {}'.format(name)))
             return
 
         try:
@@ -533,12 +503,9 @@ class AutoMod2(commands.Cog):
         if cooldown < 300:
             await ctx.send(inline('Overriding cooldown to minimum'))
             cooldown = 300
-        self.settings.setWatchdogPhrase(server_id, name, ctx.author.id,
-                                        cooldown, phrase)
+        self.settings.setWatchdogPhrase(server_id, name, ctx.author.id, cooldown, phrase)
         self.server_phrase_last[server_id][name] = None
-        await ctx.send(inline(
-            'Watchdog named {} set on {} with cooldown of {} seconds'.format(
-                name, phrase, cooldown)))
+        await ctx.send(inline('Watchdog named {} set on {} with cooldown of {} seconds'.format(name, phrase, cooldown)))
 
     @watchdog.command()
     @commands.guild_only()
@@ -551,8 +518,7 @@ class AutoMod2(commands.Cog):
 
     @commands.Cog.listener('on_message')
     async def mod_message_watchdog(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel,
-                                                               discord.abc.PrivateChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.abc.PrivateChannel):
             return
         if self.settings.getWatchdogChannel(message.guild.id) is None:
             return
@@ -582,8 +548,7 @@ class AutoMod2(commands.Cog):
         now = datetime.utcnow()
         last_spoke_at = self.server_user_last[server_id].get(user_id)
         self.server_user_last[server_id][user_id] = now
-        time_since = (
-                    now - last_spoke_at).total_seconds() if last_spoke_at else 9999
+        time_since = (now - last_spoke_at).total_seconds() if last_spoke_at else 9999
 
         report = time_since > cooldown
         if not report:
@@ -598,8 +563,7 @@ class AutoMod2(commands.Cog):
         server_id = message.guild.id
         watchdog_channel_id = self.settings.getWatchdogChannel(server_id)
 
-        for phrase_settings in self.settings.getWatchdogPhrases(
-                server_id).values():
+        for phrase_settings in self.settings.getWatchdogPhrases(server_id).values():
             name = phrase_settings['name']
             cooldown = phrase_settings['cooldown']
             request_user_id = phrase_settings['request_user_id']
@@ -610,8 +574,7 @@ class AutoMod2(commands.Cog):
 
             now = datetime.utcnow()
             last_spoke_at = self.server_phrase_last[server_id].get(name)
-            time_since = (
-                        now - last_spoke_at).total_seconds() if last_spoke_at else 9999
+            time_since = (now - last_spoke_at).total_seconds() if last_spoke_at else 9999
 
             report = time_since > cooldown
             if not report:
@@ -638,20 +601,17 @@ class AutoMod2(commands.Cog):
             await delete_msg.delete()
             await delete_msg.author.send(outgoing_msg)
         except Exception as e:
-            logger.exception(
-                'Failure while deleting message from {}, tried to send : {}'.format(
-                    delete_msg.author.name, outgoing_msg))
+            logger.exception('Failure while deleting message from {}, tried to send : {}'.format(
+                delete_msg.author.name, outgoing_msg))
 
     def patternsToTableText(self, patterns):
-        tbl = prettytable.PrettyTable(
-            ["Rule Name", "Include regex", "Exclude regex"])
+        tbl = prettytable.PrettyTable(["Rule Name", "Include regex", "Exclude regex"])
         tbl.hrules = prettytable.HEADER
         tbl.vrules = prettytable.NONE
         tbl.align = "l"
 
         for value in patterns:
-            tbl.add_row([value['name'], value['include_pattern'],
-                         value['exclude_pattern']])
+            tbl.add_row([value['name'], value['include_pattern'], value['exclude_pattern']])
 
         return tsutils.strip_right_multiline(tbl.get_string())
 
@@ -710,9 +670,7 @@ class AutoMod2Settings(CogSettings):
             channels = server['channels']
             for channel_id in list(channels.keys()):
                 channel = channels[channel_id]
-                if any([channel.get(x) for x in
-                        ['whitelist', 'blacklist', 'image_limit',
-                         'auto_emojis_type']]):
+                if any([channel.get(x) for x in ['whitelist', 'blacklist', 'image_limit', 'auto_emojis_type']]):
                     continue
                 channels.pop(channel_id)
 
@@ -859,8 +817,7 @@ class AutoMod2Settings(CogSettings):
             watchdog[key] = {}
         return watchdog[key]
 
-    def setWatchdogUser(self, server_id, user_id, request_user_id,
-                        cooldown_secs, reason):
+    def setWatchdogUser(self, server_id, user_id, request_user_id, cooldown_secs, reason):
         watchdog_users = self.getWatchdogUsers(server_id)
         if cooldown_secs:
             watchdog_users[user_id] = {
@@ -879,8 +836,7 @@ class AutoMod2Settings(CogSettings):
             watchdog[key] = {}
         return watchdog[key]
 
-    def setWatchdogPhrase(self, server_id, name, request_user_id, cooldown_secs,
-                          phrase):
+    def setWatchdogPhrase(self, server_id, name, request_user_id, cooldown_secs, phrase):
         watchdog_phrases = self.getWatchdogPhrases(server_id)
         if cooldown_secs:
             watchdog_phrases[name] = {
@@ -902,52 +858,30 @@ class AutoMod2Settings(CogSettings):
         }
 
         for gid in self.bot_settings['configs']:
-            for uid in tsutils.deepget(self.bot_settings,
-                                       ['configs', gid, 'watchdog', 'users'],
-                                       []):
+            for uid in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
                 if user_id == tsutils.deepget(self.bot_settings,
-                                              ['configs', gid, 'watchdog',
-                                               'users', uid, 'request_user_id'],
-                                              -2141):
+                                              ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
                     o['bannings'] += 1
-            for phr in tsutils.deepget(self.bot_settings,
-                                       ['configs', gid, 'watchdog', 'phrases'],
-                                       []):
+            for phr in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases'], []):
                 if user_id == tsutils.deepget(self.bot_settings,
-                                              ['configs', gid, 'watchdog',
-                                               'phrases', phr,
-                                               'request_user_id'], -2141):
+                                              ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
                     o['phrases'] += 1
-            if user_id in tsutils.deepget(self.bot_settings,
-                                          ['configs', gid, 'watchdog', 'users'],
-                                          []):
-                o['baduser'].append(
-                    self.bot_settings['configs'][gid]['watchdog']['users'][
-                        user_id]['reason'])
+            if user_id in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
+                o['baduser'].append(self.bot_settings['configs'][gid]['watchdog']['users'][user_id]['reason'])
 
         return o
 
     def clearUserData(self, user_id):
         # Anonymize requesting banners and phrasemakers
         for gid in self.bot_settings['configs']:
-            for uid in tsutils.deepget(self.bot_settings,
-                                       ['configs', gid, 'watchdog', 'users'],
-                                       []):
+            for uid in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
                 if user_id == tsutils.deepget(self.bot_settings,
-                                              ['configs', gid, 'watchdog',
-                                               'users', uid, 'request_user_id'],
-                                              -2141):
-                    self.bot_settings['configs'][gid]['watchdog']['users'][uid][
-                        'request_user_id'] = -1
-            for phr in tsutils.deepget(self.bot_settings,
-                                       ['configs', gid, 'watchdog', 'phrases'],
-                                       []):
+                                              ['configs', gid, 'watchdog', 'users', uid, 'request_user_id'], -2141):
+                    self.bot_settings['configs'][gid]['watchdog']['users'][uid]['request_user_id'] = -1
+            for phr in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'phrases'], []):
                 if user_id == tsutils.deepget(self.bot_settings,
-                                              ['configs', gid, 'watchdog',
-                                               'phrases', phr,
-                                               'request_user_id'], -2141):
-                    self.bot_settings['configs'][gid]['watchdog']['phrases'][
-                        phr]['request_user_id'] = -1
+                                              ['configs', gid, 'watchdog', 'phrases', phr, 'request_user_id'], -2141):
+                    self.bot_settings['configs'][gid]['watchdog']['phrases'][phr]['request_user_id'] = -1
         self.save_settings()
 
     def clearUserDataFull(self, user_id):
@@ -955,9 +889,6 @@ class AutoMod2Settings(CogSettings):
 
         # Remove bannees
         for gid in self.bot_settings['configs']:
-            if user_id in tsutils.deepget(self.bot_settings,
-                                          ['configs', gid, 'watchdog', 'users'],
-                                          []):
-                del self.bot_settings['configs'][gid]['watchdog']['users'][
-                    user_id]
+            if user_id in tsutils.deepget(self.bot_settings, ['configs', gid, 'watchdog', 'users'], []):
+                del self.bot_settings['configs'][gid]['watchdog']['users'][user_id]
         self.save_settings()

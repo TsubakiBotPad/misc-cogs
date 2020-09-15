@@ -5,15 +5,14 @@ import re
 import time
 import traceback
 import tsutils
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from redbot.core import commands, Config, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, pagify, box
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
-tz_lookup = dict(
-    [(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
-     for x in pytz.all_timezones])
+tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
+                  for x in pytz.all_timezones])
 
 time_at_regeces = [
     r'^\s*(?P<year>\d{4})[-/](?P<month>\d+)[-/](?P<day>\d+) (?P<hour>\d+):(?P<minute>\d\d) ?(?P<merid>pm|am)? ?(?P<input>.*)$',
@@ -25,8 +24,7 @@ time_at_regeces = [
 
 time_in_regeces = [
     r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b (.+)$',  # One tinstr
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*\|\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',
-    # Unused
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*\|\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
 ]
 
 exact_tats = [
@@ -92,8 +90,7 @@ class TimeCog(commands.Cog):
         """Delete a user's personal data."""
         await self.config.user_from_id(user_id).clear()
 
-    @commands.group(aliases=['remindmeat', 'remindmein'],
-                    invoke_without_command=True)
+    @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
     async def remindme(self, ctx, *, time):
         """Reminds you to do something at a specified time
 
@@ -115,8 +112,7 @@ class TimeCog(commands.Cog):
 
             if not user_tz_str:
                 await ctx.send(
-                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(
-                        ctx))
+                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(ctx))
                 return
 
             now = datetime.now(tz=user_timezone)
@@ -154,26 +150,22 @@ class TimeCog(commands.Cog):
             ir = time_in_regeces[0]
             match = re.search(ir, time, re.IGNORECASE)
             if not match:  # Only use the first one
-                raise commands.UserFeedbackCheckFailure(
-                    "Invalid time string: " + time)
+                raise commands.UserFeedbackCheckFailure("Invalid time string: " + time)
             tinstrs, input = match.groups()
             rmtime = datetime.utcnow()
             try:
                 rmtime += tin2tdelta(tinstrs)
             except OverflowError:
                 raise commands.UserFeedbackCheckFailure(
-                    inline(
-                        "That's way too far in the future!  Please keep it in your lifespan!"))
+                    inline("That's way too far in the future!  Please keep it in your lifespan!"))
 
         if rmtime < (datetime.utcnow() - timedelta(seconds=1)):
-            raise commands.UserFeedbackCheckFailure(
-                inline("You can't set a reminder in the past!  If only..."))
+            raise commands.UserFeedbackCheckFailure(inline("You can't set a reminder in the past!  If only..."))
 
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), input))
 
-        response = "I will tell you " + format_rm_time(rmtime, input,
-                                                       user_timezone)
+        response = "I will tell you " + format_rm_time(rmtime, input, user_timezone)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -200,32 +192,28 @@ class TimeCog(commands.Cog):
         start = (datetime.utcnow() + tin2tdelta(tinstart)).timestamp()
         async with self.config.channel(ctx.channel).schedules() as scs:
             scs.append((start, tin2tdelta(tinstrs).seconds, input))
-        m = await ctx.send(
-            "Schedule created.  I will send a message on my next cycle (10s or less)")
+        m = await ctx.send("Schedule created.  I will send a message on my next cycle (10s or less)")
         await asyncio.sleep(5.)
         await m.delete()
 
     @remindme.command(aliases=["list"])
     async def get(self, ctx):
         """Get a list of all pending reminders"""
-        rlist = sorted((await self.config.user(ctx.author).reminders()),
-                       key=lambda x: x[0])
+        rlist = sorted((await self.config.user(ctx.author).reminders()), key=lambda x: x[0])
         if not rlist:
             await ctx.send(inline("You have no pending reminders!"))
             return
         tz = tzstr_to_tz(await self.config.user(ctx.author).tz())
         o = []
         for c, (timestamp, input) in enumerate(rlist):
-            o.append(str(c + 1) + ": " + format_rm_time(
-                datetime.fromtimestamp(float(timestamp)), input, tz))
+            o.append(str(c + 1) + ": " + format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz))
         o = "```\n" + '\n'.join(o) + "\n```"
         await ctx.send(o)
 
     @remindme.command(name="remove")
     async def remindme_remove(self, ctx, no: int):
         """Remove a specific pending reminder"""
-        rlist = sorted(await self.config.user(ctx.author).reminders(),
-                       key=lambda x: x[0])
+        rlist = sorted(await self.config.user(ctx.author).reminders(), key=lambda x: x[0])
         if len(rlist) < no:
             await ctx.send(inline("There is no reminder #{}".format(no)))
             return
@@ -254,10 +242,8 @@ class TimeCog(commands.Cog):
         else:
             match = re.search(time_in_regeces[1], text, re.IGNORECASE)
             if not match:
-                if name.isdigit() or re.search(time_in_regeces[0], name + " .",
-                                               re.IGNORECASE):
-                    await ctx.send(
-                        "Invalid interval.  Remember to put 'name' as the first argument.")
+                if name.isdigit() or re.search(time_in_regeces[0], name + " .", re.IGNORECASE):
+                    await ctx.send("Invalid interval.  Remember to put 'name' as the first argument.")
                 else:
                     await ctx.send_help()
                 return
@@ -429,18 +415,12 @@ class TimeCog(commands.Cog):
         async with self.config.guild(ctx.guild).schedules() as schedules:
             o = ""
             for n, s in schedules.items():
-                o += " - {}{}\n".format(n, " (disabled)" if not s[
-                    'enabled'] else " (expired)" if s[
-                                                        'end'] < datetime.utcnow().timestamp() else "")
-                o += "   - Start Time: {}\n".format(
-                    datetime.fromtimestamp(s['start']).strftime(
-                        SHORT_DT_FORMAT))
-                o += "   - Next Time: {}\n".format(
-                    datetime.fromtimestamp(s['time']).strftime(SHORT_DT_FORMAT))
-                o += "   - End Time: {}\n".format(
-                    datetime.fromtimestamp(s['end']).strftime(SHORT_DT_FORMAT))
-                o += "   - Interval: {}\n".format(
-                    timedelta(seconds=s['interval']))
+                o += " - {}{}\n".format(n, " (disabled)" if not s['enabled'] else " (expired)" if s[
+                                                                                                      'end'] < datetime.utcnow().timestamp() else "")
+                o += "   - Start Time: {}\n".format(datetime.fromtimestamp(s['start']).strftime(SHORT_DT_FORMAT))
+                o += "   - Next Time: {}\n".format(datetime.fromtimestamp(s['time']).strftime(SHORT_DT_FORMAT))
+                o += "   - End Time: {}\n".format(datetime.fromtimestamp(s['end']).strftime(SHORT_DT_FORMAT))
+                o += "   - Interval: {}\n".format(timedelta(seconds=s['interval']))
                 o += "   - Message: {}\n".format(s['message'])
         if not o:
             await ctx.send(inline("There are no schedules for this guild."))
@@ -453,35 +433,28 @@ class TimeCog(commands.Cog):
         try:
             v = tzstr_to_tz(tzstr)
             await self.config.user(ctx.author).tz.set(tzstr)
-            await ctx.send(inline(
-                "Set personal timezone to {} ({})".format(str(v),
-                                                          get_tz_name(v))))
+            await ctx.send(inline("Set personal timezone to {} ({})".format(str(v), get_tz_name(v))))
         except IOError as e:
             await ctx.send(inline("Invalid tzstr: " + tzstr))
 
     async def reminderloop(self):
         await self.bot.wait_until_ready()
-        async for _ in tsutils.repeating_timer(10,
-                                               lambda: self == self.bot.get_cog(
-                                                       'TimeCog')):
+        async for _ in tsutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
             urs = await self.config.all_users()
             gds = await self.config.all_guilds()
             now = datetime.utcnow()
             for u in urs:
                 for rm in urs[u]['reminders']:
                     if datetime.fromtimestamp(float(rm[0])) < now:
-                        async with self.config.user(
-                                self.bot.get_user(u)).reminders() as rms:
+                        async with self.config.user(self.bot.get_user(u)).reminders() as rms:
                             rms.remove(rm)
                         await self.bot.get_user(u).send(rm[1])
             for g in gds:
                 for n, sc in gds[g]['schedules'].items():
-                    if datetime.fromtimestamp(sc['end']) < now or not sc[
-                        'enabled']:
+                    if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
                         continue
                     if datetime.fromtimestamp(float(sc['time'])) < now:
-                        async with self.config.guild(
-                                self.bot.get_guild(g)).schedules() as scs:
+                        async with self.config.guild(self.bot.get_guild(g)).schedules() as scs:
                             scs[n]['time'] += scs[n]['interval']
                         for ch in sc['channels']:
                             await self.bot.get_channel(ch).send(sc['message'])
@@ -496,8 +469,7 @@ class TimeCog(commands.Cog):
             return
 
         now = datetime.now(tz_obj)
-        msg = "The time in " + now.strftime('%Z') + " is " + fmt_time_short(
-            now).strip()
+        msg = "The time in " + now.strftime('%Z') + " is " + fmt_time_short(now).strip()
         await ctx.send(inline(msg))
 
     @commands.command()
@@ -540,8 +512,7 @@ class TimeCog(commands.Cog):
 
             if not user_tz_str:
                 await ctx.send(
-                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(
-                        ctx))
+                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(ctx))
                 return
 
             now = datetime.now(tz=user_timezone)
@@ -578,16 +549,14 @@ class TimeCog(commands.Cog):
             ir = exact_tins[0]
             match = re.search(ir, time, re.IGNORECASE)
             if not match:  # Only use the first one
-                raise commands.UserFeedbackCheckFailure(
-                    "Invalid time string: " + time)
+                raise commands.UserFeedbackCheckFailure("Invalid time string: " + time)
             tinstrs, = match.groups()
             rmtime = datetime.utcnow()
             try:
                 rmtime += tin2tdelta(tinstrs)
             except OverflowError:
                 raise commands.UserFeedbackCheckFailure(
-                    inline(
-                        "That's way too far in the future!  Please keep it in your lifespan!"))
+                    inline("That's way too far in the future!  Please keep it in your lifespan!"))
 
         return rmtime
 
@@ -675,8 +644,7 @@ def tin2tdelta(tinstr):
                     "Invalid unit: {}\nPlease use minutes, hours, days, weeks, months, or, if you're feeling especially zealous, years.".format(
                         unit)))
         except OverflowError:
-            raise commands.UserFeedbackCheckFailure(
-                inline("Come on... Be reasonable :/"))
+            raise commands.UserFeedbackCheckFailure(inline("Come on... Be reasonable :/"))
     return o
 
 

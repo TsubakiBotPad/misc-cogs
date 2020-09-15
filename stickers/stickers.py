@@ -11,8 +11,7 @@ STICKER_COG = None
 
 
 async def is_sticker_admin_check(ctx):
-    return STICKER_COG.settings.check_admin(
-        ctx.author.id) or await ctx.bot.is_owner(ctx.author)
+    return STICKER_COG.settings.check_admin(ctx.author.id) or await ctx.bot.is_owner(ctx.author)
 
 
 def is_sticker_admin():
@@ -153,8 +152,7 @@ class Stickers(commands.Cog):
 
         if image_url:
             footer_text = message.content + ' posted by ' + message.author.name
-            embed = discord.Embed().set_image(url=image_url).set_footer(
-                text=footer_text)
+            embed = discord.Embed().set_image(url=image_url).set_footer(text=footer_text)
             await message.channel.send(embed=embed)
             await message.delete()
 

@@ -52,10 +52,8 @@ class Speech(commands.Cog):
         api_key_file = self.settings.get_key_file()
         if api_key_file:
             try:
-                credentials = service_account.Credentials.from_service_account_file(
-                    api_key_file)
-                self.service = texttospeech.TextToSpeechClient(
-                    credentials=credentials)
+                credentials = service_account.Credentials.from_service_account_file(api_key_file)
+                self.service = texttospeech.TextToSpeechClient(credentials=credentials)
             except:
                 logger.warning('speech setup failed')
 
@@ -74,8 +72,7 @@ class Speech(commands.Cog):
 
         voice = ctx.author.voice
         if not voice:
-            await ctx.send(
-                inline('You must be in a voice channel to use this command'))
+            await ctx.send(inline('You must be in a voice channel to use this command'))
             return
 
         channel = voice.voice_channel
@@ -101,8 +98,7 @@ class Speech(commands.Cog):
                 audio_encoding=texttospeech.enums.AudioEncoding.MP3)
 
             synthesis_input = texttospeech.types.SynthesisInput(text=text)
-            response = self.service.synthesize_speech(synthesis_input, voice,
-                                                      audio_config)
+            response = self.service.synthesize_speech(synthesis_input, voice, audio_config)
 
             with open(SPOOL_PATH, 'wb') as out:
                 out.write(response.audio_content)
@@ -125,11 +121,8 @@ class Speech(commands.Cog):
             b_options = '-guess_layout_max 0 -v 16'
             a_options = ''
 
-            audio_source = discord.FFmpegPCMAudio(audio_path, options=a_options,
-                                                  before_options=b_options)
-            voice_client.play(audio_source,
-                              after=corowrap(voice_client.disconnect(),
-                                             self.bot.loop))
+            audio_source = discord.FFmpegPCMAudio(audio_path, options=a_options, before_options=b_options)
+            voice_client.play(audio_source, after=corowrap(voice_client.disconnect(), self.bot.loop))
             return True
         except Exception as e:
             logger.exception("Exception:")
@@ -145,8 +138,7 @@ class Speech(commands.Cog):
     async def setkeyfile(self, ctx, api_key_file):
         """Sets the google api key file."""
         self.settings.set_key_file(api_key_file)
-        await ctx.send(
-            "done, make sure the key file is in the data/speech directory")
+        await ctx.send("done, make sure the key file is in the data/speech directory")
 
 
 class SpeechSettings(CogSettings):

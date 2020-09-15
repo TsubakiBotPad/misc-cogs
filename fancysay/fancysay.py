@@ -54,16 +54,14 @@ class FancySay(commands.Cog):
         except Exception as ex:
             await ctx.send(inline('Error: failed to set role mentionable'))
             if ex.text == "Missing Permissions":
-                message = await ctx.send(inline(
-                    'Make sure this bot\'s role is higher than the one you\'re mentioning'))
+                message = await ctx.send(inline('Make sure this bot\'s role is higher than the one you\'re mentioning'))
                 await asyncio.sleep(3)
                 await message.delete()
             return
 
         await ctx.message.delete()
         await asyncio.sleep(1)
-        await ctx.send(
-            'From {}:\n{}\n{}'.format(ctx.author.mention, role.mention, text))
+        await ctx.send('From {}:\n{}\n{}'.format(ctx.author.mention, role.mention, text))
 
         try:
             await role.edit(mentionable=False)
@@ -89,8 +87,7 @@ class FancySay(commands.Cog):
 
     @fancysay.command()
     @checks.bot_has_permissions(embed_links=True)
-    async def title_description_image_footer(self, ctx, title, description,
-                                             image, footer):
+    async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
 
         You must specify a title. You can omit any of description, image, or footer.

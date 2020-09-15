@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import discord
 import logging
-from redbot.core import commands, Config, checks, modlog
+from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
@@ -82,14 +82,11 @@ class GlobalBan(commands.Cog):
                 try:
                     if m is None:
                         try:
-                            await guild.ban(discord.Object(id=uid),
-                                            reason="GlobalBan",
-                                            delete_message_days=0)
+                            await guild.ban(discord.Object(id=uid), reason="GlobalBan", delete_message_days=0)
                         except discord.errors.NotFound:
                             pass
                     else:
-                        await guild.ban(m, reason="GlobalBan",
-                                        delete_message_days=0)
+                        await guild.ban(m, reason="GlobalBan", delete_message_days=0)
                     await modlog.create_case(bot=self.bot,
                                              guild=guild,
                                              created_at=datetime.datetime.now(),
@@ -97,9 +94,7 @@ class GlobalBan(commands.Cog):
                                              user=m,
                                              reason='GlobalBan')
                 except discord.Forbidden:
-                    logger.warning(
-                        "Failed to ban user with ID {} in guild {}".format(uid,
-                                                                           guild.name))
+                    logger.warning("Failed to ban user with ID {} in guild {}".format(uid, guild.name))
 
     async def remove_gbs_guild(self, gid):
         guild = self.bot.get_guild(int(gid))
@@ -115,8 +110,7 @@ class GlobalBan(commands.Cog):
     async def remove_gbs_user(self, uid):
         for gid in await self.config.opted():
             guild = self.bot.get_guild(int(gid))
-            users = [b.user for b in await guild.bans() if
-                     b.user.id == int(uid)]
+            users = [b.user for b in await guild.bans() if b.user.id == int(uid)]
             if users:
                 try:
                     await guild.unban(users[0])

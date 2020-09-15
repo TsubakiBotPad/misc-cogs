@@ -5,8 +5,8 @@ import io
 import json
 import os
 import re
-from redbot.core import checks, data_manager, commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
+from redbot.core import checks, commands, data_manager
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 R_MESSAGE_LINK = r"https://discordapp.com/channels/(\d+)/(\d+)/(\d+)"
 R_ATTATCH_LINK = r"https://cdn.discordapp.com/attachments/\d+/\d+/.+"
@@ -44,14 +44,12 @@ class DataTransfer(commands.Cog):
         """Load data from another bot via an attatched .enc file. (Obtain this with [p]export)"""
 
     @_import.command(name="alias")
-    async def import_alias(self, ctx, bot_mention: discord.User,
-                           link_or_attatchment=None):
+    async def import_alias(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
         if not bot_mention == ctx.me:
             return
 
         if re.match(R_MESSAGE_LINK, link_or_attatchment):
-            m = await commands.MessageConverter().convert(ctx,
-                                                          link_or_attatchment)
+            m = await commands.MessageConverter().convert(ctx, link_or_attatchment)
             raw_data = await m.attachments[0].read()
         elif re.match(R_ATTATCH_LINK, link_or_attatchment):
             async with aiohttp.ClientSession() as session:
@@ -60,20 +58,17 @@ class DataTransfer(commands.Cog):
         elif ctx.message.attachments:
             raw_data = await ctx.message.attachments[0].read()
         elif link_or_attatchment is None:
-            await ctx.send(inline(
-                "Please supply the .enc file retrieved from export function."))
+            await ctx.send(inline("Please supply the .enc file retrieved from export function."))
             return
         else:
-            await ctx.send(inline(
-                "Invalid link to file.  Please use a message or attachment link."))
+            await ctx.send(inline("Invalid link to file.  Please use a message or attachment link."))
             return
 
         try:
             data = json.loads(base64.b64decode(raw_data).decode())
 
             for k, v in data.items():
-                await self.bot.get_cog("Alias").config.guild(ctx.guild).set_raw(
-                    k, value=v)
+                await self.bot.get_cog("Alias").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "alias")
             await ctx.tick()
@@ -85,22 +80,17 @@ class DataTransfer(commands.Cog):
         if not bot_mention == ctx.me:
             return
 
-        raw_data = (await self.bot.get_cog("Alias").config.all_guilds())[
-            ctx.guild.id]
+        raw_data = (await self.bot.get_cog("Alias").config.all_guilds())[ctx.guild.id]
         data = base64.b64encode(json.dumps(raw_data).encode())
-        await ctx.send(
-            file=discord.File(io.BytesIO(data), "alias_settings.enc"))
+        await ctx.send(file=discord.File(io.BytesIO(data), "alias_settings.enc"))
 
-    @_import.command(name="customcom",
-                     aliases=["cc", "customcommands", "customcommand"])
-    async def import_customcommand(self, ctx, bot_mention: discord.User,
-                                   link_or_attatchment=None):
+    @_import.command(name="customcom", aliases=["cc", "customcommands", "customcommand"])
+    async def import_customcommand(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
         if not bot_mention == ctx.me:
             return
 
         if re.match(R_MESSAGE_LINK, link_or_attatchment):
-            m = await commands.MessageConverter().convert(ctx,
-                                                          link_or_attatchment)
+            m = await commands.MessageConverter().convert(ctx, link_or_attatchment)
             raw_data = await m.attachments[0].read()
         elif re.match(R_ATTATCH_LINK, link_or_attatchment):
             async with aiohttp.ClientSession() as session:
@@ -109,47 +99,39 @@ class DataTransfer(commands.Cog):
         elif ctx.message.attachments:
             raw_data = await ctx.message.attachments[0].read()
         elif link_or_attatchment is None:
-            await ctx.send(inline(
-                "Please supply the .enc file retrieved from export function."))
+            await ctx.send(inline("Please supply the .enc file retrieved from export function."))
             return
         else:
-            await ctx.send(inline(
-                "Invalid link to file.  Please use a message or attachment link."))
+            await ctx.send(inline("Invalid link to file.  Please use a message or attachment link."))
             return
 
         try:
             data = json.loads(base64.b64decode(raw_data).decode())
 
             for k, v in data.items():
-                await self.bot.get_cog("CustomCommands").config.guild(
-                    ctx.guild).set_raw(k, value=v)
+                await self.bot.get_cog("CustomCommands").config.guild(ctx.guild).set_raw(k, value=v)
 
             await self.bot.get_cog("Core").reload(ctx, "customcom")
             await ctx.tick()
         except Exception as e:
             await ctx.send(inline("Invalid file."))
 
-    @_export.command(name="customcom",
-                     aliases=["cc", "customcommands", "customcommand"])
+    @_export.command(name="customcom", aliases=["cc", "customcommands", "customcommand"])
     async def export_customcommand(self, ctx, bot_mention: discord.Member):
         if not bot_mention == ctx.me:
             return
 
-        raw_data = \
-        (await self.bot.get_cog("CustomCommands").config.all_guilds())[
-            ctx.guild.id]
+        raw_data = (await self.bot.get_cog("CustomCommands").config.all_guilds())[ctx.guild.id]
         data = base64.b64encode(json.dumps(raw_data).encode())
         await ctx.send(file=discord.File(io.BytesIO(data), "cc_settings.enc"))
 
     @_import.command(name="memes", aliases=["meme"])
-    async def import_meme(self, ctx, bot_mention: discord.User,
-                          link_or_attatchment=None):
+    async def import_meme(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
         if not bot_mention == ctx.me:
             return
 
         if re.match(R_MESSAGE_LINK, link_or_attatchment):
-            m = await commands.MessageConverter().convert(ctx,
-                                                          link_or_attatchment)
+            m = await commands.MessageConverter().convert(ctx, link_or_attatchment)
             raw_data = await m.attachments[0].read()
         elif re.match(R_ATTATCH_LINK, link_or_attatchment):
             async with aiohttp.ClientSession() as session:
@@ -158,22 +140,17 @@ class DataTransfer(commands.Cog):
         elif ctx.message.attachments:
             raw_data = await ctx.message.attachments[0].read()
         elif link_or_attatchment is None:
-            await ctx.send(inline(
-                "Please supply the .enc file retrieved from export function."))
+            await ctx.send(inline("Please supply the .enc file retrieved from export function."))
             return
         else:
-            await ctx.send(inline(
-                "Invalid link to file.  Please use a message or attachment link."))
+            await ctx.send(inline("Invalid link to file.  Please use a message or attachment link."))
             return
 
         try:
             data = json.loads(base64.b64decode(raw_data).decode())
-            self.bot.get_cog("Memes").settings.bot_settings['configs'][
-                ctx.guild.id] = data['configs']
-            self.bot.get_cog("Memes").c_commands[ctx.guild.id] = data[
-                'commands']
-            json.dump(self.bot.get_cog("Memes").c_commands,
-                      open(self.bot.get_cog("Memes").file_path, 'w+'))
+            self.bot.get_cog("Memes").settings.bot_settings['configs'][ctx.guild.id] = data['configs']
+            self.bot.get_cog("Memes").c_commands[ctx.guild.id] = data['commands']
+            json.dump(self.bot.get_cog("Memes").c_commands, open(self.bot.get_cog("Memes").file_path, 'w+'))
             await ctx.tick()
         except Exception as e:
             await ctx.send(inline("Invalid file."))
@@ -184,8 +161,7 @@ class DataTransfer(commands.Cog):
             return
 
         raw_data = {
-            'configs': self.bot.get_cog("Memes").settings.bot_settings[
-                'configs'].get(ctx.guild.id, {}),
+            'configs': self.bot.get_cog("Memes").settings.bot_settings['configs'].get(ctx.guild.id, {}),
             'commands': self.bot.get_cog("Memes").c_commands[ctx.guild.id],
         }
         data = base64.b64encode(json.dumps(raw_data).encode())
