@@ -1,21 +1,20 @@
+import discord
+import logging
 import os
+import prettytable
+import pytz
 import sqlite3 as lite
 import textwrap
 import timeit
-import logging
+import tsutils
 from collections import deque
 from datetime import datetime, timedelta
-
-import discord
-import prettytable
-import pytz
 from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box, pagify
 
-import tsutils
-
 logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
+
 
 def mod_help(self, ctx, help_type):
     hs = getattr(self, help_type)
@@ -23,11 +22,13 @@ def mod_help(self, ctx, help_type):
 
 
 commands.Command.format_help_for_context = lambda s, c: mod_help(s, c, "help")
-commands.Command.format_shortdoc_for_context = lambda s, c: mod_help(s, c, "short_doc")
+commands.Command.format_shortdoc_for_context = lambda s, c: mod_help(s, c,
+                                                                     "short_doc")
 
 
 def _data_file(file_name: str) -> str:
-    return os.path.join(str(data_manager.cog_data_path(raw_name='sqlactivitylog')), file_name)
+    return os.path.join(
+        str(data_manager.cog_data_path(raw_name='sqlactivitylog')), file_name)
 
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %X'  # YYYY-MM-DD HH:MM:SS
@@ -154,6 +155,7 @@ FROM messages
 WHERE user_id = :user_id
 '''
 
+
 class SqlActivityLogger(commands.Cog):
     """Log activity seen by bot"""
 
@@ -192,7 +194,8 @@ class SqlActivityLogger(commands.Cog):
                 "so data deletion requests can only be made by the bot owner and "
                 "Discord itself.  If you need your data deleted, please contact a "
                 "bot owner.\n\n\n")
-        data += await self.queryAndSave(None, None, USER_QUERY, values, column_data)
+        data += await self.queryAndSave(None, None, USER_QUERY, values,
+                                        column_data)
 
         return {"user_data.txt": BytesIO(data.encode())}
 
@@ -220,7 +223,9 @@ class SqlActivityLogger(commands.Cog):
         avg_time = round(sum(self.insert_timing) / size, 4)
         max_time = round(max(self.insert_timing), 4)
         min_time = round(min(self.insert_timing), 4)
-        await ctx.send(inline('{} inserts, min={} max={} avg={}'.format(size, min_time, max_time, avg_time)))
+        await ctx.send(inline(
+            '{} inserts, min={} max={} avg={}'.format(size, min_time, max_time,
+                                                      avg_time)))
 
     @commands.command()
     @checks.is_owner()
@@ -288,10 +293,12 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, CHANNEL_QUERY, values, column_data)
+        await self.queryAndPrint(ctx, server, CHANNEL_QUERY, values,
+                                 column_data)
 
     @exlog.command()
-    async def userchannel(self, ctx, user: discord.User, channel: discord.TextChannel, count=10):
+    async def userchannel(self, ctx, user: discord.User,
+                          channel: discord.TextChannel, count=10):
         """exlog userchannel "{0.author.name}" #general_chat 100
 
         List of messages from a user in a given channel.
@@ -311,7 +318,8 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, USER_CHANNEL_QUERY, values, column_data)
+        await self.queryAndPrint(ctx, server, USER_CHANNEL_QUERY, values,
+                                 column_data)
 
     @exlog.command()
     async def query(self, ctx, query, count=10):
@@ -342,14 +350,18 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, CONTENT_QUERY, values, column_data)
+        await self.queryAndPrint(ctx, server, CONTENT_QUERY, values,
+                                 column_data)
 
-    async def queryAndPrint(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
-        result_text = queryAndSave(self, ctx, server, query, values, column_data, max_rows, verbose)
+    async def queryAndPrint(self, ctx, server, query, values, column_data,
+                            max_rows=MAX_LOGS * 2, verbose=True):
+        result_text = queryAndSave(self, ctx, server, query, values,
+                                   column_data, max_rows, verbose)
         for p in pagify(result_text):
             await ctx.send(box(p))
 
-    async def queryAndSave(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
+    async def queryAndSave(self, ctx, server, query, values, column_data,
+                           max_rows=MAX_LOGS * 2, verbose=True):
         before_time = timeit.default_timer()
         cursor = self.con.execute(query, values)
         rows = cursor.fetchall()
@@ -360,7 +372,8 @@ class SqlActivityLogger(commands.Cog):
 
         results_columns = [d[0] for d in cursor.description]
         column_data = [r for r in column_data if r[0] in results_columns]
-        for missing_col in [col for col in results_columns if col not in [c[0] for c in column_data]]:
+        for missing_col in [col for col in results_columns if
+                            col not in [c[0] for c in column_data]]:
             column_data.append((missing_col, missing_col))
 
         column_names = [c[0] for c in column_data]

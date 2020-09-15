@@ -1,14 +1,12 @@
 """
 Utilities for managing moderator notes about users.
 """
-import re
-
 import discord
+import re
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box, pagify
-
 from tsutils import CogSettings
 
 
@@ -57,10 +55,12 @@ class ModNotes(commands.Cog):
     async def add(self, ctx, user: discord.User, *, note_text: str):
         """Add a note to a user."""
         timestamp = str(ctx.message.created_at)[:-7]
-        msg = 'Added by {} ({}): {}'.format(ctx.author.name, timestamp, note_text)
+        msg = 'Added by {} ({}): {}'.format(ctx.author.name, timestamp,
+                                            note_text)
         server_id = ctx.guild.id
         notes = self.settings.addNoteForUser(server_id, user.id, msg)
-        await ctx.send(inline('Done. User {} now has {} notes'.format(user.name, len(notes))))
+        await ctx.send(inline(
+            'Done. User {} now has {} notes'.format(user.name, len(notes))))
 
     @usernotes.command()
     @checks.mod_or_permissions(manage_guild=True)
@@ -74,7 +74,9 @@ class ModNotes(commands.Cog):
         note = notes[note_num - 1]
         notes.remove(note)
         self.settings.setNotesForUser(ctx.guild.id, user.id, notes)
-        await ctx.send(inline('Removed note {}. User has {} remaining.'.format(note_num, len(notes))))
+        await ctx.send(inline(
+            'Removed note {}. User has {} remaining.'.format(note_num,
+                                                             len(notes))))
         await ctx.send(box(note))
 
     @usernotes.command()
@@ -85,7 +87,8 @@ class ModNotes(commands.Cog):
         msg = 'Notes for {} users'.format(len(user_notes))
         for user_id, notes in user_notes.items():
             user = ctx.guild.get_member(user_id)
-            user_text = '{} ({})'.format(user.name, user.id) if user else user_id
+            user_text = '{} ({})'.format(user.name,
+                                         user.id) if user else user_id
             msg += '\n\t{} : {}'.format(len(notes), user_text)
 
         for page in pagify(msg):

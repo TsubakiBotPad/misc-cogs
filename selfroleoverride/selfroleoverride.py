@@ -1,11 +1,11 @@
+import asyncio
+import discord.utils
 import json
 import re
-import discord.utils
-import asyncio
-
 from redbot.core import checks, Config
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box, pagify
+
 
 class SelfRoleConverterOverride(commands.Converter):
     async def convert(self, ctx: commands.Context, arg: str) -> discord.Role:
@@ -32,11 +32,11 @@ class SelfRoleConverterOverride(commands.Converter):
                                "possibilities.  Please inform a moderator.")
             role = pool[0]
 
-
-
         if role.id not in selfroles:
-            raise commands.BadArgument("The provided role is not a valid selfrole.")
+            raise commands.BadArgument(
+                "The provided role is not a valid selfrole.")
         return role
+
 
 class SelfRoleOverride(commands.Cog):
     """Overrides of builtin commands"""
@@ -79,7 +79,8 @@ class SelfRoleOverride(commands.Cog):
         pass
 
     @selfrole.command(name="add")
-    async def selfrole_add(self, ctx: commands.Context, *, selfrole: SelfRoleConverterOverride):
+    async def selfrole_add(self, ctx: commands.Context, *,
+                           selfrole: SelfRoleConverterOverride):
         """
         Add a selfrole to yourself.
 
@@ -92,7 +93,8 @@ class SelfRoleOverride(commands.Cog):
         await self._addrole(ctx, ctx.author, selfrole, check_user=False)
 
     @selfrole.command(name="remove")
-    async def selfrole_remove(self, ctx: commands.Context, *, selfrole: SelfRoleConverterOverride):
+    async def selfrole_remove(self, ctx: commands.Context, *,
+                              selfrole: SelfRoleConverterOverride):
         """
         Remove a selfrole from yourself.
 
@@ -120,5 +122,6 @@ class SelfRoleOverride(commands.Cog):
             await ctx.send("There are currently no selfroles.")
             return
 
-        msg = "Available Selfroles:\n{selfroles}".format(selfroles=fmt_selfroles)
+        msg = "Available Selfroles:\n{selfroles}".format(
+            selfroles=fmt_selfroles)
         await ctx.send(box(msg, "diff"))
