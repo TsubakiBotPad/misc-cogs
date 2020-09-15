@@ -1,11 +1,14 @@
 import asyncio
 import datetime
-import discord
 import re
 import sys
+
+import discord
 from redbot.core import checks, modlog, commands
 from redbot.core.utils.chat_formatting import inline, box, pagify
+
 from tsutils import CogSettings
+
 
 USER_HELP = """
 Bot user help
@@ -147,10 +150,8 @@ class TrUtils(commands.Cog):
     @commands.command()
     @checks.is_owner()
     async def loadallcogs(self, ctx):
-        cogs = ['tsutils', 'AutoMod2', 'ChannelMod', 'Donations', 'FancySay',
-                'Memes',
-                'PadBoard', 'Profile', 'Stickers', 'StreamCopy', 'Translate',
-                'VoiceRole',
+        cogs = ['tsutils', 'AutoMod2', 'ChannelMod', 'Donations', 'FancySay', 'Memes',
+                'PadBoard', 'Profile', 'Stickers', 'StreamCopy', 'Translate', 'VoiceRole',
                 'Dadguide', 'PadGlobal', 'PadInfo']
 
         owner_cog = self.bot.get_cog('Core')
@@ -158,13 +159,11 @@ class TrUtils(commands.Cog):
         for cog_name in cogs:
             cog = self.bot.get_cog(cog_name)
             if cog is None:
-                await ctx.send(
-                    '{} not loaded, trying to load it...'.format(cog_name))
+                await ctx.send('{} not loaded, trying to load it...'.format(cog_name))
                 try:
                     await ctx.invoke(owner_cog.load, cog_name.lower())
                 except Exception as e:
-                    await ctx.send(box("Loading cog failed: {}: {}".format(
-                        e.__class__.__name__, str(e))))
+                    await ctx.send(box("Loading cog failed: {}: {}".format(e.__class__.__name__, str(e))))
         await ctx.tick()
 
     @commands.command(hidden=True)
@@ -218,8 +217,7 @@ class TrUtils(commands.Cog):
 
         avatar = (
             "Bot avatars supplied by:\n"
-            "\t[Tsubaki]({}): {}").format("https://twitter.com/_violebot",
-                                          "Violebot")
+            "\t[Tsubaki]({}): {}").format("https://twitter.com/_violebot", "Violebot")
 
         using = (
             "You can use `{0.prefix}help` to get a full list of commands.\n"
@@ -230,8 +228,7 @@ class TrUtils(commands.Cog):
         embed = discord.Embed()
         embed.add_field(name="Instance owned by", value='The Tsubaki Team')
         embed.add_field(name="About the bot", value=about, inline=False)
-        embed.add_field(name="Using the bot", value=using.format(ctx),
-                        inline=False)
+        embed.add_field(name="Using the bot", value=using.format(ctx), inline=False)
         embed.add_field(name="Avatar credits", value=avatar, inline=False)
         embed.set_thumbnail(url=self.bot.user.avatar_url)
 
@@ -295,9 +292,8 @@ class TrUtils(commands.Cog):
                 try:
                     result = await result
                 except Exception as e:
-                    await ctx.send(
-                        box('{}: {}'.format(type(e).__name__, str(e)),
-                            lang="py"))
+                    await ctx.send(box('{}: {}'.format(type(e).__name__, str(e)),
+                                       lang="py"))
             else:
                 await ctx.send(result)
 
@@ -317,27 +313,23 @@ class TrUtils(commands.Cog):
                     msg += '\n\tUser already banned from {}'.format(guild.name)
                     continue
             except:
-                msg += '\n\tNot allowed to ban in {}; nothing I can do here'.format(
-                    guild.name)
+                msg += '\n\tNot allowed to ban in {}; nothing I can do here'.format(guild.name)
                 continue
 
             m = guild.get_member(user.id)
             if m is None:
                 try:
                     await self.bot.http.ban(user.id, guild.id, 0)
-                    msg += '\n\tUser not in {}; added to hackban'.format(
-                        guild.name)
+                    msg += '\n\tUser not in {}; added to hackban'.format(guild.name)
                     await modlog.create_case(bot=self.bot,
                                              guild=guild,
                                              created_at=datetime.datetime.now(),
                                              action_type="hackban",
                                              moderator=ctx.author,
                                              user=user,
-                                             reason='SuperBan by bot owner: {}'.format(
-                                                 reason))
+                                             reason='SuperBan by bot owner: {}'.format(reason))
                 except Exception as ex:
-                    msg += '\n\tUser not in {}; hackban failed: {}'.format(
-                        guild.name, ex)
+                    msg += '\n\tUser not in {}; hackban failed: {}'.format(guild.name, ex)
                 continue
             try:
                 await m.ban(delete_message_days=0)
@@ -348,17 +340,14 @@ class TrUtils(commands.Cog):
                                          action_type="ban",
                                          moderator=ctx.author,
                                          user=user,
-                                         reason='SuperBan by bot owner: {}'.format(
-                                             reason))
+                                         reason='SuperBan by bot owner: {}'.format(reason))
             except Exception as ex:
-                msg += '\n\tFailed to ban from {} because {}'.format(guild.name,
-                                                                     ex)
+                msg += '\n\tFailed to ban from {} because {}'.format(guild.name, ex)
 
         for page in pagify(msg):
             await ctx.send(box(page))
 
-    async def _send_feedback(self, ctx, message: str, feedback_channel,
-                             success_message: str):
+    async def _send_feedback(self, ctx, message: str, feedback_channel, success_message: str):
         if feedback_channel is None:
             raise commands.UserFeedbackCheckFailure("Feedback channel not set")
 
@@ -397,11 +386,9 @@ class TrUtils(commands.Cog):
 
         Use this command to provide public feedback on the bot.
         """
-        feedback_channel = self.bot.get_channel(
-            int(self.settings.get_feedback_channel()))
+        feedback_channel = self.bot.get_channel(int(self.settings.get_feedback_channel()))
         await self._send_feedback(ctx, message, feedback_channel,
-                                  " Join the Tsubaki Server to see any responses ({0.prefix}tsubakiserver).".format(
-                                      ctx))
+                    " Join the Tsubaki Server to see any responses ({0.prefix}tsubakiserver).".format(ctx))
 
     @commands.command()
     @commands.guild_only()
@@ -418,11 +405,9 @@ class TrUtils(commands.Cog):
 
         Use this command to submit feedback on https://pad.protic.site or the JP translations.
         """
-        feedback_channel = self.bot.get_channel(
-            int(self.settings.get_blog_feedback_channel()))
+        feedback_channel = self.bot.get_channel(int(self.settings.get_blog_feedback_channel()))
         await self._send_feedback(ctx, message, feedback_channel,
-                                  " Join the PDX Server to see any responses ({0.prefix}pdx).".format(
-                                      ctx))
+            " Join the PDX Server to see any responses ({0.prefix}pdx).".format(ctx))
 
     @commands.command()
     @commands.guild_only()
@@ -440,8 +425,7 @@ class TrUtils(commands.Cog):
         try:
             new_mentionable = not role.mentionable
             await role.edit(mentionable=new_mentionable)
-            await ctx.send(inline('Role is now {}mentionable'.format(
-                '' if new_mentionable else 'un')))
+            await ctx.send(inline('Role is now {}mentionable'.format('' if new_mentionable else 'un')))
         except Exception as ex:
             await ctx.send(inline('Error: failed to alter role'))
 
@@ -455,15 +439,13 @@ class TrUtils(commands.Cog):
             await ctx.send("Invalid Command: {}".format(full_cmd))
             return
         _send = ctx.send
-
         async def fakesend(*args, **kwargs):
             if "Reloaded " in args[0]:
                 return
             await _send(*args, **kwargs)
 
         ctx.send = fakesend
-        await self.bot.get_cog("Core").reload(ctx,
-                                              cmd.cog.__module__.split('.')[0])
+        await self.bot.get_cog("Core").reload(ctx, cmd.cog.__module__.split('.')[0])
 
         ctx.send = _send
         ctx.message.content = full_cmd
@@ -480,13 +462,11 @@ class TrUtils(commands.Cog):
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = (bts.decode() if bts else "" for bts in
-                              await process.communicate())
+            stdout, stderr = (bts.decode() if bts else "" for bts in await process.communicate())
 
         if stderr.startswith("WARNING: You are using pip version"):
             if updatepip:
-                await ctx.send(stderr.split('You should consider')[
-                                   0] + '\n\nUpdating pip...')
+                await ctx.send(stderr.split('You should consider')[0]+'\n\nUpdating pip...')
                 await self.pipupdate(ctx, 'pip', False)
             stderr = ""
 
@@ -510,15 +490,14 @@ class TrUtils(commands.Cog):
         for member in ctx.channel.members:
             conline += member.status.name == "online"
             cmobile += member.is_on_mobile()
-        await ctx.send(
-            box("There are {} members online ({} online on mobile).\n"
-                "There are {} members online in this channel ({} online on mobile).")
-            .format(gonline, gmobile, conline, cmobile))
+        await ctx.send(box("There are {} members online ({} online on mobile).\n"
+                           "There are {} members online in this channel ({} online on mobile).")
+                            .format(gonline, gmobile, conline, cmobile))
 
     @commands.command()
     async def servercount(self, ctx):
-        await ctx.send("{} is in {} servers.".format(self.bot.user.name,
-                                                     len(self.bot.guilds)))
+        await ctx.send("{} is in {} servers.".format(self.bot.user.name, len(self.bot.guilds)))
+
 
 
 class TrUtilsSettings(CogSettings):

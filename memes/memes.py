@@ -1,17 +1,19 @@
-import base64
-import discord
-import io
 import json
 import os
 import re
+import base64
+import io
+
+import discord
 from redbot.core import checks, data_manager, commands
 from redbot.core.utils.chat_formatting import inline, box, pagify
+
+
 from tsutils import CogSettings, get_role_from_id, safe_read_json
 
 
 def _data_file(file_name: str) -> str:
-    return os.path.join(str(data_manager.cog_data_path(raw_name='memes')),
-                        file_name)
+    return os.path.join(str(data_manager.cog_data_path(raw_name='memes')), file_name)
 
 
 class Memes(commands.Cog):
@@ -22,8 +24,7 @@ class Memes(commands.Cog):
         self.bot = bot
         self.file_path = _data_file('commands.json')
         self.c_commands = safe_read_json(self.file_path)
-        self.c_commands = {int(k): v for k, v in
-                           self.c_commands.items()}  # Fix legacy issues
+        self.c_commands = {int(k): v for k, v in self.c_commands.items()}  # Fix legacy issues
         self.settings = MemesSettings("memes")
 
     async def red_get_data_for_user(self, *, user_id):
@@ -64,8 +65,7 @@ class Memes(commands.Cog):
             json.dump(self.c_commands, open(self.file_path, 'w+'))
             await ctx.send("Custom command successfully added.")
         else:
-            await ctx.send(
-                "This command already exists. Use editmeme to edit it.")
+            await ctx.send("This command already exists. Use editmeme to edit it.")
 
     @commands.command()
     @commands.guild_only()
@@ -86,11 +86,9 @@ class Memes(commands.Cog):
                 json.dump(self.c_commands, open(self.file_path, 'w+'))
                 await ctx.send("Custom command successfully edited.")
             else:
-                await ctx.send(
-                    "That command doesn't exist. Use addmeme [command] [text]")
+                await ctx.send("That command doesn't exist. Use addmeme [command] [text]")
         else:
-            await ctx.send(
-                "There are no custom memes in this server. Use addmeme [command] [text]")
+            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
 
     @commands.command()
     @commands.guild_only()
@@ -112,8 +110,7 @@ class Memes(commands.Cog):
             else:
                 await ctx.send("That meme doesn't exist.")
         else:
-            await ctx.send(
-                "There are no custom memes in this server. Use addmeme [command] [text]")
+            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
 
     @commands.command()
     @commands.guild_only()
@@ -147,13 +144,11 @@ class Memes(commands.Cog):
             for cmds in msg:
                 await ctx.author.send(cmds)
         else:
-            await ctx.send(
-                "There are no custom memes in this server. Use addmeme [command] [text]")
+            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
 
     @commands.Cog.listener('on_message')
     async def checkCC(self, message):
-        if len(message.content) < 2 or isinstance(message.channel,
-                                                  discord.abc.PrivateChannel):
+        if len(message.content) < 2 or isinstance(message.channel, discord.abc.PrivateChannel):
             return
 
         guild = message.guild

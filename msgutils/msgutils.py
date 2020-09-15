@@ -1,10 +1,12 @@
 import asyncio
 import datetime
-import discord
 import re
+
+import discord
+from redbot.core.bot import Red
+
 from redbot.core import checks, modlog
 from redbot.core import commands
-from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box, pagify
 
 
@@ -27,8 +29,7 @@ class MsgUtils(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(manage_guild=True)
-    async def editmsg(self, ctx, channel: discord.TextChannel, msg_id: int, *,
-                      new_msg: str):
+    async def editmsg(self, ctx, channel: discord.TextChannel, msg_id: int, *, new_msg: str):
         """Given a channel and an ID for a message printed in that channel, replaces it.
 
         To find a message ID, enable developer mode in Discord settings and
@@ -37,8 +38,7 @@ class MsgUtils(commands.Cog):
         try:
             msg = await channel.fetch_message(msg_id)
         except discord.NotFound:
-            await ctx.send(inline(
-                'Cannot find that message, check the channel and message id'))
+            await ctx.send(inline('Cannot find that message, check the channel and message id'))
             return
         except discord.Forbidden:
             await ctx.send(inline('No permissions to do that'))
@@ -52,8 +52,7 @@ class MsgUtils(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(manage_guild=True)
-    async def dumpchannel(self, ctx, channel: discord.TextChannel,
-                          msg_id: int = None):
+    async def dumpchannel(self, ctx, channel: discord.TextChannel, msg_id: int = None):
         """Given a channel and an ID for a message printed in that channel, dumps it
         boxed with formatting escaped and some issues cleaned up.
 
@@ -72,8 +71,7 @@ class MsgUtils(commands.Cog):
         """
         await self._dump(ctx, ctx.channel, msg_id)
 
-    async def _dump(self, ctx, channel: discord.TextChannel = None,
-                    msg_id: int = None):
+    async def _dump(self, ctx, channel: discord.TextChannel = None, msg_id: int = None):
         if msg_id:
             msg = await channel.fetch_message(msg_id)
         else:
@@ -81,8 +79,7 @@ class MsgUtils(commands.Cog):
             async for message in channel.history(limit=msg_limit):
                 msg = message
         content = msg.content.strip()
-        content = re.sub(r'<(:[0-9a-z_]+:)\d{18}>', r'\1', content,
-                         flags=re.IGNORECASE)
+        content = re.sub(r'<(:[0-9a-z_]+:)\d{18}>', r'\1', content, flags=re.IGNORECASE)
         content = box(content.replace('`', u'\u200b`'))
         await ctx.send(content)
 

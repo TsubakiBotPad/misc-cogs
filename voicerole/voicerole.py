@@ -9,7 +9,6 @@ from tsutils import CogSettings, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.voicerole')
 
-
 class VoiceRole(commands.Cog):
     """Gives a custom to anyone who enters a voice channel.
 
@@ -51,9 +50,7 @@ class VoiceRole(commands.Cog):
             else:
                 await member.remove_roles(role)
         except Exception as ex:
-            logger.exception(
-                'voicerole failure {} {} {}'.format(guild_id, channel_id,
-                                                    role_id))
+            logger.exception('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id))
 
     @commands.group()
     @commands.guild_only()
@@ -87,8 +84,7 @@ class VoiceRole(commands.Cog):
     async def list(self, ctx):
         """List the channel/role associations for this server."""
         msg = 'Channel -> Role:'
-        for channel_id, role_id in self.settings.get_channel_roles(
-                ctx.guild.id).items():
+        for channel_id, role_id in self.settings.get_channel_roles(ctx.guild.id).items():
             msg += '\n\t{} : {}'.format(channel_id, role_id)
         await ctx.send(box(msg))
 
