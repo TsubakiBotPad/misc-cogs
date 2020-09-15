@@ -3,24 +3,24 @@ Utilities for managing misbehaving users and facilitating administrator
 communication about role changes.
 """
 
+import discord
 import logging
 from collections import defaultdict
 from collections import deque
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
-
 from tsutils import CogSettings, get_role, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.baduser')
 
 LOGS_PER_USER = 10
 
+
 def opted_in(ctx):
     return ctx.guild.id in ctx.bot.get_cog("BadUser").settings.buEnabled()
+
 
 class BadUser(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
@@ -162,9 +162,12 @@ class BadUser(commands.Cog):
     async def togglestrikeprivacy(self, ctx):
         """Change strike existance policy."""
         server = ctx.guild
-        self.settings.setStrikesPrivate(server.id, not self.settings.getStrikesPrivate(server.id))
+        self.settings.setStrikesPrivate(server.id,
+                                        not self.settings.getStrikesPrivate(
+                                            server.id))
         output = '\nStrike existance is now ' + \
-                 'private' if self.settings.getStrikesPrivate(server.id) else 'public'
+                 'private' if self.settings.getStrikesPrivate(
+            server.id) else 'public'
         await ctx.send(inline(output))
 
     @baduser.command()
@@ -200,7 +203,8 @@ class BadUser(commands.Cog):
 
         output += '\nStrike contents are private'
         output += '\nStrike existence is ' + \
-                  ('private' if self.settings.getStrikesPrivate(server.id) else 'public')
+                  ('private' if self.settings.getStrikesPrivate(
+                      server.id) else 'public')
 
         await ctx.send(box(output))
 
@@ -225,7 +229,8 @@ class BadUser(commands.Cog):
         server_id = ctx.guild.id
         self.settings.updateBadUser(server_id, user.id, msg)
         strikes = self.settings.countUserStrikes(server_id, user.id)
-        await ctx.send(box('Done. User {} now has {} strikes'.format(user.name, strikes)))
+        await ctx.send(
+            box('Done. User {} now has {} strikes'.format(user.name, strikes)))
 
     @baduser.command()
     @commands.guild_only()
@@ -248,7 +253,8 @@ class BadUser(commands.Cog):
             return
 
         for idx, strike in enumerate(strikes):
-            await ctx.send(inline('Strike {} of {}:'.format(idx + 1, len(strikes))))
+            await ctx.send(
+                inline('Strike {} of {}:'.format(idx + 1, len(strikes))))
             await ctx.send(box(strike))
 
     @baduser.command()
@@ -265,7 +271,9 @@ class BadUser(commands.Cog):
         strike = strikes[strike_num - 1]
         strikes.remove(strike)
         self.settings.setUserStrikes(ctx.guild.id, user.id, strikes)
-        await ctx.send(inline('Removed strike {}. User has {} remaining.'.format(strike_num, len(strikes))))
+        await ctx.send(inline(
+            'Removed strike {}. User has {} remaining.'.format(strike_num,
+                                                               len(strikes))))
         await ctx.send(box(strike))
 
     @baduser.command()
@@ -283,14 +291,17 @@ class BadUser(commands.Cog):
                 continue
 
             if self.settings.getStrikesPrivate(server.id):
-                error_messages.append("Server '{}' set its strikes private".format(server.name))
+                error_messages.append(
+                    "Server '{}' set its strikes private".format(server.name))
                 continue
 
             try:
                 ban_list = await server.bans()
             except:
                 ban_list = list()
-                error_messages.append("Server '{}' refused access to ban list".format(server.name))
+                error_messages.append(
+                    "Server '{}' refused access to ban list".format(
+                        server.name))
 
             for banentry in ban_list:
                 user_id_to_ban_server[banentry.user.id].append(server.id)
@@ -305,21 +316,26 @@ class BadUser(commands.Cog):
         otheruser_entries = list()
 
         for member in cur_server.members:
-            local_strikes = self.settings.getUserStrikes(cur_server.id, member.id)
+            local_strikes = self.settings.getUserStrikes(cur_server.id,
+                                                         member.id)
             other_baduser_servers = user_id_to_baduser_server[member.id]
             other_banned_servers = user_id_to_ban_server[member.id]
 
-            if not len(local_strikes) and not len(other_baduser_servers) and not len(other_banned_servers):
+            if not len(local_strikes) and not len(
+                    other_baduser_servers) and not len(other_banned_servers):
                 continue
 
             tmp_msg = "{} ({})".format(member.name, member.id)
             if other_baduser_servers:
-                tmp_msg += "\n\tbad user in {} other servers".format(len(other_baduser_servers))
+                tmp_msg += "\n\tbad user in {} other servers".format(
+                    len(other_baduser_servers))
             if other_banned_servers:
-                tmp_msg += "\n\tbanned from {} other servers".format(len(other_banned_servers))
+                tmp_msg += "\n\tbanned from {} other servers".format(
+                    len(other_banned_servers))
 
             if len(local_strikes):
-                tmp_msg += "\n\t{} strikes in this server".format(len(local_strikes))
+                tmp_msg += "\n\t{} strikes in this server".format(
+                    len(local_strikes))
                 for strike in local_strikes:
                     tmp_msg += "\n\t\t{}".format(strike.splitlines()[0])
                 baduser_entries.append(tmp_msg)
@@ -327,12 +343,15 @@ class BadUser(commands.Cog):
                 otheruser_entries.append(tmp_msg)
 
         other_server_count = len(self.bot.guilds) - 1
-        other_ban_count = len([x for x, l in user_id_to_ban_server.items() if len(l)])
-        other_baduser_count = len([x for x, l in user_id_to_baduser_server.items() if len(l)])
+        other_ban_count = len(
+            [x for x, l in user_id_to_ban_server.items() if len(l)])
+        other_baduser_count = len(
+            [x for x, l in user_id_to_baduser_server.items() if len(l)])
         msg = "Across {} other servers, {} users are banned and {} have baduser entries".format(
             other_server_count, other_ban_count, other_baduser_count)
 
-        msg += "\n\n{} baduser entries for this server".format(len(baduser_entries))
+        msg += "\n\n{} baduser entries for this server".format(
+            len(baduser_entries))
         msg += "\n" + "\n".join(baduser_entries)
         msg += "\n\n{} entries for users with no record in this server".format(
             len(otheruser_entries))
@@ -372,7 +391,8 @@ class BadUser(commands.Cog):
 
     @commands.Cog.listener('on_message')
     async def log_message(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.abc.PrivateChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel,
+                                                               discord.abc.PrivateChannel):
             return
 
         if message.guild.id not in self.settings.buEnabled():
@@ -418,13 +438,17 @@ class BadUser(commands.Cog):
         if strikes:
             msg = 'Hey @here a user with {} strikes just joined the server: {}'.format(
                 strikes, member.mention)
-            await channel_obj.send(msg, allowed_mentions=discord.AllowedMentions(everyone=True))
+            await channel_obj.send(msg,
+                                   allowed_mentions=discord.AllowedMentions(
+                                       everyone=True))
 
         local_ban = self.settings.bannedUsers().get(member.id, None)
         if local_ban:
             msg = 'Hey @here locally banned user {} (for: {}) just joined the server'.format(
                 member.mention, local_ban)
-            await channel_obj.send(msg, allowed_mentions=discord.AllowedMentions(everyone=True))
+            await channel_obj.send(msg,
+                                   allowed_mentions=discord.AllowedMentions(
+                                       everyone=True))
 
     @commands.Cog.listener('on_member_update')
     async def check_punishment(self, before, after):
@@ -451,7 +475,8 @@ class BadUser(commands.Cog):
                 return
 
             if role.id in neutral_role_ids:
-                await self.recordRoleChange(after, role.name, True, send_ping=False)
+                await self.recordRoleChange(after, role.name, True,
+                                            send_ping=False)
                 return
 
         for role in removed_roles:
@@ -459,7 +484,8 @@ class BadUser(commands.Cog):
                 await self.recordRoleChange(after, role.name, False)
                 return
             if role.id in neutral_role_ids:
-                await self.recordRoleChange(after, role.name, False, send_ping=False)
+                await self.recordRoleChange(after, role.name, False,
+                                            send_ping=False)
                 return
 
     async def recordBadUser(self, member, role_name):
@@ -476,22 +502,31 @@ class BadUser(commands.Cog):
             await channel_obj.send(inline('Detected bad user'))
             await channel_obj.send(box(msg))
             followup_msg = 'Hey @here please leave a note explaining why this user is punished'
-            await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
-            await channel_obj.send('This user now has {} strikes'.format(strikes))
+            await channel_obj.send(followup_msg,
+                                   allowed_mentions=discord.AllowedMentions(
+                                       everyone=True))
+            await channel_obj.send(
+                'This user now has {} strikes'.format(strikes))
 
             try:
-                dm_msg = ('You were assigned the punishment role "{}" in the server "{}".\n'
-                          'The Mods will contact you shortly regarding this.\n'
-                          'Attempting to clear this role yourself will result in punishment.').format(role_name,
-                                                                                                      member.guild.name)
+                dm_msg = (
+                    'You were assigned the punishment role "{}" in the server "{}".\n'
+                    'The Mods will contact you shortly regarding this.\n'
+                    'Attempting to clear this role yourself will result in punishment.').format(
+                    role_name,
+                    member.guild.name)
                 await member.send(box(dm_msg))
                 await channel_obj.send('User successfully notified')
             except Exception as e:
-                await channel_obj.send('Failed to notify the user! I might be blocked\n' + box(str(e)))
+                await channel_obj.send(
+                    'Failed to notify the user! I might be blocked\n' + box(
+                        str(e)))
 
-    async def recordRoleChange(self, member, role_name, is_added, send_ping=True):
+    async def recordRoleChange(self, member, role_name, is_added,
+                               send_ping=True):
         msg = 'Detected role {} : Name={} Nick={} ID={} Joined={} Role={}'.format(
-            "Added" if is_added else "Removed", member.name, member.nick, member.id, member.joined_at, role_name)
+            "Added" if is_added else "Removed", member.name, member.nick,
+            member.id, member.joined_at, role_name)
 
         update_channel = self.settings.getChannel(member.guild.id)
         if update_channel is not None:
@@ -500,9 +535,12 @@ class BadUser(commands.Cog):
                 await channel_obj.send(inline(msg))
                 if send_ping:
                     followup_msg = 'Hey @here please leave a note explaining why this role was modified'
-                    await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
+                    await channel_obj.send(followup_msg,
+                                           allowed_mentions=discord.AllowedMentions(
+                                               everyone=True))
             except:
-                logger.warning('Failed to notify in {} {}'.format(update_channel, msg))
+                logger.warning(
+                    'Failed to notify in {} {}'.format(update_channel, msg))
 
 
 class BadUserSettings(CogSettings):

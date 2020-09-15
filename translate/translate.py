@@ -1,14 +1,13 @@
-import logging
-
 import discord
+import logging
 import romkan
-
 from googleapiclient.discovery import build
 from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
 logger = logging.getLogger('red.misc-cogs.translate')
+
 
 class Translate(commands.Cog):
     """Translation utilities."""
@@ -74,12 +73,16 @@ class Translate(commands.Cog):
         await ctx.send(romkan.to_roma(query))
 
     def translate_lang(self, source, target, query):
-        result = self.service.translations().list(source=source, target=target, format='text', q=query).execute()
+        result = self.service.translations().list(source=source, target=target,
+                                                  format='text',
+                                                  q=query).execute()
         return result.get('translations')[0].get('translatedText')
 
     def translate_to_embed(self, source, target, query):
         translation = self.translate_lang(source, target, query)
-        return discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation))
+        return discord.Embed(
+            description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(
+                query, translation))
 
     @translate.command()
     async def setkey(self, ctx, api_key):

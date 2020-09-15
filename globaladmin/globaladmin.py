@@ -7,6 +7,7 @@ from tsutils import CogSettings, tsutils
 
 logger = logging.getLogger('red.misc-cogs.globaladmin')
 
+
 class GlobalAdmin(commands.Cog):
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,7 +48,8 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def reset(self, ctx, perm_name):
         """Restore defaults for a perm for all users"""
-        if not await tsutils.confirm_message(ctx, "Are you sure you want to reset this perm to defaults?"):
+        if not await tsutils.confirm_message(ctx,
+                                             "Are you sure you want to reset this perm to defaults?"):
             return
         self.settings.refresh_perm(perm_name)
         await ctx.tick()
@@ -55,7 +57,8 @@ class GlobalAdmin(commands.Cog):
     @perms.command()
     async def unregister(self, ctx, perm_name):
         """Completely remove a perm from storage"""
-        if not await tsutils.confirm_message(ctx, "Are you sure you want to unregister this perm?"):
+        if not await tsutils.confirm_message(ctx,
+                                             "Are you sure you want to unregister this perm?"):
             return
         self.settings.refresh_perm(perm_name)
         self.settings.rm_perm(perm_name)
@@ -67,7 +70,9 @@ class GlobalAdmin(commands.Cog):
         msg = "Perms:\n"
         mlen = max([len(k) for k in self.settings.get_perms().keys()])
         for perm, default in self.settings.get_perms().items():
-            msg += " - {}{}(default: {})\n".format(perm, " "*(mlen-len(perm)+3), default)
+            msg += " - {}{}(default: {})\n".format(perm,
+                                                   " " * (mlen - len(perm) + 3),
+                                                   default)
         for page in pagify(msg):
             await ctx.send(box(page))
 
@@ -96,7 +101,6 @@ class GlobalAdmin(commands.Cog):
             await ctx.send(inline("No users have this perm."))
         for page in pagify("\n".join(us)):
             await ctx.send(box(page))
-
 
 
 class GlobalAdminSettings(CogSettings):

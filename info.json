@@ -1,5 +1,7 @@
 {
-    "author": ["The Tsubaki Bot Team"],
-    "description": "A collection of miscellaneous moderation and general use cogs.",
-    "short": "The Tsubotki Team General Use Cogs."
+  "author": [
+    "The Tsubaki Bot Team"
+  ],
+  "description": "A collection of miscellaneous moderation and general use cogs.",
+  "short": "The Tsubotki Team General Use Cogs."
 }

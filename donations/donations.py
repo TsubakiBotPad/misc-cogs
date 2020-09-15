@@ -1,13 +1,11 @@
+import discord
 import json
 import random
 import re
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, box
-
 from tsutils import CogSettings, clean_global_mentions
 
 DONATE_MSG = """
@@ -44,6 +42,7 @@ DEFAULT_LOVE = {
 def roll(chance: int):
     return random.randrange(100) < chance
 
+
 def is_patron(ctx):
     DCOG = ctx.bot.get_cog("Donations")
     if not DCOG.support_guild: return False
@@ -52,13 +51,16 @@ def is_patron(ctx):
         return False
     return True
 
+
 def is_donor(ctx):
     DCOG = ctx.bot.get_cog("Donations")
     if not DCOG.support_guild: return False
     author = DCOG.support_guild.get_member(ctx.author.id)
-    if author is None or (DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
+    if author is None or (
+            DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
         return False
     return True
+
 
 class Donations(commands.Cog):
     """Manages donations and perks."""
@@ -74,14 +76,16 @@ class Donations(commands.Cog):
             insults_json = {}
         self.insults_miru_reference = insults_json.get(
             'miru_references', DEFAULT_INSULTS['miru_references'])
-        self.insults_list = insults_json.get('insults', DEFAULT_INSULTS['insults'])
+        self.insults_list = insults_json.get('insults',
+                                             DEFAULT_INSULTS['insults'])
         try:
             love_json = json.load(open(LOVE_FILE, "r"))
         except:
             love_json = {}
         self.cute_list = love_json.get('cute', DEFAULT_LOVE['cute'])
         self.sexy_list = love_json.get('sexy', DEFAULT_LOVE['sexy'])
-        self.perverted_list = love_json.get('perverted', DEFAULT_LOVE['perverted'])
+        self.perverted_list = love_json.get('perverted',
+                                            DEFAULT_LOVE['perverted'])
 
         self.support_guild = None
         self.donor_role = None
@@ -93,7 +97,8 @@ class Donations(commands.Cog):
 
         data = "Stored data for user with ID {}:\n".format(user_id)
         if udata['command']:
-            data += " - You have setup the command '{}'.\n".format(udata['command'])
+            data += " - You have setup the command '{}'.\n".format(
+                udata['command'])
         if udata['embed']:
             data += " - You have setup the embed '{}'.\n".format(udata['embed'])
         if udata['insult']:
@@ -113,7 +118,7 @@ class Donations(commands.Cog):
 
     async def set_server_attributes(self):
         await self.bot.wait_until_ready()
-        drole,prole,server = self.settings.getDPS()
+        drole, prole, server = self.settings.getDPS()
         self.support_guild = self.bot.get_guild(server)
         self.donor_role = self.support_guild.get_role(drole)
         self.patron_role = self.support_guild.get_role(prole)
@@ -126,7 +131,8 @@ class Donations(commands.Cog):
             if self.donor_role in user.roles or self.patron_role in user.roles:
                 donor_names.add(user.name)
 
-        msg = DONATE_MSG.format(count=len(donor_names), donors=', '.join(sorted(donor_names)))
+        msg = DONATE_MSG.format(count=len(donor_names),
+                                donors=', '.join(sorted(donor_names)))
         await ctx.send(box(msg))
 
     @commands.command()
@@ -140,7 +146,8 @@ class Donations(commands.Cog):
 
     @commands.command()
     @commands.check(is_donor)
-    async def myembed(self, ctx, command: str, title: str, url: str, footer: str):
+    async def myembed(self, ctx, command: str, title: str, url: str,
+                      footer: str):
         """Sets your custom embed command.
 
         This lets you create a fancier image message. For example you can set up
@@ -161,7 +168,8 @@ class Donations(commands.Cog):
     @commands.check(is_donor)
     async def spankme(self, ctx):
         """You are trash."""
-        await ctx.send(ctx.author.mention + ' ' + random.choice(self.insults_list))
+        await ctx.send(
+            ctx.author.mention + ' ' + random.choice(self.insults_list))
 
     @commands.command()
     @commands.check(is_donor)
@@ -170,7 +178,8 @@ class Donations(commands.Cog):
         user_id = ctx.author.id
 
         self.settings.addInsultsEnabled(user_id)
-        await ctx.send(ctx.author.mention + ' ' 'Oh, I will.\n' + random.choice(self.insults_list))
+        await ctx.send(ctx.author.mention + ' ' 'Oh, I will.\n' + random.choice(
+            self.insults_list))
 
     @commands.command()
     @commands.check(is_donor)
@@ -191,7 +200,8 @@ class Donations(commands.Cog):
     async def lewdme(self, ctx):
         """So nsfw.."""
         if 'nsfw' in ctx.channel.name.lower():
-            await ctx.send(ctx.author.mention + ' ' + random.choice(self.sexy_list))
+            await ctx.send(
+                ctx.author.mention + ' ' + random.choice(self.sexy_list))
         else:
             await ctx.send(ctx.author.mention + ' Oooh naughty...')
             await ctx.author.send(random.choice(self.sexy_list))
@@ -201,7 +211,8 @@ class Donations(commands.Cog):
     async def pervme(self, ctx):
         """Hentai!!!."""
         if 'nsfw' in ctx.channel.name.lower():
-            await ctx.send(ctx.author.mention + ' ' + random.choice(self.perverted_list))
+            await ctx.send(
+                ctx.author.mention + ' ' + random.choice(self.perverted_list))
         else:
             await ctx.send(ctx.author.mention + ' Filthy hentai!')
             await ctx.author.send(random.choice(self.perverted_list))
@@ -226,9 +237,11 @@ class Donations(commands.Cog):
     @checks.is_owner()
     async def info(self, ctx):
         """Print donation related info."""
-        patrons = [user for user in self.support_guild.members if self.patron_role in user.roles]
-        donors = [user for user in self.support_guild.members if self.donor_role in user.roles
-                                                             and self.patron_role not in user.roles]
+        patrons = [user for user in self.support_guild.members if
+                   self.patron_role in user.roles]
+        donors = [user for user in self.support_guild.members if
+                  self.donor_role in user.roles
+                  and self.patron_role not in user.roles]
         cmds = self.settings.customCommands()
         embeds = self.settings.customEmbeds()
         disabled_servers = self.settings.disabledServers()
@@ -248,7 +261,8 @@ class Donations(commands.Cog):
         msg += '\n\nDisabled servers:'
         for server_id in disabled_servers:
             server = self.bot.get_guild(int(server_id))
-            msg += '\n\t{} ({})'.format(server.name if server else 'unknown', server_id)
+            msg += '\n\t{} ({})'.format(server.name if server else 'unknown',
+                                        server_id)
 
         msg += '\n\n{} personal commands are set'.format(len(cmds))
         msg += '\n{} personal embeds are set'.format(len(cmds))
@@ -257,7 +271,8 @@ class Donations(commands.Cog):
 
     @donations.command()
     @checks.is_owner()
-    async def setup(self, ctx, donor_role: discord.Role, patron_role: discord.Role):
+    async def setup(self, ctx, donor_role: discord.Role,
+                    patron_role: discord.Role):
         """Setup the Donor and Patron role from your Patreon enabled server."""
         self.settings.setDPS(donor_role.id, patron_role.id, ctx.guild.id)
         await self.set_server_attributes()
@@ -274,8 +289,10 @@ class Donations(commands.Cog):
         prefix = (await self.bot.get_prefix(message))[0]
 
         user_id = message.author.id
-        if user_id not in [user.id for user in self.support_guild.members if self.donor_role in user.roles] and \
-           user_id not in [user.id for user in self.support_guild.members if self.patron_role in user.roles]:
+        if user_id not in [user.id for user in self.support_guild.members if
+                           self.donor_role in user.roles] and \
+                user_id not in [user.id for user in self.support_guild.members
+                                if self.patron_role in user.roles]:
             return
 
         if message.guild and message.guild.id in self.settings.disabledServers():
@@ -321,7 +338,8 @@ class Donations(commands.Cog):
         msg = message.author.mention
 
         # Pretty frequently respond to direct messages
-        mentions_bot = re.search(r'(miru|myr|tsubaki) bot', content, re.IGNORECASE) and roll(40)
+        mentions_bot = re.search(r'(miru|myr|tsubaki) bot', content,
+                                 re.IGNORECASE) and roll(40)
         # Semi-frequently respond to miru in msg
         mentions_miru_and_roll = re.search(
             r'\b(miru|myr|tsubaki)\b', content, re.IGNORECASE) and roll(20)
@@ -356,7 +374,7 @@ class DonationsSettings(CogSettings):
             'custom_embeds': {},
             'disabled_servers': [],
             'insults_enabled': [],
-            'dps': (0,0,None),
+            'dps': (0, 0, None),
         }
         return config
 
@@ -427,7 +445,7 @@ class DonationsSettings(CogSettings):
             self.save_settings()
 
     def setDPS(self, d, p, s):
-        self.bot_settings['dps'] = (d,p,s)
+        self.bot_settings['dps'] = (d, p, s)
         self.save_settings()
 
     def getDPS(self):
@@ -442,7 +460,8 @@ class DonationsSettings(CogSettings):
         }
 
         if user_id in self.bot_settings['custom_commands']:
-            o['command'] = self.bot_settings['custom_commands'][user_id]["command"]
+            o['command'] = self.bot_settings['custom_commands'][user_id][
+                "command"]
         if user_id in self.bot_settings['custom_embeds']:
             o['embed'] = self.bot_settings['custom_embeds'][user_id]["command"]
         if user_id in self.bot_settings['insults_enabled']:
