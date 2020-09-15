@@ -1,13 +1,11 @@
+import discord
 import json
 import random
 import re
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, box
-
+from redbot.core.utils.chat_formatting import box, inline
 from tsutils import CogSettings, clean_global_mentions
 
 DONATE_MSG = """
@@ -44,6 +42,7 @@ DEFAULT_LOVE = {
 def roll(chance: int):
     return random.randrange(100) < chance
 
+
 def is_patron(ctx):
     DCOG = ctx.bot.get_cog("Donations")
     if not DCOG.support_guild: return False
@@ -52,6 +51,7 @@ def is_patron(ctx):
         return False
     return True
 
+
 def is_donor(ctx):
     DCOG = ctx.bot.get_cog("Donations")
     if not DCOG.support_guild: return False
@@ -59,6 +59,7 @@ def is_donor(ctx):
     if author is None or (DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
         return False
     return True
+
 
 class Donations(commands.Cog):
     """Manages donations and perks."""
@@ -113,7 +114,7 @@ class Donations(commands.Cog):
 
     async def set_server_attributes(self):
         await self.bot.wait_until_ready()
-        drole,prole,server = self.settings.getDPS()
+        drole, prole, server = self.settings.getDPS()
         self.support_guild = self.bot.get_guild(server)
         self.donor_role = self.support_guild.get_role(drole)
         self.patron_role = self.support_guild.get_role(prole)
@@ -228,7 +229,7 @@ class Donations(commands.Cog):
         """Print donation related info."""
         patrons = [user for user in self.support_guild.members if self.patron_role in user.roles]
         donors = [user for user in self.support_guild.members if self.donor_role in user.roles
-                                                             and self.patron_role not in user.roles]
+                  and self.patron_role not in user.roles]
         cmds = self.settings.customCommands()
         embeds = self.settings.customEmbeds()
         disabled_servers = self.settings.disabledServers()
@@ -275,7 +276,7 @@ class Donations(commands.Cog):
 
         user_id = message.author.id
         if user_id not in [user.id for user in self.support_guild.members if self.donor_role in user.roles] and \
-           user_id not in [user.id for user in self.support_guild.members if self.patron_role in user.roles]:
+                user_id not in [user.id for user in self.support_guild.members if self.patron_role in user.roles]:
             return
 
         if message.guild and message.guild.id in self.settings.disabledServers():
@@ -356,7 +357,7 @@ class DonationsSettings(CogSettings):
             'custom_embeds': {},
             'disabled_servers': [],
             'insults_enabled': [],
-            'dps': (0,0,None),
+            'dps': (0, 0, None),
         }
         return config
 
@@ -427,7 +428,7 @@ class DonationsSettings(CogSettings):
             self.save_settings()
 
     def setDPS(self, d, p, s):
-        self.bot_settings['dps'] = (d,p,s)
+        self.bot_settings['dps'] = (d, p, s)
         self.save_settings()
 
     def getDPS(self):

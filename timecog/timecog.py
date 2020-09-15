@@ -1,17 +1,15 @@
 import asyncio
+import discord
+import pytz
 import re
 import time
 import traceback
-from datetime import timedelta, datetime
-from dateutil.relativedelta import relativedelta
-
-import discord
-import pytz
-from redbot.core import commands, Config, checks
-from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, pagify, box
-
 import tsutils
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
                   for x in pytz.all_timezones])
@@ -25,8 +23,8 @@ time_at_regeces = [
 ]
 
 time_in_regeces = [
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b (.+)$', # One tinstr
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*\|\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$', #Unused
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b (.+)$',  # One tinstr
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*\|\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
 ]
 
 exact_tats = [
@@ -38,12 +36,11 @@ exact_tats = [
 ]
 
 exact_tins = [
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)$', # One tinstr
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)$',  # One tinstr
 ]
 
 DT_FORMAT = "%A, %b %-d, %Y at %-I:%M %p"
 SHORT_DT_FORMAT = "%b %-d, %Y at %-I:%M %p"
-
 
 
 class TimeCog(commands.Cog):
@@ -152,7 +149,7 @@ class TimeCog(commands.Cog):
         else:
             ir = time_in_regeces[0]
             match = re.search(ir, time, re.IGNORECASE)
-            if not match: # Only use the first one
+            if not match:  # Only use the first one
                 raise commands.UserFeedbackCheckFailure("Invalid time string: " + time)
             tinstrs, input = match.groups()
             rmtime = datetime.utcnow()
@@ -179,7 +176,7 @@ class TimeCog(commands.Cog):
         await ctx.author.send(input)
 
     @remindme.command()
-    @checks.is_owner() #Command is unfinished
+    @checks.is_owner()  # Command is unfinished
     async def every(self, ctx, *, text):
         await ctx.send("Test")
         match = re.search(time_in_regeces[1], text, re.IGNORECASE)
@@ -230,7 +227,6 @@ class TimeCog(commands.Cog):
         await self.config.user(ctx.author).reminders.set([])
         await ctx.tick()
 
-
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
     async def schedule(self, ctx, name, *, text):
@@ -246,7 +242,7 @@ class TimeCog(commands.Cog):
         else:
             match = re.search(time_in_regeces[1], text, re.IGNORECASE)
             if not match:
-                if name.isdigit() or re.search(time_in_regeces[0], name+" .", re.IGNORECASE):
+                if name.isdigit() or re.search(time_in_regeces[0], name + " .", re.IGNORECASE):
                     await ctx.send("Invalid interval.  Remember to put 'name' as the first argument.")
                 else:
                     await ctx.send_help()
@@ -418,8 +414,9 @@ class TimeCog(commands.Cog):
         """List the guild's schedules."""
         async with self.config.guild(ctx.guild).schedules() as schedules:
             o = ""
-            for n,s in schedules.items():
-                o += " - {}{}\n".format(n, " (disabled)" if not s['enabled'] else " (expired)" if s['end'] < datetime.utcnow().timestamp() else "")
+            for n, s in schedules.items():
+                o += " - {}{}\n".format(n, " (disabled)" if not s['enabled'] else " (expired)" if s[
+                                                                                                      'end'] < datetime.utcnow().timestamp() else "")
                 o += "   - Start Time: {}\n".format(datetime.fromtimestamp(s['start']).strftime(SHORT_DT_FORMAT))
                 o += "   - Next Time: {}\n".format(datetime.fromtimestamp(s['time']).strftime(SHORT_DT_FORMAT))
                 o += "   - End Time: {}\n".format(datetime.fromtimestamp(s['end']).strftime(SHORT_DT_FORMAT))
@@ -498,7 +495,7 @@ class TimeCog(commands.Cog):
         delta = req_time - now
 
         msg = ("There are " + fmt_hrs_mins(delta.seconds).strip() +
-              " until " + time.strip() + " in " + now.strftime('%Z'))
+               " until " + time.strip() + " in " + now.strftime('%Z'))
         await ctx.send(inline(msg))
 
     async def exact_tartintodt(self, ctx, time, allowtat=True):
@@ -551,7 +548,7 @@ class TimeCog(commands.Cog):
         else:
             ir = exact_tins[0]
             match = re.search(ir, time, re.IGNORECASE)
-            if not match: # Only use the first one
+            if not match:  # Only use the first one
                 raise commands.UserFeedbackCheckFailure("Invalid time string: " + time)
             tinstrs, = match.groups()
             rmtime = datetime.utcnow()
@@ -658,9 +655,9 @@ def ydhm(seconds):
     m, seconds = divmod(seconds, 60)
     y, d, h, m = [int(ydhm) for ydhm in (y, d, h, m)]
     ydhm = []
-    if y: ydhm.append("{} yr" .format(y) + ("s" if y > 1 else ''))
+    if y: ydhm.append("{} yr".format(y) + ("s" if y > 1 else ''))
     if d: ydhm.append("{} day".format(d) + ("s" if d > 1 else ''))
-    if h: ydhm.append("{} hr" .format(h) + ("s" if h > 1 else ''))
+    if h: ydhm.append("{} hr".format(h) + ("s" if h > 1 else ''))
     if m: ydhm.append("{} min".format(m) + ("s" if m > 1 else ''))
     return " ".join(ydhm) or "<1 minute"
 

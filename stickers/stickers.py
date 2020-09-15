@@ -1,12 +1,10 @@
+import discord
 import re
 from collections import defaultdict
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
-
 from tsutils import CogSettings
 
 STICKER_COG = None

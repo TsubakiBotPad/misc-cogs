@@ -1,15 +1,13 @@
 import asyncio
-import logging
 import ctypes.util
-
 import discord
+import logging
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
-
 from tsutils import CogSettings, corowrap
 
 logger = logging.getLogger('red.misc-cogs.speech')
@@ -124,7 +122,7 @@ class Speech(commands.Cog):
             a_options = ''
 
             audio_source = discord.FFmpegPCMAudio(audio_path, options=a_options, before_options=b_options)
-            voice_client.play(audio_source, after = corowrap(voice_client.disconnect(), self.bot.loop))
+            voice_client.play(audio_source, after=corowrap(voice_client.disconnect(), self.bot.loop))
             return True
         except Exception as e:
             logger.exception("Exception:")

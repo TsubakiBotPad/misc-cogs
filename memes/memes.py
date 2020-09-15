@@ -1,14 +1,11 @@
+import base64
+import discord
+import io
 import json
 import os
 import re
-import base64
-import io
-
-import discord
-from redbot.core import checks, data_manager, commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
-
-
+from redbot.core import checks, commands, data_manager
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, get_role_from_id, safe_read_json
 
 

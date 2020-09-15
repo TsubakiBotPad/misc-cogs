@@ -1,22 +1,20 @@
+import aioodbc
+import discord
+import logging
 import os
+import prettytable
+import pytz
 import re
 import sys
 import timeit
-import logging
+import tsutils
 from collections import deque
 from datetime import datetime, timedelta
-
-import aioodbc
-import discord
-import prettytable
-import pytz
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.commands import Context
-from redbot.core.utils.chat_formatting import inline, pagify, box
-
-import tsutils
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, NA_TZ_OBJ
 
 logger = logging.getLogger('red.misc-cogs.seniority')
@@ -116,6 +114,7 @@ GET_USER_DATA = '''
 SELECT * FROM seniority
 WHERE user_id = ?
 '''
+
 
 class Seniority(commands.Cog):
     """Automatically promote people based on activity."""

@@ -1,11 +1,11 @@
 import discord
 import logging
-from redbot.core import commands, checks, Config
-from redbot.core.utils.chat_formatting import box, pagify, inline
-
+from redbot.core import Config, checks, commands
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, tsutils
 
 logger = logging.getLogger('red.misc-cogs.globaladmin')
+
 
 class GlobalAdmin(commands.Cog):
     def __init__(self, bot, *args, **kwargs):
@@ -67,7 +67,7 @@ class GlobalAdmin(commands.Cog):
         msg = "Perms:\n"
         mlen = max([len(k) for k in self.settings.get_perms().keys()])
         for perm, default in self.settings.get_perms().items():
-            msg += " - {}{}(default: {})\n".format(perm, " "*(mlen-len(perm)+3), default)
+            msg += " - {}{}(default: {})\n".format(perm, " " * (mlen - len(perm) + 3), default)
         for page in pagify(msg):
             await ctx.send(box(page))
 
@@ -96,7 +96,6 @@ class GlobalAdmin(commands.Cog):
             await ctx.send(inline("No users have this perm."))
         for page in pagify("\n".join(us)):
             await ctx.send(box(page))
-
 
 
 class GlobalAdminSettings(CogSettings):

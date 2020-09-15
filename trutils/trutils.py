@@ -1,14 +1,11 @@
 import asyncio
 import datetime
+import discord
 import re
 import sys
-
-import discord
-from redbot.core import checks, modlog, commands
-from redbot.core.utils.chat_formatting import inline, box, pagify
-
+from redbot.core import checks, commands, modlog
+from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings
-
 
 USER_HELP = """
 Bot user help
@@ -388,7 +385,8 @@ class TrUtils(commands.Cog):
         """
         feedback_channel = self.bot.get_channel(int(self.settings.get_feedback_channel()))
         await self._send_feedback(ctx, message, feedback_channel,
-                    " Join the Tsubaki Server to see any responses ({0.prefix}tsubakiserver).".format(ctx))
+                                  " Join the Tsubaki Server to see any responses ({0.prefix}tsubakiserver).".format(
+                                      ctx))
 
     @commands.command()
     @commands.guild_only()
@@ -407,7 +405,7 @@ class TrUtils(commands.Cog):
         """
         feedback_channel = self.bot.get_channel(int(self.settings.get_blog_feedback_channel()))
         await self._send_feedback(ctx, message, feedback_channel,
-            " Join the PDX Server to see any responses ({0.prefix}pdx).".format(ctx))
+                                  " Join the PDX Server to see any responses ({0.prefix}pdx).".format(ctx))
 
     @commands.command()
     @commands.guild_only()
@@ -439,6 +437,7 @@ class TrUtils(commands.Cog):
             await ctx.send("Invalid Command: {}".format(full_cmd))
             return
         _send = ctx.send
+
         async def fakesend(*args, **kwargs):
             if "Reloaded " in args[0]:
                 return
@@ -466,7 +465,7 @@ class TrUtils(commands.Cog):
 
         if stderr.startswith("WARNING: You are using pip version"):
             if updatepip:
-                await ctx.send(stderr.split('You should consider')[0]+'\n\nUpdating pip...')
+                await ctx.send(stderr.split('You should consider')[0] + '\n\nUpdating pip...')
                 await self.pipupdate(ctx, 'pip', False)
             stderr = ""
 
@@ -492,12 +491,11 @@ class TrUtils(commands.Cog):
             cmobile += member.is_on_mobile()
         await ctx.send(box("There are {} members online ({} online on mobile).\n"
                            "There are {} members online in this channel ({} online on mobile).")
-                            .format(gonline, gmobile, conline, cmobile))
+                       .format(gonline, gmobile, conline, cmobile))
 
     @commands.command()
     async def servercount(self, ctx):
         await ctx.send("{} is in {} servers.".format(self.bot.user.name, len(self.bot.guilds)))
-
 
 
 class TrUtilsSettings(CogSettings):

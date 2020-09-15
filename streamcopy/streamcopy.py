@@ -1,17 +1,16 @@
 import asyncio
+import discord
+import logging
 import random
 import traceback
-import logging
-
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, box
-
+from redbot.core.utils.chat_formatting import box, inline
 from tsutils import CogSettings, get_role, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.streamcopy')
+
 
 class StreamCopy(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):

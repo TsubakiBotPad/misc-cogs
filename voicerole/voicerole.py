@@ -9,6 +9,7 @@ from tsutils import CogSettings, get_role_from_id
 
 logger = logging.getLogger('red.misc-cogs.voicerole')
 
+
 class VoiceRole(commands.Cog):
     """Gives a custom to anyone who enters a voice channel.
 
