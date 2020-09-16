@@ -2,8 +2,10 @@ import asyncio
 import ctypes.util
 import discord
 import logging
-from google.cloud import texttospeech
-from google.oauth2 import service_account
+from google.cloud import texttospeech as google_google_texttospeech
+from google.oauth2 import service_account as google_service_account
+from azure.cognitiveservices.speech import AudioDataStream, SpeechConfig, SpeechSynthesizer, SpeechSynthesisOutputFormat
+from azure.cognitiveservices.speech.audio import AudioOutputConfig
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -23,6 +25,16 @@ else:
 
 SPOOL_PATH = "data/speech/spool.mp3"
 
+TSUBAKI_SSML = """
+<speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
+  <voice name="zh-CN-XiaoxiaoNeural">
+    <prosody rate="-30.00%" pitch="-1Hz">
+      <mstts:express-as style="calm" styledegree="2">
+        {text}
+      </mstts:express-as>
+    </prosody>
+  </voice>
+</speak>"""
 
 class Speech(commands.Cog):
     """Speech utilities."""
@@ -32,8 +44,9 @@ class Speech(commands.Cog):
         self.bot = bot
         self.settings = SpeechSettings("speech")
 
-        self.service = None
-        self.try_setup_api()
+        self.gservice = None
+        self.aservice = None
+        self.try_setup_apis()
         self.busy = False
 
     async def red_get_data_for_user(self, *, user_id):
@@ -48,14 +61,22 @@ class Speech(commands.Cog):
         """
         return
 
-    def try_setup_api(self):
-        api_key_file = self.settings.get_key_file()
+    def try_setup_apis(self):
+        # Google Setup
+        api_key_file = self.settings.get_google_key_file()
         if api_key_file:
             try:
-                credentials = service_account.Credentials.from_service_account_file(api_key_file)
-                self.service = texttospeech.TextToSpeechClient(credentials=credentials)
+                credentials = google_service_account.Credentials.from_google_service_account_file(api_key_file)
+                self.gservice = google_texttospeech.google_texttospeechClient(credentials=credentials)
             except:
-                logger.warning('speech setup failed')
+                logger.warning('Google speech setup failed.  Check your API key.')
+
+        api_key = self.settings.get_azure_key()
+        if api_key:
+            try:
+                self.aservice = SpeechConfig(subscription=api_key, region="eastus")
+            except:
+                logger.warning('Azure speech setup failed.  Check your API key.')
 
     @commands.group()
     @checks.is_owner()
@@ -63,10 +84,9 @@ class Speech(commands.Cog):
         """Speech utilities."""
 
     @commands.command()
-    @checks.is_owner()
     async def vcsay(self, ctx, *, text):
         """Speak into the current user's voice channel."""
-        if not self.service:
+        if not (self.gservice or self.aservice):
             await ctx.send(inline('Set up an API key file first!'))
             return
 
@@ -75,13 +95,14 @@ class Speech(commands.Cog):
             await ctx.send(inline('You must be in a voice channel to use this command'))
             return
 
-        channel = voice.voice_channel
+        channel = voice.channel
 
         if len(text) > 300:
             await ctx.send(inline('Command is too long'))
             return
 
         await self.speak(ctx, channel, text)
+
 
     async def speak(self, ctx, channel, text: str):
         if self.busy:
@@ -90,18 +111,19 @@ class Speech(commands.Cog):
         else:
             self.busy = True
 
+        audio_data = None
+        if self.gservice:
+            audio_data = self.google_text_to_speech(text)
+        elif self.aservice:
+            audio_data = self.azure_text_to_speech(text)
+
+        if audio_data is None:
+            await ctx.send(inline("There are no avaliable services"))
+            return
+
         try:
-            voice = texttospeech.types.VoiceSelectionParams(
-                language_code='en-US', name='en-US-Wavenet-F')
-
-            audio_config = texttospeech.types.AudioConfig(
-                audio_encoding=texttospeech.enums.AudioEncoding.MP3)
-
-            synthesis_input = texttospeech.types.SynthesisInput(text=text)
-            response = self.service.synthesize_speech(synthesis_input, voice, audio_config)
-
             with open(SPOOL_PATH, 'wb') as out:
-                out.write(response.audio_content)
+                out.write(audio_data)
 
             await self.play_path(channel, SPOOL_PATH)
             return True
@@ -135,22 +157,66 @@ class Speech(commands.Cog):
 
     @speech.command()
     @checks.is_owner()
-    async def setkeyfile(self, ctx, api_key_file):
+    async def setgooglekeyfile(self, ctx, api_key_file):
         """Sets the google api key file."""
-        self.settings.set_key_file(api_key_file)
+        self.settings.set_google_key_file(api_key_file)
         await ctx.send("done, make sure the key file is in the data/speech directory")
+
+    @speech.command()
+    @checks.is_owner()
+    async def setazurekeyfile(self, ctx, api_key):
+        """Sets the azure api key."""
+        self.settings.set_azure_key(api_key)
+        await ctx.tick()
+
+    def google_text_to_speech(self, text):
+        try:
+            voice = google_texttospeech.types.VoiceSelectionParams(
+                language_code='en-US', name='en-US-Wavenet-F')
+
+            audio_config = google_texttospeech.types.AudioConfig(
+                audio_encoding=google_texttospeech.enums.AudioEncoding.MP3)
+
+            synthesis_input = google_texttospeech.types.SynthesisInput(text=text)
+            response = self.gservice.synthesize_speech(synthesis_input, voice, audio_config)
+            return response.audio_content
+        except Exception as e:
+            logger.exception("Google Text to Speech Failiure:")
+
+    def azure_text_to_speech(self, text):
+        try:
+            synthesizer = SpeechSynthesizer(speech_config=self.aservice, audio_config=None)
+            ssml = TSUBAKI_SSML.format(text=text)
+            result = synthesizer.speak_ssml_async(ssml).get()
+            data = result.audio_data
+            if not data:
+                logger.error(str(result.cancellation_details))
+            return data
+        except Exception as e:
+            logger.exception("Azure Text to Speech Failiure:")
 
 
 class SpeechSettings(CogSettings):
     def make_default_settings(self):
         config = {
-            'google_api_key_file': ''
+            'google_api_key_file': '',
+            'azure_api_key': ''
         }
         return config
 
-    def get_key_file(self):
+    def get_google_key_file(self):
         return self.bot_settings.get('google_api_key_file')
 
-    def set_key_file(self, api_key_file):
+    def set_google_key_file(self, api_key_file):
         self.bot_settings['google_api_key_file'] = api_key_file
         self.save_settings()
+
+    def get_azure_key(self):
+        return self.bot_settings.get('azure_api_key')
+
+    def set_azure_key(self, api_key):
+        self.bot_settings['azure_api_key'] = api_key
+        self.save_settings()
+
+    def valid_keys():
+        return any(self.bot_settings.values())
