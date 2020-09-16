@@ -21,7 +21,8 @@
     "google-api",
     "google-api-python-client",
     "google-cloud",
-    "google-cloud-texttospeech"
+    "google-cloud-texttospeech",
+    "azure-cognitiveservices-speech"
   ],
   "tags": [
     "audio"
