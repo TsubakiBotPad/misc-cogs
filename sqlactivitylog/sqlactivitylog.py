@@ -345,7 +345,7 @@ class SqlActivityLogger(commands.Cog):
         await self.queryAndPrint(ctx, server, CONTENT_QUERY, values, column_data)
 
     async def queryAndPrint(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
-        result_text = queryAndSave(self, ctx, server, query, values, column_data, max_rows, verbose)
+        result_text = await self.queryAndSave(ctx, server, query, values, column_data, max_rows, verbose)
         for p in pagify(result_text):
             await ctx.send(box(p))
 
