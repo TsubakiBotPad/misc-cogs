@@ -1,6 +1,9 @@
+import aiohttp
 import discord
+import json
 import logging
 import romkan
+import uuid
 from googleapiclient.discovery import build
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -16,9 +19,10 @@ class Translate(commands.Cog):
         super().__init__(*args, **kwargs)
         self.bot = bot
         self.config = Config.get_conf(self, identifier=724757473)
-        self.config.register_global(api_key=None)
+        self.config.register_global(g_api_key=None, a_api_key=None)
 
-        self.service = None
+        self.gservice = None
+        self.aservice = None
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -38,54 +42,90 @@ class Translate(commands.Cog):
         """Translation utilities."""
 
     async def build_service(self):
-        api_key = await self.config.api_key()
-        try:
-            assert api_key
-            self.service = build('translate', 'v2', developerKey=api_key)
-        except:
-            logger.error("Google API key not found or invalid")
+        api_key = await self.config.g_api_key()
+        if api_key:
+            try:
+                self.gservice = build('translate', 'v2', developerKey=api_key)
+                return
+            except:
+                logger.error("Google API invalid")
+
+        api_key = await self.config.a_api_key()
+        if api_key:
+            self.aservice = api_key
 
     @commands.command(aliases=['jaus', 'jpen', 'jpus'])
     @checks.bot_has_permissions(embed_links=True)
     async def jaen(self, ctx, *, query):
         """Translates from Japanese to English"""
-        if not self.service:
-            await ctx.send(inline('Set up an API key first!'))
-            return
-
-        em = self.translate_to_embed("ja", "en", query)
-        await ctx.send(embed=em)
+        await self.translate_to_embed(ctx, "ja", "en", query)
 
     @commands.command(aliases=['zhus'])
     @checks.bot_has_permissions(embed_links=True)
     async def zhen(self, ctx, *, query):
         """Translates from Chinese to English"""
-        if not self.service:
-            await ctx.send(inline('Set up an API key first!'))
-            return
-
-        em = self.translate_to_embed("zh", "en", query)
-        await ctx.send(embed=em)
+        await self.translate_to_embed(ctx, "zh", "en", query)
 
     @commands.command()
     async def kanrom(self, ctx, *, query):
         """Transliterates Kanji to Romanji"""
         await ctx.send(romkan.to_roma(query))
 
-    def translate_lang(self, source, target, query):
-        result = self.service.translations().list(source=source, target=target, format='text', q=query).execute()
+    async def g_translate_lang(self, source, target, query):
+        result = self.gservice.translations().list(source=source, target=target, format='text', q=query).execute()
         return result.get('translations')[0].get('translatedText')
 
-    def translate_to_embed(self, source, target, query):
-        translation = self.translate_lang(source, target, query)
-        return discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation))
+    async def a_translate_lang(self, source, target, query):
+        endpoint = "https://api.cognitive.microsofttranslator.com"
+
+        path = '/translate'
+        constructed_url = endpoint + path
+
+        params = {
+            'api-version': '3.0',
+            'from':  source,
+            'to': target,
+        }
+        headers = {
+            'Ocp-Apim-Subscription-Key': self.aservice,
+            'Content-type': 'application/json',
+            'X-ClientTraceId': str(uuid.uuid4())
+        }
+        body = [{'text': query}]
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(constructed_url, params=params, headers=headers, json=body) as resp:
+                res = json.loads(await resp.read())
+
+        return res[0]['translations'][0]['text']
+
+    async def translate_to_embed(self, ctx, source, target, query):
+        if not (self.gservice or self.aservice):
+            await ctx.send(inline('Set up an API key first!'))
+            return
+
+        if self.gservice:
+            translation = await self.g_translate_lang(source, target, query)
+        elif self.aservice:
+            translation = await self.a_translate_lang(source, target, query)
+        await ctx.send(embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
 
     @translate.command()
-    async def setkey(self, ctx, api_key):
+    async def setgkey(self, ctx, api_key):
         """Sets the google api key."""
-        await self.config.api_key.set(api_key)
+        await self.config.g_api_key.set(api_key)
         await ctx.tick()
 
     @translate.command()
-    async def getkey(self, ctx):
-        await ctx.author.send(await self.config.api_key())
+    async def getgkey(self, ctx):
+        await ctx.author.send(await self.config.g_api_key())
+
+    @translate.command()
+    async def setakey(self, ctx, api_key):
+        """Sets the google api key."""
+        await self.config.a_api_key.set(api_key)
+        await ctx.tick()
+
+    @translate.command()
+    async def getakey(self, ctx):
+        await ctx.author.send(await self.config.a_api_key())
