@@ -1,4 +1,5 @@
 import asyncio
+import os
 import ctypes.util
 import discord
 import logging
@@ -23,7 +24,7 @@ except:  # Missing opus
 else:
     opus = True
 
-SPOOL_PATH = "data/speech/spool.mp3"
+SPOOL_PATH = "/tmp/misc-cogs/speech/spool.mp3"
 
 TSUBAKI_SSML = """
 <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
@@ -122,6 +123,7 @@ class Speech(commands.Cog):
             return
 
         try:
+            os.makedirs(os.path.dirname(SPOOL_PATH), exist_ok=True)
             with open(SPOOL_PATH, 'wb') as out:
                 out.write(audio_data)
 
