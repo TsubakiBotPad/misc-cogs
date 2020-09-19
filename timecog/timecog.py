@@ -176,9 +176,7 @@ class TimeCog(commands.Cog):
         await ctx.author.send(input)
 
     @remindme.command()
-    @checks.is_owner()  # Command is unfinished
     async def every(self, ctx, *, text):
-        await ctx.send("Test")
         match = re.search(time_in_regeces[1], text, re.IGNORECASE)
         if match:
             tinstrs, tinstart, input = match.groups()
@@ -190,12 +188,14 @@ class TimeCog(commands.Cog):
             tinstart = "now"
             tinstrs, input = match.groups()
         start = (datetime.utcnow() + tin2tdelta(tinstart)).timestamp()
-        async with self.config.channel(ctx.channel).schedules() as scs:
-            scs.append((start, tin2tdelta(tinstrs).seconds, input))
-        m = await ctx.send("Schedule created.  I will send a message on my next cycle (10s or less)")
-        await asyncio.sleep(5.)
-        await m.delete()
-
+        async with self.config.user(ctx.author).reminders() as rms:
+            rms.append((start, input, tin2tdelta(tinstrs).seconds))
+        m = await ctx.send("I will tell you {} and every {} seconds after that."
+                           "".format(format_rm_time(
+                                     datetime.utcnow() + tin2tdelta(tinstart),
+                                     input,
+                                     tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC')),
+                           tin2tdelta(tinstrs).seconds))
     @remindme.command(aliases=["list"])
     async def get(self, ctx):
         """Get a list of all pending reminders"""
@@ -205,10 +205,14 @@ class TimeCog(commands.Cog):
             return
         tz = tzstr_to_tz(await self.config.user(ctx.author).tz())
         o = []
-        for c, (timestamp, input) in enumerate(rlist):
-            o.append(str(c + 1) + ": " + format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz))
-        o = "```\n" + '\n'.join(o) + "\n```"
-        await ctx.send(o)
+        for c, rm in enumerate(rlist):
+            timestamp = rm[0]
+            input = rm[1]
+            ftime = format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz)
+            if len(rm) > 2:
+                ftime += " (every {} seconds)".format(rm[2])
+            o.append(str(c + 1) + ": " + ftime)
+        await ctx.send(box('\n'.join(o)))
 
     @remindme.command(name="remove")
     async def remindme_remove(self, ctx, no: int):
@@ -444,10 +448,13 @@ class TimeCog(commands.Cog):
             gds = await self.config.all_guilds()
             now = datetime.utcnow()
             for u in urs:
-                for rm in urs[u]['reminders']:
+                for c, rm in enumerate(urs[u]['reminders']):
                     if datetime.fromtimestamp(float(rm[0])) < now:
                         async with self.config.user(self.bot.get_user(u)).reminders() as rms:
-                            rms.remove(rm)
+                            if len(rm) == 3:
+                                rms[c][0] += rms[c][2]
+                            else:
+                                rms.remove(rm)
                         await self.bot.get_user(u).send(rm[1])
             for g in gds:
                 for n, sc in gds[g]['schedules'].items():
@@ -625,7 +632,7 @@ def tin2tdelta(tinstr):
         try:
             tin = int(tin)
             if unit[:2] == 'mo':
-                o += relativedelta(months=+1)
+                o += relativedelta(months=+tin)
             elif unit[0] == 'm':
                 o += timedelta(minutes=tin)
             elif unit[0] == 'h':
@@ -635,7 +642,7 @@ def tin2tdelta(tinstr):
             elif unit[0] == 'w':
                 o += timedelta(weeks=tin)
             elif unit[0] == 'y':
-                o += relativedelta(years=+1)
+                o += relativedelta(years=+tin)
             elif unit[0] == 's':
                 raise commands.UserFeedbackCheckFailure(
                     "We aren't exact enough to use seconds! If you need that precision, try this: https://www.timeanddate.com/timer/")
