@@ -24,7 +24,7 @@ time_at_regeces = [
 
 time_in_regeces = [
     r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b (.+)$',  # One tinstr
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*\|\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*(?:\||in|start(?:ing)? in)\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
 ]
 
 exact_tats = [
@@ -177,6 +177,12 @@ class TimeCog(commands.Cog):
 
     @remindme.command()
     async def every(self, ctx, *, text):
+        """Reminds you to do something at a specified time at a specified interval
+
+        [p]remindme every 1d Do something!
+        [p]remindme every 1d in 3 minutes Do something!
+        [p]remindme every 1 week | 3 minutes something!
+        """
         match = re.search(time_in_regeces[1], text, re.IGNORECASE)
         if match:
             tinstrs, tinstart, input = match.groups()
