@@ -16,7 +16,7 @@
   "hidden": false,
   "disabled": false,
   "require_cogs": {},
-  "requirements": [],
+  "requirements": ["tsutils"],
   "tags": [
     "todo"
   ]
