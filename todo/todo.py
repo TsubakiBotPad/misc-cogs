@@ -41,8 +41,9 @@ class Todo(commands.Cog):
         for c, item in enumerate(todo, 1):
             msg += "{}) {}\n".format(str(c).rjust(len(str(len(todo)))), item)
         msg = msg.rstrip()
-        if not msg:
+        if not todo:
             await ctx.send(inline("Your todo list is empty.  Yay!"))
+            return
         for page in pagify(msg):
             await ctx.send(box(page))
 
