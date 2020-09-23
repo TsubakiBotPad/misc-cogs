@@ -398,8 +398,8 @@ class BadUser(commands.Cog):
             return
         strikes = self.settings.countUserStrikes(member.guild.id, member.id)
         if strikes:
-            msg = 'FYI: A user with {} strikes just left the server: {}'.format(
-                strikes, member.name)
+            msg = 'FYI: A user with {} strikes just left the server: {} ({})'.format(
+                strikes, member.name, member.id)
             update_channel = self.settings.getChannel(member.guild.id)
             if update_channel is not None:
                 channel_obj = member.guild.get_channel(update_channel)
@@ -416,8 +416,8 @@ class BadUser(commands.Cog):
         channel_obj = member.guild.get_channel(update_channel)
         strikes = self.settings.countUserStrikes(member.guild.id, member.id)
         if strikes:
-            msg = 'Hey @here a user with {} strikes just joined the server: {}'.format(
-                strikes, member.mention)
+            msg = 'Hey @here a user with {} strikes just joined the server: {} ({})'.format(
+                strikes, member.mention, member.id)
             await channel_obj.send(msg, allowed_mentions=discord.AllowedMentions(everyone=True))
 
         local_ban = self.settings.bannedUsers().get(member.id, None)
