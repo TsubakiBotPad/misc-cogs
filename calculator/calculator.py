@@ -57,7 +57,7 @@ class Calculator(commands.Cog):
         help_msg = HELP_MSG + '\n' + ACCEPTED_TOKENS
         await ctx.author.send(box(help_msg))
 
-    @commands.command(aliases=['calc'])
+    @commands.command(aliases=['calc', 'math'])
     @checks.bot_has_permissions(embed_links=True)
     async def calculator(self, ctx, *, inp):
         '''Evaluate equations. Use helpcalc for more info.'''
