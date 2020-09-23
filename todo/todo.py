@@ -64,6 +64,16 @@ class Todo(commands.Cog):
             item = todos[focus].pop(number - 1)
             await ctx.send(inline("Removed '{}' from your todo list.".format(item)))
 
+    @todo.command(aliases=[])
+    async def purge(self, ctx):
+        """Remove the nth item from your todo list."""
+        focus = await self.config.user(ctx.author).focus()
+        if not await tsutils.confirm_message(ctx, "Are you sure you want to clear the todo list '{}'?".format(focus)):
+            return
+        async with self.config.user(ctx.author).todos() as todos:
+            todos[focus] = []
+            await ctx.tick()
+
     @todo.command()
     async def edit(self, ctx, number: int, *, new_item):
         """Edit/Reword the nth item of your todo list."""
