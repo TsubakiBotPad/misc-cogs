@@ -15,7 +15,7 @@ tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.time
                   for x in pytz.all_timezones])
 
 time_at_regeces = [
-    r'^\s*(?:(?:(?P<year>\d{4})[-/])?(?P<month>\d+)[-/](?P<day>\d+) )?(?:(?P<hour>\d+):?(?P<minute>\d\d)? ?(?P<merid>pm|am)?)? ?\"?(?P<input>.*)\"?$',
+    r'^\s*(?:(?:(?P<year>\d{4})[-/])?(?P<month>\d+)[-/](?P<day>\d+) )?(?:(?P<hour>\d+):?(?P<minute>\d\d)? ?(?P<merid>pm|am)?)? \"?(?P<input>.*)\"?$',
 ]
 
 time_in_regeces = [
