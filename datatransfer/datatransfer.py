@@ -44,7 +44,7 @@ class DataTransfer(commands.Cog):
         """Load data from another bot via an attatched .enc file. (Obtain this with [p]export)"""
 
     @_import.command(name="alias")
-    async def import_alias(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
+    async def import_alias(self, ctx, bot_mention: discord.User, link_or_attatchment=""):
         if not bot_mention == ctx.me:
             return
 

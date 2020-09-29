@@ -15,15 +15,11 @@ tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.time
                   for x in pytz.all_timezones])
 
 time_at_regeces = [
-    r'^\s*(?P<year>\d{4})[-/](?P<month>\d+)[-/](?P<day>\d+) (?P<hour>\d+):(?P<minute>\d\d) ?(?P<merid>pm|am)? ?(?P<input>.*)$',
-    r'^\s*(?P<year>\d{4})[-/](?P<month>\d+)[-/](?P<day>\d+) ?(?P<input>.*)$',
-    r'^\s*(?P<month>\d+)[-/](?P<day>\d+) ?(?P<input>.*)$',
-    r'^\s*(?P<hour>\d+):(?P<minute>\d\d) ?(?P<merid>\d?pm|am)? ?(?P<input>.*)$',
-    r'^\s*(?P<hour>\d+) ?(?P<merid>\d?pm|am) ?(?P<input>.*)$',
+    r'^\s*(?:(?:(?P<year>\d{4})[-/])?(?P<month>\d+)[-/](?P<day>\d+) )?(?:(?P<hour>\d+):?(?P<minute>\d\d)? ?(?P<merid>pm|am)?)? ?\"?(?P<input>.*)\"?$',
 ]
 
 time_in_regeces = [
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b (.+)$',  # One tinstr
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.+)$',  # One tinstr
     r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*(?:\||in|start(?:ing)? in)\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
 ]
 
@@ -121,7 +117,7 @@ class TimeCog(commands.Cog):
                 'month': now.month,
                 'day': now.day,
                 'hour': now.hour,
-                'minute': now.minute,
+                'minute': 0,
                 'merid': 'NONE'
             }
             defaults.update({k: v for k, v in match.items() if v})
@@ -609,6 +605,8 @@ def tzstr_to_tz(tz):
         tz = 'America/North_Dakota/Center'
     elif tz in ['pdt', 'pst', 'pt']:
         tz = 'America/Los_Angeles'
+    elif tz in ['cdt', 'cst', 'ct']:
+        tz = 'America/Chicago'
     elif tz in ['jp', 'jt', 'jst']:
         return tz_lookup['JST']
     elif tz.upper() in tz_lookup:

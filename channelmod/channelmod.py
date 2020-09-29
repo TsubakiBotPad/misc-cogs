@@ -138,11 +138,12 @@ class ChannelMod(commands.Cog):
         else:
             to_message = await self.catchup.do_conversion(ctx, discord.Message, to_message, "to_message")
 
-        await self.mirror_msg(from_message)
-        async for message in channel.history(limit=None, after=from_message, before=to_message):
-            await self.mirror_msg(message)
-        if to_message:
-            await self.mirror_msg(to_message)
+        async with ctx.typing():
+            await self.mirror_msg(from_message)
+            async for message in channel.history(limit=None, after=from_message, before=to_message):
+                await self.mirror_msg(message)
+            if to_message:
+                await self.mirror_msg(to_message)
         await ctx.tick()
 
     @commands.Cog.listener('on_message')
@@ -195,9 +196,9 @@ class ChannelMod(commands.Cog):
                 fmessage = await self.mformat(message.content, message.channel, dest_channel)
 
                 if attachment_bytes and filename:
+                    attachment_bytes.seek(0)
                     dest_message = await dest_channel.send(file=discord.File(attachment_bytes, filename),
                                                            content=fmessage)
-                    attachment_bytes.seek(0)
                 elif message.content:
                     dest_message = await dest_channel.send(fmessage)
                 else:
