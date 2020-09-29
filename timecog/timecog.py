@@ -102,7 +102,7 @@ class TimeCog(commands.Cog):
 
         for ar in time_at_regeces:
             match = re.search(ar, time, re.IGNORECASE)
-            if not match:
+            if not match or re.match(r"\d [^ap][^m]", time, re.IGNORECASE):
                 continue
             match = match.groupdict()
 
@@ -120,6 +120,8 @@ class TimeCog(commands.Cog):
                 'minute': 0,
                 'merid': 'NONE'
             }
+            if not any([match[k] for k in defaults]):
+                continue
             defaults.update({k: v for k, v in match.items() if v})
             input = defaults.pop('input')
             for key in defaults:
