@@ -15,7 +15,7 @@ tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.time
                   for x in pytz.all_timezones])
 
 time_at_regeces = [
-    r'^\s*(?:(?:(?P<year>\d{4})[-/])?(?P<month>\d+)[-/](?P<day>\d+) )?(?:(?P<hour>\d+):?(?P<minute>\d\d)? ?(?P<merid>pm|am)?)? ?\"?(?P<input>.*)\"?$',
+    r'^\s*(?:(?:(?P<year>\d{4})[-/])?(?P<month>\d+)[-/](?P<day>\d+) )?(?:(?P<hour>\d+):?(?P<minute>\d\d)? ?(?P<merid>pm|am)?)? \"?(?P<input>.*)\"?$',
 ]
 
 time_in_regeces = [
@@ -102,7 +102,7 @@ class TimeCog(commands.Cog):
 
         for ar in time_at_regeces:
             match = re.search(ar, time, re.IGNORECASE)
-            if not match:
+            if not match or re.match(r"\d [^ap][^m]", time, re.IGNORECASE):
                 continue
             match = match.groupdict()
 
@@ -120,6 +120,8 @@ class TimeCog(commands.Cog):
                 'minute': 0,
                 'merid': 'NONE'
             }
+            if not any([match[k] for k in defaults]):
+                continue
             defaults.update({k: v for k, v in match.items() if v})
             input = defaults.pop('input')
             for key in defaults:
