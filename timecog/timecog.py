@@ -102,7 +102,7 @@ class TimeCog(commands.Cog):
 
         for ar in time_at_regeces:
             match = re.search(ar, time, re.IGNORECASE)
-            if not match or re.match(r"\d [^ap][^m]", time, re.IGNORECASE):
+            if not match or re.match(r"\d+ [^ap][^m]", time, re.IGNORECASE):
                 continue
             match = match.groupdict()
 
