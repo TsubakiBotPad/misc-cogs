@@ -183,11 +183,25 @@ class Trigger(commands.Cog):
             msg += "Case Sensitive: {}\n".format(cs)
             regex = "yes" if trigger.regex else "no"
             msg += "Regex: {}\n".format(regex)
+            msg += "Channels: (In this server)\n"
+            if trigger.server not in (None, ctx.guild.id):
+                msg+="  None (Not enabled in server)\n"
+            elif not trigger.channels.get(str(ctx.guild.id)):
+                msg+="  All\n"
+            else:
+                for channel in trigger.channels[str(ctx.guild.id)]:
+                    try:
+                        c=self.bot.get_channel(channel)
+                        if c.guild.id == ctx.guild.id:
+                            msg+="  #{}\n".format(c.name)
+                    except Exception as e:
+                        print(e)
+                        msg+="  {} (unknown)\n".format(channel)
             msg += "Cooldown: {} seconds\n".format(trigger.cooldown)
             msg += "Triggered By: \"{}\"\n".format(trigger.triggered_by.replace("`", "\\`"))
             msg += "Payload: {} responses\n".format(len(trigger.responses))
             msg += "Triggered: {} times\n".format(trigger.triggered)
-            await ctx.send(box(msg, lang="xl"))
+            await ctx.send(box(msg))
         else:
             await ctx.send("There is no trigger with that name.")
 
