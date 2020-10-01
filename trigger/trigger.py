@@ -321,7 +321,7 @@ class Trigger(commands.Cog):
             return
         if channels:
             channels = [c.id for c in channels]
-            trigger.channels[ctx.guild.id] = list(channels)
+            trigger.channels[str(ctx.guild.id)] = list(channels)
             await self.save_triggers()
             if trigger.server is not None:
                 await ctx.send("The trigger will be enabled only on "
@@ -330,7 +330,7 @@ class Trigger(commands.Cog):
                 await ctx.send("In this server the trigger will be "
                                "enabled only on those channels")
         else:
-            trigger.channels[ctx.guild.id] = []
+            trigger.channels[str(ctx.guild.id)] = []
             await self.save_triggers()
             await ctx.send("The trigger will be active in all channels.")
 
@@ -562,10 +562,9 @@ class TriggerObj:
         if not self.active:
             return False
 
-        channels = self.channels.get(msg.guild.id, [])
-        if channels:
-            if msg.channel.id not in channels:
-                return False
+        channels = self.channels.get(str(msg.guild.id), [])
+        if channels and msg.channel.id not in channels:
+            return False
 
         content = msg.content
         triggered_by = self.triggered_by
