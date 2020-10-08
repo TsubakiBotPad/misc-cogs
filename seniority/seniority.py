@@ -142,7 +142,7 @@ class Seniority(commands.Cog):
         """Delete a user's personal data."""
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(REPLACE_POINTS_QUERY, user_id)
+                await cur.execute(DELETE_USER_DATA, user_id)
 
     def cog_unload(self):
         logger.debug('Seniority: unloading')
