@@ -1,10 +1,12 @@
 import asyncio
 import discord
 import logging
+import re
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
+from typing import Optional
 from tsutils import char_to_emoji
 from tsutils import tsutils
 
@@ -84,6 +86,48 @@ class FancySay(commands.Cog):
 
         if len(new_msg):
             await ctx.send(new_msg)
+
+    @commands.command()
+    @checks.mod_or_permissions(add_reactions=True)
+    async def emojireact(self, ctx, *, text):
+        """React to a message with emoji"""
+        EXTRA = {
+            "a": ["\N{NEGATIVE SQUARED LATIN CAPITAL LETTER A}"],
+            "b": ["\N{NEGATIVE SQUARED LATIN CAPITAL LETTER B}"],
+            "o": ["\N{NEGATIVE SQUARED LATIN CAPITAL LETTER O}"],
+        }
+
+        *text, message_t = text.split()
+        try:
+            message = await commands.MessageConverter().convert(ctx, message_t)
+            text = "".join(text)
+        except:
+            message = None
+            text = "".join(text + [message_t])
+
+        if message is None:
+            message = (await ctx.channel.history(limit=2).flatten())[1]
+
+        text = re.sub(r'[^a-z0-9]', '', text.lower())
+
+        if len(message.reactions) + len(text) > 20:
+            await ctx.send("I don't have enough room to spell this.")
+            return
+
+        for char in text:
+            if text.count(char) > len(EXTRA.get(char, [])) + 1:
+                await ctx.send("It is not possible to make this using emoji.")
+                return
+
+        await ctx.message.delete()
+
+
+        used = ""
+        for char in text:
+            emote = ([char_to_emoji(char)] + EXTRA.get(char, []))[used.count(char)]
+            await message.add_reaction(emote)
+            used += char
+
 
     @fancysay.command()
     @checks.bot_has_permissions(embed_links=True)
