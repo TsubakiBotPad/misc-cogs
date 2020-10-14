@@ -108,7 +108,7 @@ class GrantRole(commands.Cog):
 
     @commands.Cog.listener('on_reaction_add')
     async def on_reaction_add(self, reaction, member):
-        if await self.bot.cog_disabled_in_guild(self, member.guild):
+        if member.bot or await self.bot.cog_disabled_in_guild(self, member.guild):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
