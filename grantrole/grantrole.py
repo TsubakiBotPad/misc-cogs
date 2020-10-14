@@ -98,7 +98,7 @@ class GrantRole(commands.Cog):
 
     @commands.Cog.listener('on_member_join')
     async def on_member_join(self, member):
-        if await self.bot.cog_disabled_in_guild(self, member.guild):
+        if not hasattr(member, 'guild') or await self.bot.cog_disabled_in_guild(self, member.guild):
             return
         roles = await self.config.guild(member.guild).on_join()
         try:
@@ -108,7 +108,7 @@ class GrantRole(commands.Cog):
 
     @commands.Cog.listener('on_reaction_add')
     async def on_reaction_add(self, reaction, member):
-        if await self.bot.cog_disabled_in_guild(self, member.guild):
+        if not hasattr(member, 'guild') or await self.bot.cog_disabled_in_guild(self, member.guild):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
