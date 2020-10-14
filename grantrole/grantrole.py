@@ -66,6 +66,7 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="add")
     async def onreact_add(self, ctx, message: discord.Message, emoji: discord.Emoji, role: discord.Role):
+        """Add a role on a reaction"""
         if not await self.can_assign(ctx, role):
             return
         await message.add_reaction(emoji)
@@ -86,6 +87,7 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="remove")
     async def onreact_remove(self, ctx, message: discord.Message, emoji: discord.Emoji):
+        """Remove a role from a reaction"""
         await message.add_reaction(emoji)
         async with self.config.guild(ctx.guild).on_react() as on_react:
             if not on_react.get(str(message.id)) or not on_react.get(str(message.id), {}).get(str(emoji.id)):
@@ -110,7 +112,8 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
-            role = roles.get(str(reaction.message.id), {}).get(str(reaction.emoji.id))
+            emoji = reaction.emoji if isinstance(reaction.emoji, str) else str(reaction.emoji.id)
+            role = roles.get(str(reaction.message.id), {}).get(emoji)
             if role is None:
                 return
             await member.add_roles(reaction.message.guild.get_role(role), reason="On React Role Grant")
@@ -123,7 +126,8 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
-            role = roles.get(str(reaction.message.id), {}).get(str(reaction.emoji.id))
+            emoji = reaction.emoji if isinstance(reaction.emoji, str) else str(reaction.emoji.id)
+            role = roles.get(str(reaction.message.id), {}).get(emoji)
             if role is None:
                 return
             await member.remove_roles(reaction.message.guild.get_role(role), reason="On React Role Removal")
