@@ -184,11 +184,10 @@ class ChannelMod(commands.Cog):
                         attachment_bytes = io.BytesIO(await response.read())
 
         for dest_channel_id in mirrored_channels:
+            dest_channel = self.bot.get_channel(dest_channel_id)
+            if not dest_channel:
+                continue
             try:
-                dest_channel = self.bot.get_channel(dest_channel_id)
-                if not dest_channel:
-                    continue
-
                 if attribution_required:
                     msg = self.makeheader(message)
                     await dest_channel.send(msg)
@@ -208,6 +207,19 @@ class ChannelMod(commands.Cog):
                 self.settings.add_mirrored_message(
                     channel.id, message.id, dest_channel.id, dest_message.id)
             except Exception as ex:
+                if dest_channel.guild.owner:
+                    try:
+                        message = ("Hi, {1.guild.owner}!  This is an automated message from the Tsubaki team to let"
+                                   " you know that your server, {1.guild.name}, has been configured to mirror"
+                                   " messages from {0.name} (from {0.guild.name}) to {1.name}, but your channel"
+                                   " doesn't give me manage message permissions!  Please do make sure to allow"
+                                   " me permissions to send messages, embed links, and attach files!  It's also"
+                                   " okay to turn off message mirroring from your channel.  If you need help, contact"
+                                   " us via `{2}feedback`!"
+                                   "").format(channel, dest_channel, (await self.bot.get_valid_prefixes())[0])
+                        await dest_channel.guild.owner.send(message)
+                    except Exception:
+                        logger.exception("Owner message failed.")
                 logger.warning(
                     'Failed to mirror message from {} to {}: {}'.format(channel.id, dest_channel_id, str(ex)))
 
@@ -391,6 +403,8 @@ class ChannelModSettings(CogSettings):
                 'channels': [],
                 'messages': {},
             }
+        if dest_channel in channels[source_channel]['channels']:
+            raise commands.UserFeedbackCheckFailure('This mirror already exists')
         channels[source_channel]['channels'].append(dest_channel)
         self.save_settings()
 

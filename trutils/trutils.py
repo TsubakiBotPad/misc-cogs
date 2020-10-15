@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import sys
+import re
 from redbot.core import checks, commands, modlog
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
@@ -43,6 +44,45 @@ class TrUtils(commands.Cog):
 
         ctx.send = _send
         ctx.message.content = full_cmd
+        await self.bot.process_commands(ctx.message)
+
+    @commands.command()
+    async def delaycommand(self, ctx, time, *, command):
+        """Run a command after waiting a period of time.
+
+        [p]delaycommand 30s which sonia
+        [p]delaycommand 5m forceindexreload
+        """
+        if not re.match(r'\d+[ms]?', time):
+            await ctx.send("Invalid time: {}".format(time))
+            return
+
+        if time.endswith('s'):
+            time = int(time[:-1])
+        elif time.endswith('m'):
+            time = int(time[:-1]) * 60
+        else:
+            time = int(time)
+
+        if time > 60 * 15:
+            await ctx.send("Time must be less than 15 minutes.")
+            return
+
+        cname = []
+        for sc in command.split():
+            if self.bot.get_command(" ".join(cname) + " " + sc) is None:
+                break
+            cname.append(sc)
+
+        cmd = self.bot.get_command(" ".join(cname))
+        if cmd is None:
+            await ctx.send("Invalid Command. \nNOTE: Aliases aren't valid with this command")
+            return
+        if not await cmd.can_run(ctx):
+            await ctx.send("You do not have permission to run the command `{}`".format(" ".join(cname)))
+        await asyncio.sleep(time)
+
+        ctx.message.content = ctx.prefix + command
         await self.bot.process_commands(ctx.message)
 
     @commands.command()
