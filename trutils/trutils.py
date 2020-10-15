@@ -80,6 +80,8 @@ class TrUtils(commands.Cog):
             return
         if not await cmd.can_run(ctx):
             await ctx.send("You do not have permission to run the command `{}`".format(" ".join(cname)))
+
+        await ctx.tick()
         await asyncio.sleep(time)
 
         ctx.message.content = ctx.prefix + command
