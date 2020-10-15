@@ -102,7 +102,7 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(member.guild).on_join()
         try:
-            member.add_roles(*roles, reason="On Join Role Grant")
+            await member.add_roles(*roles, reason="On Join Role Grant")
         except discord.Forbidden:
             logger.exception("Unable to add roles in guild: {}".format(guild.id))
 
