@@ -9,8 +9,7 @@ from redbot.core.utils.chat_formatting import box, inline
 from tsutils import CogSettings, clean_global_mentions
 
 DONATE_MSG = """
-To donate to cover bot hosting fees you can use one of:
-  Patreon : https://www.patreon.com/tsubaki_bot
+Patreon : https://www.patreon.com/tsubaki_bot
 
 Read the Patreon or join the Tsubaki Support Server for more details:
   https://discord.gg/tVPmeG8
@@ -128,7 +127,7 @@ class Donations(commands.Cog):
                 donor_names.add(user.name)
 
         msg = DONATE_MSG.format(count=len(donor_names), donors=', '.join(sorted(donor_names)))
-        await ctx.send(box(msg))
+        await ctx.send(msg)
 
     @commands.command()
     @commands.check(is_donor)
@@ -348,6 +347,12 @@ class Donations(commands.Cog):
             msg += ' ' + random.choice(self.insults_list)
             await message.author.send(msg)
             return
+
+    def is_patron(self, ctx):
+        return is_patron(ctx)
+
+    def is_donor(self, ctx):
+        return is_donor(ctx)
 
 
 class DonationsSettings(CogSettings):
