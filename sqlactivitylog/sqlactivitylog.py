@@ -389,13 +389,13 @@ class SqlActivityLogger(commands.Cog):
                     raw_value = tsutils.NA_TZ_OBJ.normalize(raw_value)
                     value = raw_value.strftime("%F %X")
                 if col == 'channel_id':
-                    channel = server.get_channel(value) if server else None
+                    channel = server.get_channel(int(value)) if server else None
                     value = channel.name if channel else value
                 if col == 'user_id':
-                    member = server.get_member(value) if server else None
+                    member = server.get_member(int(value)) if server else None
                     value = member.name if member else value
                 if col == 'server_id':
-                    server_obj = self.bot.get_guild(value)
+                    server_obj = self.bot.get_guild(int(value))
                     value = server_obj.name if server_obj else value
                 if col == 'clean_content':
                     value = value.replace('```', '~~~')
