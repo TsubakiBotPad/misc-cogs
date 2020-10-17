@@ -115,24 +115,25 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="serverlist")
     async def onreact_serverlist(self, ctx):
-        roles = await self.config.guild(ctx.guild).on_react()
-        msg = []
-        for mid in roles:
-            for channel in ctx.guild.text_channels:
-                try:
-                    message = await channel.fetch_message(int(mid))
-                except discord.errors.NotFound:
-                    continue
-                emojis = roles[mid]
-                smsg = []
-                for eid,rid in emojis.items():
-                    e = self.bot.get_emoji(int(eid))
-                    r = ctx.guild.get_role(rid)
-                    if None not in (e, r):
-                        smsg.append("\n\t{}: {}".format(str(e), r.mention))
-                if smsg:
-                    msg.append(message.jump_url + "".join(smsg))
-                break
+        async with ctx.typing():
+            roles = await self.config.guild(ctx.guild).on_react()
+            msg = []
+            for mid in roles:
+                for channel in ctx.guild.text_channels:
+                    try:
+                        message = await channel.fetch_message(int(mid))
+                    except discord.errors.NotFound:
+                        continue
+                    emojis = roles[mid]
+                    smsg = []
+                    for eid,rid in emojis.items():
+                        e = self.bot.get_emoji(int(eid))
+                        r = ctx.guild.get_role(rid)
+                        if None not in (e, r):
+                            smsg.append("\n\t{}: {}".format(str(e), r.mention))
+                    if smsg:
+                        msg.append(message.jump_url + "".join(smsg))
+                    break
         for page in pagify("\n\n".join(msg)):
             await ctx.send(page)
         if not msg:
