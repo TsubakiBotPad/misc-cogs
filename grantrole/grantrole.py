@@ -77,9 +77,11 @@ class GrantRole(commands.Cog):
 
     @onreact_add.error
     async def onreact_error(self, ctx, error):
-        if isinstance(error, commands.errors.ConversionFailure):
+        if isinstance(error, commands.errors.ConversionFailure) and error.converter == discord.Role:
             await ctx.send(("I do not have access to `{}`.  Please add me to the"
                             " server it's hosted in or use a different emoji.".format(error.argument)))
+        elif isinstance(error, commands.errors.ConversionFailure):
+            raise error
         elif isinstance(error, discord.ext.commands.UserInputError):
             await ctx.send_help()
         else:
@@ -96,43 +98,105 @@ class GrantRole(commands.Cog):
             del on_react[str(message.id)][str(emoji.id)]
         await ctx.tick()
 
+    @onreact.command(name="list")
+    async def onreact_list(self, ctx, message: discord.Message):
+        roles = await self.config.guild(message.guild).on_react()
+        if str(message.id) not in roles:
+            await ctx.send("That message isn't configured with onreact")
+            return
+        emojis = roles[str(message.id)]
+        msg = []
+        for eid,rid in emojis.items():
+            e = self.bot.get_emoji(int(eid))
+            r = ctx.guild.get_role(rid)
+            if None not in (e, r):
+                msg.append("{}: {}".format(str(e), r.mention))
+        await ctx.send("\n".join(msg))
+
+    @onreact.command(name="serverlist")
+    async def onreact_serverlist(self, ctx):
+        roles = await self.config.guild(ctx.guild).on_react()
+        msg = []
+        for mid in roles:
+            for channel in ctx.guild.text_channels:
+                try:
+                    message = await channel.fetch_message(int(mid))
+                except discord.errors.NotFound:
+                    continue
+                emojis = roles[mid]
+                smsg = []
+                for eid,rid in emojis.items():
+                    e = self.bot.get_emoji(int(eid))
+                    r = ctx.guild.get_role(rid)
+                    if None not in (e, r):
+                        smsg.append("\n\t{}: {}".format(str(e), r.mention))
+                if smsg:
+                    msg.append(message.jump_url + "".join(smsg))
+                break
+        for page in pagify("\n\n".join(msg)):
+            await ctx.send(page)
+        if not msg:
+            await ctx.send("onreact is not enabled on this server.")
+
+    @onreact.command(name="catchup")
+    async def onreact_catchup(self, ctx, message: discord.Message):
+        roles = await self.config.guild(message.guild).on_react()
+        if str(message.id) not in roles:
+            await ctx.send("That message isn't configured with onreact")
+            return
+        emojis = roles[str(message.id)]
+        for r in message.reactions:
+            if str(r.emoji.id) in emojis:
+                role = ctx.guild.get_role(emojis[str(r.emoji.id)])
+                async for member in r.users():
+                    await member.add_roles(role, reason="On React Role Catchup")
+        await ctx.tick()
+
     @commands.Cog.listener('on_member_join')
     async def on_member_join(self, member):
         if not hasattr(member, 'guild') or await self.bot.cog_disabled_in_guild(self, member.guild):
             return
         roles = await self.config.guild(member.guild).on_join()
         try:
-            await member.add_roles(*roles, reason="On Join Role Grant")
+            for role in roles:
+                r = member.guild.get_role(int(role))
+                if r is not None:
+                    await member.add_roles(r, reason="On Join Role Grant")
         except discord.Forbidden:
             logger.exception("Unable to add roles in guild: {}".format(guild.id))
 
-    @commands.Cog.listener('on_reaction_add')
-    async def on_reaction_add(self, reaction, member):
-        if not hasattr(member, 'guild') or await self.bot.cog_disabled_in_guild(self, member.guild):
+    @commands.Cog.listener('on_raw_reaction_add')
+    async def on_reaction_add(self, payload):
+        if not payload.guild_id \
+                  or payload.member.bot \
+                  or await self.bot.cog_disabled_in_guild(self, payload.member.guild):
             return
-        roles = await self.config.guild(member.guild).on_react()
+        roles = await self.config.guild(payload.member.guild).on_react()
         try:
-            emoji = reaction.emoji if isinstance(reaction.emoji, str) else str(reaction.emoji.id)
-            role = roles.get(str(reaction.message.id), {}).get(emoji)
+            emoji = payload.emoji if isinstance(payload.emoji, str) else str(payload.emoji.id)
+            role = roles.get(str(payload.message_id), {}).get(emoji)
             if role is None:
                 return
-            await member.add_roles(reaction.message.guild.get_role(role), reason="On React Role Grant")
+            await payload.member.add_roles(payload.member.guild.get_role(role), reason="On React Role Grant")
         except discord.Forbidden:
-            logger.exception("Unable to add roles in guild: {}".format(guild.id))
+            logger.exception("Unable to add roles in guild: {}".format(payload.guild_id))
 
-    @commands.Cog.listener('on_reaction_remove')
-    async def on_reaction_remove(self, reaction, member):
-        if await self.bot.cog_disabled_in_guild(self, member.guild):
+    @commands.Cog.listener('on_raw_reaction_remove')
+    async def on_reaction_remove(self, payload):
+        member = self.bot.get_guild(payload.guild_id).get_member(payload.user_id)
+        if not payload.guild_id \
+                  or member.bot \
+                  or await self.bot.cog_disabled_in_guild(self, member.guild):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
-            emoji = reaction.emoji if isinstance(reaction.emoji, str) else str(reaction.emoji.id)
-            role = roles.get(str(reaction.message.id), {}).get(emoji)
+            emoji = payload.emoji if isinstance(payload.emoji, str) else str(payload.emoji.id)
+            role = roles.get(str(payload.message_id), {}).get(emoji)
             if role is None:
                 return
-            await member.remove_roles(reaction.message.guild.get_role(role), reason="On React Role Removal")
+            await member.remove_roles(member.guild.get_role(role), reason="On React Role Grant")
         except discord.Forbidden:
-            logger.exception("Unable to add roles in guild: {}".format(guild.id))
+            logger.exception("Unable to remove roles in guild: {}".format(payload.guild_id))
 
     async def can_assign(self, ctx, role):
         if ctx.author.id == ctx.guild.owner_id:
