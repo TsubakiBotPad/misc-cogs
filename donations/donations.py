@@ -9,7 +9,7 @@ from redbot.core.utils.chat_formatting import box, inline
 from tsutils import CogSettings, clean_global_mentions
 
 DONATE_MSG = """
-Patreon : https://www.patreon.com/tsubaki_bot
+Patreon : <https://www.patreon.com/tsubaki_bot>
 
 Read the Patreon or join the Tsubaki Support Server for more details:
   https://discord.gg/tVPmeG8
