@@ -2,6 +2,7 @@ import asyncio
 import discord.utils
 import json
 import re
+from io import BytesIO
 from redbot.core import Config, checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box, pagify

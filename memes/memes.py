@@ -1,8 +1,8 @@
 import base64
 import discord
-import io
 import os
 import re
+from io import BytesIO
 from redbot.core import checks, commands, data_manager, Config
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings

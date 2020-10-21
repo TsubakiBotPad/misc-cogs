@@ -8,6 +8,7 @@ import re
 import sys
 import timeit
 import tsutils
+from io import BytesIO
 from collections import deque
 from datetime import datetime, timedelta
 from redbot.core import checks
