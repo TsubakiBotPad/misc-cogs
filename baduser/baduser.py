@@ -11,7 +11,8 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings, get_role, get_role_from_id
+from tsutils import CogSettings
+from io import BytesIO
 
 logger = logging.getLogger('red.misc-cogs.baduser')
 
@@ -23,6 +24,7 @@ def opted_in(ctx):
 
 
 class BadUser(commands.Cog):
+    """Allows for more specific punishments than regular discord including global strikes and positive/negative roles"""
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -176,27 +178,21 @@ class BadUser(commands.Cog):
         server = ctx.guild
         output = 'Punishment roles:\n'
         for role_id in self.settings.getPunishmentRoles(server.id):
-            try:
-                role = get_role_from_id(self.bot, server, role_id)
+            role = server.get_role(role_id)
+            if role is not None
                 output += '\t' + role.name + '\n'
-            except Exception as e:
-                pass  # Role was deleted
 
         output += '\nPositive roles:\n'
         for role_id in self.settings.getPositiveRoles(server.id):
-            try:
-                role = get_role_from_id(self.bot, server, role_id)
+            role = server.get_role(role_id)
+            if role is not None
                 output += '\t' + role.name + '\n'
-            except Exception as e:
-                pass  # Role was deleted
 
         output += '\nNeutral roles:\n'
         for role_id in self.settings.getNeutralRoles(server.id):
-            try:
-                role = get_role_from_id(self.bot, server, role_id)
+            role = server.get_role(role_id)
+            if role is not None
                 output += '\t' + role.name + '\n'
-            except Exception as e:
-                pass  # Role was deleted
 
         output += '\nStrike contents are private'
         output += '\nStrike existence is ' + \
@@ -288,7 +284,7 @@ class BadUser(commands.Cog):
 
             try:
                 ban_list = await server.bans()
-            except:
+            except discord.Forbidden:
                 ban_list = list()
                 error_messages.append("Server '{}' refused access to ban list".format(server.name))
 
@@ -348,12 +344,14 @@ class BadUser(commands.Cog):
     @baduser.command()
     @checks.is_owner()
     async def addban(self, ctx, user_id: int, *, reason: str):
+        """Add a banned user"""
         self.settings.addBannedUser(user_id, reason)
         await ctx.tick()
 
     @baduser.command()
     @checks.is_owner()
     async def rmban(self, ctx, user_id: int):
+        """Remove a banned user"""
         user_id = str(user_id)
         self.settings.rmBannedUser(user_id)
         await ctx.tick()
@@ -361,12 +359,14 @@ class BadUser(commands.Cog):
     @baduser.command()
     @checks.is_owner()
     async def opt_in(self, ctx):
+        """Opt this server into baduser"""
         self.settings.addBuEnabled(ctx.guild.id)
         await ctx.tick()
 
     @baduser.command()
-    @checks.is_owner()
+    @checks.mod_or_permissions(manage_guild=True)
     async def opt_out(self, ctx):
+        """Opt this server out of baduser"""
         self.settings.rmBuEnabled(ctx.guild.id)
         await ctx.tick()
 

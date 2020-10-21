@@ -2,6 +2,7 @@
 A cloned and improved version of paddo's calculator cog.
 """
 
+import asyncio
 import discord
 import numbers
 import os
@@ -9,6 +10,7 @@ import re
 import shlex
 import subprocess
 import sys
+from io import BytesIO
 from functools import reduce
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline
@@ -24,6 +26,7 @@ executing a python eval() on it, so some common syntax wont work.  Here is the f
 
 
 class Calculator(commands.Cog):
+    """Calculate expressions via python exec, but safely so users can do it too!"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -32,7 +35,7 @@ class Calculator(commands.Cog):
 
         """
         CONFIG: Config
-        |   GUILDS: Config
+        |   USERS: Config
         |   |   ans: channel_id -> Any
         """
 
@@ -55,7 +58,10 @@ class Calculator(commands.Cog):
     async def helpcalc(self, ctx):
         '''Whispers info on how to use the calculator.'''
         help_msg = HELP_MSG + '\n' + ACCEPTED_TOKENS
-        await ctx.author.send(box(help_msg))
+        try:
+            await ctx.author.send(box(help_msg))
+        except discord.Forbidden:
+            await ctx.send("Failed to send to user.  I might be blocked.")
 
     @commands.command(aliases=['calc', 'math'])
     @checks.bot_has_permissions(embed_links=True)
@@ -81,15 +87,18 @@ class Calculator(commands.Cog):
             sys.executable, ans, inp)
 
         try:
-            if os.name != 'nt' and sys.platform != 'win32':
-                cmd = shlex.split(cmd)
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, timeout=2)
-            calc_result = output.decode('utf-8').strip()
-        except subprocess.TimeoutExpired:
+            proc = await asyncio.create_subprocess_shell(
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=2)
+            if stderr:
+                await ctx.send(inline(stderr.decode("utf-8").strip().split('\n')[-1]))
+                return
+            calc_result = stdout.decode('utf-8').strip()
+        except asyncio.TimeoutError:
             await ctx.send(inline('Command took too long to execute. Quit trying to break the bot.'))
-            return
-        except subprocess.CalledProcessError as e:
-            await ctx.send(inline(e.output.decode("utf-8").strip().split('\n')[-1]))
             return
 
         if len(str(calc_result)) > 1024:

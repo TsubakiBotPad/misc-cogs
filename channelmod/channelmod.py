@@ -1,15 +1,15 @@
 import aiohttp
 import discord
-import io
 import logging
 import re
 import time
 import traceback
 from datetime import datetime
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import inline
-from tsutils import CogSettings, auth_check, box, tsutils
+from tsutils import CogSettings, auth_check, box, replace_emoji_names_with_code, fix_emojis_for_server
 
 logger = logging.getLogger('red.misc-cogs.channelmod')
 
@@ -146,15 +146,10 @@ class ChannelMod(commands.Cog):
                 await self.mirror_msg(to_message)
         await ctx.tick()
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener('on_message_without_command')
     async def mirror_msg(self, message):
         if message.author.id == self.bot.user.id:
             return
-
-        prefixes = await self.bot.get_prefix(message)
-        for prefix in prefixes if isinstance(prefixes, list) else [prefixes]:
-            if message.content.strip().startswith(prefix):
-                return
 
         channel = message.channel
         mirrored_channels = self.settings.get_mirrored_channels(channel.id)
@@ -179,9 +174,7 @@ class ChannelMod(commands.Cog):
             if hasattr(attachment, 'url') and hasattr(attachment, 'filename'):
                 url = attachment.url
                 filename = attachment.filename
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
-                        attachment_bytes = io.BytesIO(await response.read())
+                attachment_bytes = BytesIO(await attachment.read())
 
         for dest_channel_id in mirrored_channels:
             dest_channel = self.bot.get_channel(dest_channel_id)
@@ -220,7 +213,7 @@ class ChannelMod(commands.Cog):
                         await dest_channel.guild.owner.send(message)
                     except Exception:
                         logger.exception("Owner message failed.")
-                logger.warning(
+                logger.exception(
                     'Failed to mirror message from {} to {}: {}'.format(channel.id, dest_channel_id, str(ex)))
 
         if attachment_bytes:
@@ -341,8 +334,8 @@ class ChannelMod(commands.Cog):
         emojis = list()
         for guild in self.bot.guilds:
             emojis.extend(guild.emojis)
-        message = tsutils.replace_emoji_names_with_code(emojis, message)
-        return tsutils.fix_emojis_for_server(emojis, message)
+        message = replace_emoji_names_with_code(emojis, message)
+        return fix_emojis_for_server(emojis, message)
 
 
 class ChannelModSettings(CogSettings):

@@ -1,4 +1,4 @@
-from .calculator import *
+from .calculator import Calculator
 
 __red_end_user_data_statement__ = "The most recent answer in each channel is stored."
 
