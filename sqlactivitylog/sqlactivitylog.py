@@ -1,12 +1,16 @@
+import aioodbc
 import discord
 import logging
 import os
 import prettytable
 import pytz
+import pyodbc
 import sqlite3 as lite
 import textwrap
 import timeit
 import tsutils
+import sys
+from io import BytesIO
 from collections import deque
 from datetime import datetime, timedelta
 from redbot.core import checks, commands, data_manager
@@ -84,10 +88,10 @@ USER_QUERY = '''
 SELECT * FROM (
     SELECT timestamp, channel_id, msg_type, clean_content
     FROM messages INDEXED BY idx_messages_server_id_user_id_timestamp
-    WHERE server_id = :server_id
-      AND user_id = :user_id
+    WHERE server_id = ?
+      AND user_id = ?
     ORDER BY timestamp DESC
-    LIMIT :row_count
+    LIMIT ?
 )
 ORDER BY timestamp ASC
 '''
@@ -96,11 +100,11 @@ CHANNEL_QUERY = '''
 SELECT * FROM (
     SELECT timestamp, user_id, msg_type, clean_content
     FROM messages INDEXED BY idx_messages_server_id_channel_id_timestamp
-    WHERE server_id = :server_id
-      AND channel_id = :channel_id
-      AND user_id <> :bot_id
+    WHERE server_id = ?
+      AND channel_id = ?
+      AND user_id <> ?
     ORDER BY timestamp DESC
-    LIMIT :row_count
+    LIMIT ?
 )
 ORDER BY timestamp ASC
 '''
@@ -109,11 +113,11 @@ USER_CHANNEL_QUERY = '''
 SELECT * FROM (
     SELECT timestamp, msg_type, clean_content
     FROM messages INDEXED BY idx_messages_server_id_channel_id_user_id_timestamp
-    WHERE server_id = :server_id
-      AND user_id = :user_id
-      AND channel_id = :channel_id
+    WHERE server_id = ?
+      AND user_id = ?
+      AND channel_id = ?
     ORDER BY timestamp DESC
-    LIMIT :row_count
+    LIMIT ?
 )
 ORDER BY timestamp ASC
 '''
@@ -122,11 +126,11 @@ CONTENT_QUERY = '''
 SELECT * FROM (
     SELECT timestamp, channel_id, user_id, msg_type, clean_content
     FROM messages INDEXED BY idx_messages_server_id_clean_content
-    WHERE server_id = :server_id
-      AND lower(clean_content) LIKE lower(:content_query)
-      AND user_id <> :bot_id
+    WHERE server_id = ?
+      AND lower(clean_content) LIKE lower(?)
+      AND user_id <> ?
     ORDER BY timestamp DESC
-    LIMIT :row_count
+    LIMIT ?
 )
 ORDER BY timestamp ASC
 '''
@@ -134,14 +138,14 @@ ORDER BY timestamp ASC
 DELETE_BEFORE_QUERY = '''
 DELETE
 FROM messages
-WHERE timestamp  < :before
+WHERE timestamp  < ?
 '''
 
 GET_USER_DATA_QUERY = '''
 SELECT * FROM (
     SELECT timestamp, channel_id, msg_type, clean_content
     FROM messages INDEXED BY idx_messages_server_id_user_id_timestamp
-    WHERE user_id = :user_id
+    WHERE user_id = ?
     ORDER BY timestamp DESC
 )
 ORDER BY timestamp ASC
@@ -150,8 +154,14 @@ ORDER BY timestamp ASC
 DELETE_USER_DATA_QUERY = '''
 DELETE
 FROM messages
-WHERE user_id = :user_id
+WHERE user_id = ?
 '''
+
+async def conn_attributes(conn):
+    conn.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')
+    conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+    conn.setdecoding(pyodbc.SQL_WMETADATA, encoding='utf-16le')
+    conn.setencoding(encoding='utf-8')
 
 
 class SqlActivityLogger(commands.Cog):
@@ -160,27 +170,16 @@ class SqlActivityLogger(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
-        self.lock = False
-        self.con = lite.connect(DB_FILE, detect_types=lite.PARSE_DECLTYPES)
-        self.con.row_factory = lite.Row
-        self.con.execute(CREATE_TABLE)
-        self.con.execute(CREATE_INDEX_1)
-        self.con.execute(CREATE_INDEX_2)
-        self.con.execute(CREATE_INDEX_3)
-        self.con.execute(CREATE_INDEX_4)
-        self.con.execute(CREATE_INDEX_5)
-        self.insert_timing = deque(maxlen=1000)
-        self.purge()
-
-    def cog_unload(self):
         self.lock = True
-        self.con.close()
+        self.insert_timing = deque(maxlen=1000)
+        self.db_path = DB_FILE
+        self.pool = None
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
-        values = {
-            'user_id': user.id,
-        }
+        values = [
+            user.id,
+        ]
         column_data = [
             ('timestamp', 'Time (PT)'),
             ('channel_id', 'Channel'),
@@ -192,7 +191,7 @@ class SqlActivityLogger(commands.Cog):
                 "so data deletion requests can only be made by the bot owner and "
                 "Discord itself.  If you need your data deleted, please contact a "
                 "bot owner.\n\n\n")
-        data += await self.queryAndSave(None, None, USER_QUERY, values, column_data)
+        data += await self.queryAndSave(None, None, GET_USER_DATA_QUERY, values, column_data)
 
         return {"user_data.txt": BytesIO(data.encode())}
 
@@ -205,9 +204,44 @@ class SqlActivityLogger(commands.Cog):
         """
         if requester not in ("discord_deleted_user", "owner"):
             return
-        cursor = self.con.execute(DELETE_USER_DATA_QUERY, {'user_id': user_id})
-        self.con.commit()
 
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(DELETE_USER_DATA_QUERY, [user_id])
+
+    def cog_unload(self):
+        logger.debug('Seniority: unloading')
+        self.lock = True
+        if self.pool:
+            self.pool.close()
+            self.bot.loop.create_task(self.pool.wait_closed())
+            self.pool = None
+        else:
+            logger.error('unexpected error: pool was None')
+        logger.debug('Seniority: unloading complete')
+
+    async def init(self):
+        logger.debug('Seniority: init')
+        if not self.lock:
+            logger.info('Seniority: bailing on unlock')
+            return
+
+        if os.name != 'nt' and sys.platform != 'win32':
+            dsn = 'Driver=SQLite3;Database=' + self.db_path
+        else:
+            dsn = 'Driver=SQLite3 ODBC Driver;Database=' + self.db_path
+        self.pool = await aioodbc.create_pool(dsn=dsn, autocommit=True, after_created=conn_attributes)
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(CREATE_TABLE)
+                await cur.execute(CREATE_INDEX_1)
+                await cur.execute(CREATE_INDEX_2)
+                await cur.execute(CREATE_INDEX_3)
+                await cur.execute(CREATE_INDEX_4)
+        await self.purge()
+        self.lock = False
+
+        logger.debug('Seniority: init complete')
     @commands.command()
     @checks.is_owner()
     async def rawquery(self, ctx, *, query: str):
@@ -251,11 +285,11 @@ class SqlActivityLogger(commands.Cog):
         """
         count = min(count, MAX_LOGS)
         server = ctx.guild
-        values = {
-            'server_id': server.id,
-            'row_count': count,
-            'user_id': user.id,
-        }
+        values = [
+            server.id,
+            user.id,
+            count
+        ]
         column_data = [
             ('timestamp', 'Time (PT)'),
             ('channel_id', 'Channel'),
@@ -275,12 +309,12 @@ class SqlActivityLogger(commands.Cog):
         """
         count = min(count, MAX_LOGS)
         server = channel.guild
-        values = {
-            'server_id': server.id,
-            'bot_id': self.bot.user.id,
-            'row_count': count,
-            'channel_id': channel.id,
-        }
+        values = [
+            server.id,
+            channel.id,
+            self.bot.user.id,
+            count
+        ]
         column_data = [
             ('timestamp', 'Time (PT)'),
             ('user_id', 'User'),
@@ -299,12 +333,12 @@ class SqlActivityLogger(commands.Cog):
         """
         count = min(count, MAX_LOGS)
         server = channel.guild
-        values = {
-            'server_id': server.id,
-            'row_count': count,
-            'channel_id': channel.id,
-            'user_id': user.id,
-        }
+        values = [
+            server.id,
+            user.id,
+            channel.id,
+            count
+        ]
         column_data = [
             ('timestamp', 'Time (PT)'),
             ('msg_type', 'Type'),
@@ -328,12 +362,12 @@ class SqlActivityLogger(commands.Cog):
 
         count = min(count, MAX_LOGS)
         server = ctx.guild
-        values = {
-            'server_id': server.id,
-            'bot_id': self.bot.user.id,
-            'row_count': count,
-            'content_query': query,
-        }
+        values = [
+            server.id,
+            query,
+            self.bot.user.id,
+            count
+        ]
         column_data = [
             ('timestamp', 'Time (PT)'),
             ('channel_id', 'Channel'),
@@ -351,14 +385,17 @@ class SqlActivityLogger(commands.Cog):
 
     async def queryAndSave(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
         before_time = timeit.default_timer()
-        cursor = self.con.execute(query, values)
-        rows = cursor.fetchall()
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(query, values)
+                rows = await cur.fetchall()
+                results_columns = [d[0] for d in cur.description]
+
         execution_time = timeit.default_timer() - before_time
 
         if len(column_data) == 0:
             column_data = ALL_COLUMNS
 
-        results_columns = [d[0] for d in cursor.description]
         column_data = [r for r in column_data if r[0] in results_columns]
         for missing_col in [col for col in results_columns if col not in [c[0] for c in column_data]]:
             column_data.append((missing_col, missing_col))
@@ -376,11 +413,16 @@ class SqlActivityLogger(commands.Cog):
                 break
 
             table_row = list()
+            cols = next(zip(*row.cursor_description))
+
+            print(row)
+            print(cols)
+            print()
             for col in column_names:
-                if col not in row.keys():
+                if col not in cols:
                     table_row.append('')
                     continue
-                raw_value = row[col]
+                raw_value = row[cols.index(col)]
                 value = str(raw_value)
                 if col == 'timestamp':
                     # Assign a UTC timezone to the datetime
@@ -413,13 +455,13 @@ class SqlActivityLogger(commands.Cog):
 
     @commands.Cog.listener("on_message_edit")
     async def on_message_edit(self, before, after):
-        self.log('EDIT', before, after.edited_at)
+        await self.log('EDIT', before, after.edited_at)
 
     @commands.Cog.listener("on_message_delete")
     async def on_message_delete(self, message):
-        self.log('DELETE', message, datetime.utcnow())
+        await self.log('DELETE', message, datetime.utcnow())
 
-    def log(self, msg_type, message, timestamp):
+    async def log(self, msg_type, message, timestamp):
         if self.lock:
             return
 
@@ -428,7 +470,7 @@ class SqlActivityLogger(commands.Cog):
 
         stmt = '''
           INSERT INTO messages(timestamp, server_id, channel_id, user_id, msg_type, content, clean_content)
-          VALUES(:timestamp, :server_id, :channel_id, :user_id, :msg_type, :content, :clean_content)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
         '''
         timestamp = timestamp or datetime.utcnow()
         server_id = message.guild.id if message.guild else -1
@@ -446,26 +488,28 @@ class SqlActivityLogger(commands.Cog):
             msg_content = (msg_content + extra_txt).strip()
             msg_clean_content = (msg_clean_content + extra_txt).strip()
 
-        values = {
-            'timestamp': timestamp,
-            'server_id': server_id,
-            'channel_id': channel_id,
-            'user_id': message.author.id,
-            'msg_type': msg_type,
-            'content': msg_content,
-            'clean_content': msg_clean_content,
-        }
+        values = [
+            timestamp,
+            server_id,
+            channel_id,
+            message.author.id,
+            msg_type,
+            msg_content,
+            msg_clean_content,
+        ]
 
         before_time = timeit.default_timer()
-        self.con.execute(stmt, values)
-        self.con.commit()
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(stmt, *values)
         execution_time = timeit.default_timer() - before_time
         self.insert_timing.append(execution_time)
 
-    def purge(self):
+    async def purge(self):
         before = datetime.today() - timedelta(days=(7 * 3))
-        values = dict(before=before)
+        values = [before]
         logger.debug('Purging old logs')
-        cursor = self.con.execute(DELETE_BEFORE_QUERY, values)
-        self.con.commit()
-        logger.debug('Purged {}'.format(cursor.rowcount))
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(DELETE_BEFORE_QUERY, values)
+                logger.debug('Purged {}'.format(cur.rowcount))

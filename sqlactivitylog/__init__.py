@@ -1,4 +1,4 @@
-from .sqlactivitylog import *
+from .sqlactivitylog import SqlActivityLogger
 
 __red_end_user_data_statement__ = "All message edits/deletions less than 3 weeks old are saved."
 
@@ -6,3 +6,4 @@ __red_end_user_data_statement__ = "All message edits/deletions less than 3 weeks
 def setup(bot):
     n = SqlActivityLogger(bot)
     bot.add_cog(n)
+    bot.loop.create_task(n.init())

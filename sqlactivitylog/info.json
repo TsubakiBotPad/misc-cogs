@@ -4,7 +4,7 @@
   ],
   "description": "Stores message edits and deletions.",
   "end_user_data_statement": "All message edits/deletions less than 3 weeks old are saved.",
-  "install_msg": "",
+  "install_msg": "Use [p]exlog to get started.",
   "short": "Message deletion log",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,11 +15,12 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils",
     "prettytable",
-    "pytz"
+    "pytz",
+    "pyodbc"
   ],
   "tags": [
     "moderation"
