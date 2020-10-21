@@ -11,12 +11,13 @@ from tsutils import CogSettings
 
 
 class ModNotes(commands.Cog):
+    """Keep tabs on iffy users"""
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
         self.settings = ModNotesSettings("modnotes")
 
-    @commands.group(aliases=["usernote"])
+    @commands.group(aliases=["usernote", "modnotes", "modnote"])
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def usernotes(self, ctx):

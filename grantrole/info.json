@@ -1,10 +1,10 @@
 {
   "author": [
-    "The Tsubaki Bot Team"
+    "Aradia Megido#2552"
   ],
   "description": "Grant roles on user join or reaction add",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Use [p]grantrole to get started.",
   "short": "Grant roles on events",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [],
   "tags": [
     "Tsubaki",

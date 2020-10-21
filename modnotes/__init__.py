@@ -1,4 +1,4 @@
-from .modnotes import *
+from .modnotes import ModNotes
 
 __red_end_user_data_statement__ = "No personal data is stored."
 
