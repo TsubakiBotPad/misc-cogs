@@ -84,11 +84,11 @@ class SelfRoleOverride(commands.Cog):
 
         Server admins must have configured the role as user settable.
         """
-        self = self.bot.get_cog("Admin")
-        if self is None:
+        a_cog = self.bot.get_cog("Admin")
+        if a_cog is None:
             await ctx.send("Admin cog not loaded.")
 
-        await self._addrole(ctx, ctx.author, selfrole, check_user=False)
+        await a_cog._addrole(ctx, ctx.author, selfrole, check_user=False)
 
     @selfrole.command(name="remove")
     async def selfrole_remove(self, ctx: commands.Context, *, selfrole: SelfRoleConverterOverride):
@@ -97,22 +97,22 @@ class SelfRoleOverride(commands.Cog):
 
         Server admins must have configured the role as user settable.
         """
-        self = self.bot.get_cog("Admin")
-        if self is None:
+        a_cog = self.bot.get_cog("Admin")
+        if a_cog is None:
             await ctx.send("Admin cog not loaded.")
 
-        await self._removerole(ctx, ctx.author, selfrole, check_user=False)
+        await a_cog._removerole(ctx, ctx.author, selfrole, check_user=False)
 
     @selfrole.command(name="list")
     async def selfrole_list(self, ctx: commands.Context):
         """
         Lists all available selfroles.
         """
-        self = self.bot.get_cog("Admin")
-        if self is None:
+        a_cog = self.bot.get_cog("Admin")
+        if a_cog is None:
             await ctx.send("Admin cog not loaded.")
 
-        selfroles = await self._valid_selfroles(ctx.guild)
+        selfroles = await a_cog._valid_selfroles(ctx.guild)
         fmt_selfroles = "\n".join(["+ " + r.name for r in selfroles])
 
         if not fmt_selfroles:
