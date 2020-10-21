@@ -13,9 +13,9 @@
     8,
     1
   ],
-  "hidden": false,
+  "hidden": true,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [],
   "tags": []
 }
