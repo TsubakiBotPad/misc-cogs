@@ -1,5 +1,6 @@
 import discord
 import logging
+from io import BytesIO
 from redbot.core import checks, commands, Config, modlog
 from redbot.core.utils.chat_formatting import box, inline, pagify
 

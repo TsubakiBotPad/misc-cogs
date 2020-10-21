@@ -3,8 +3,7 @@ import os
 import ctypes.util
 import discord
 import logging
-from google.cloud import texttospeech as google_google_texttospeech
-from google.oauth2 import service_account as google_service_account
+from io import BytesIO
 from azure.cognitiveservices.speech import AudioDataStream, SpeechConfig, SpeechSynthesizer, SpeechSynthesisOutputFormat
 from azure.cognitiveservices.speech.audio import AudioOutputConfig
 from redbot.core import checks
@@ -45,7 +44,6 @@ class Speech(commands.Cog):
         self.bot = bot
         self.settings = SpeechSettings("speech")
 
-        self.gservice = None
         self.aservice = None
         self.try_setup_apis()
         self.busy = False
@@ -63,15 +61,6 @@ class Speech(commands.Cog):
         return
 
     def try_setup_apis(self):
-        # Google Setup
-        api_key_file = self.settings.get_google_key_file()
-        if api_key_file:
-            try:
-                credentials = google_service_account.Credentials.from_google_service_account_file(api_key_file)
-                self.gservice = google_texttospeech.google_texttospeechClient(credentials=credentials)
-            except:
-                logger.warning('Google speech setup failed.  Check your API key.')
-
         api_key = self.settings.get_azure_key()
         if api_key:
             try:
@@ -87,8 +76,8 @@ class Speech(commands.Cog):
     @commands.command()
     async def vcsay(self, ctx, *, text):
         """Speak into the current user's voice channel."""
-        if not (self.gservice or self.aservice):
-            await ctx.send(inline('Set up an API key file first!'))
+        if not self.aservice:
+            await ctx.send('Set up an Azure API key file first via `{}setapikey!`'.format(ctx.prefix`))
             return
 
         voice = ctx.author.voice
@@ -113,10 +102,7 @@ class Speech(commands.Cog):
             self.busy = True
 
         audio_data = None
-        if self.gservice:
-            audio_data = self.google_text_to_speech(text)
-        elif self.aservice:
-            audio_data = self.azure_text_to_speech(text)
+        audio_data = self.azure_text_to_speech(text)
 
         if audio_data is None:
             await ctx.send(inline("There are no avaliable services"))
@@ -159,31 +145,10 @@ class Speech(commands.Cog):
 
     @speech.command()
     @checks.is_owner()
-    async def setgooglekeyfile(self, ctx, api_key_file):
-        """Sets the google api key file."""
-        self.settings.set_google_key_file(api_key_file)
-        await ctx.send("done, make sure the key file is in the data/speech directory")
-
-    @speech.command()
-    @checks.is_owner()
-    async def setazurekeyfile(self, ctx, api_key):
+    async def setapikey(self, ctx, api_key):
         """Sets the azure api key."""
         self.settings.set_azure_key(api_key)
         await ctx.tick()
-
-    def google_text_to_speech(self, text):
-        try:
-            voice = google_texttospeech.types.VoiceSelectionParams(
-                language_code='en-US', name='en-US-Wavenet-F')
-
-            audio_config = google_texttospeech.types.AudioConfig(
-                audio_encoding=google_texttospeech.enums.AudioEncoding.MP3)
-
-            synthesis_input = google_texttospeech.types.SynthesisInput(text=text)
-            response = self.gservice.synthesize_speech(synthesis_input, voice, audio_config)
-            return response.audio_content
-        except Exception as e:
-            logger.exception("Google Text to Speech Failiure:")
 
     def azure_text_to_speech(self, text):
         try:
@@ -201,17 +166,9 @@ class Speech(commands.Cog):
 class SpeechSettings(CogSettings):
     def make_default_settings(self):
         config = {
-            'google_api_key_file': '',
             'azure_api_key': ''
         }
         return config
-
-    def get_google_key_file(self):
-        return self.bot_settings.get('google_api_key_file')
-
-    def set_google_key_file(self, api_key_file):
-        self.bot_settings['google_api_key_file'] = api_key_file
-        self.save_settings()
 
     def get_azure_key(self):
         return self.bot_settings.get('azure_api_key')
