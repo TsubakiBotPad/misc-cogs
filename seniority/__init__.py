@@ -1,4 +1,4 @@
-from .seniority import *
+from .seniority import Seniority
 
 __red_end_user_data_statement__ = "Activity data is stored."
 
