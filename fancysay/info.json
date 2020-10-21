@@ -4,7 +4,7 @@
   ],
   "description": "Allows the user to make the bot say things in a variety of ways.",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Get started with [p]fancysay.  See https://github.com/TsubakiBotPad/misc-cogs/wiki/FancySay for a full list of commands.",
   "short": "Say things with \u2728style\u2728~",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils"
   ],

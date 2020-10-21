@@ -4,7 +4,7 @@
   ],
   "description": "Export and import data for memes, customcom, and alias",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Use [p]export and [p]import to move setups between bots or servers.",
   "short": "Exports/Imports data for some cogs",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "aiohttp"
   ],

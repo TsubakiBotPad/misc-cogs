@@ -3,9 +3,9 @@
     "The Tsubaki Bot Team"
   ],
   "description": "Allows for more specific punishments than regular discord including global strikes and positive/negative roles.",
-  "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "General purpose punishment cog.",
-  "short": "A fancy python powered calculator",
+  "end_user_data_statement": "All users last 10 messages are stored in memory, and when a user is marked as problematic, their last 10 messages are stored perminently for logging purposes.",
+  "install_msg": "Use [p]baduser to get started.",
+  "short": "General purpose punishment cog",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
   "min_python_version": [
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils"
   ],

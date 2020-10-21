@@ -8,7 +8,7 @@ import asyncio
 import discord
 import logging
 import prettytable
-import re
+import re2 as re
 import tsutils
 from collections import defaultdict
 from collections import deque
@@ -79,6 +79,7 @@ def linked_img_count(message):
 
 
 class AutoMod2(commands.Cog):
+    """Uses regex pattern matching to filter message content and set limits on users"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -299,11 +300,11 @@ class AutoMod2(commands.Cog):
                 if linked_img_count(m) > 0:
                     try:
                         await m.delete()
-                    except:
+                    except Exception:
                         pass
                     try:
                         user_logs.remove(m)
-                    except:
+                    except Exception:
                         pass
 
             msg = m.author.mention + inline(' Upload multiple images to an imgur gallery #endimagespam')
@@ -616,22 +617,6 @@ class AutoMod2(commands.Cog):
         return tsutils.strip_right_multiline(tbl.get_string())
 
 
-def matchesPattern(pattern, txt):
-    if not len(pattern):
-        return False
-
-    try:
-        if pattern[0] == pattern[-1] == ':':
-            check_method = globals().get(pattern[1:-1])
-            if check_method:
-                return check_method(txt)
-    except:
-        return False
-
-    p = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
-    return p.match(txt)
-
-
 def starts_with_code(txt):
     # ignore spaces before or in code
     txt = txt.replace(' ', '')
@@ -652,10 +637,32 @@ def pad_checkdigit(n):
     return checkdigit == calcdigit
 
 
+CUSTOM_PATTERNS = {
+    'starts_with_code': starts_with_code,
+    'pad_checkdigit': pad_checkdigit,
+}
+
+
 def matchesIncludeExclude(include_pattern, exclude_pattern, txt):
     if matchesPattern(include_pattern, txt):
         return not matchesPattern(exclude_pattern, txt)
     return False
+
+
+def matchesPattern(pattern, txt):
+    if not len(pattern):
+        return False
+
+    try:
+        if pattern[0] == pattern[-1] == ':':
+            check_method = CUSTOM_PATTERNS.get(pattern[1:-1])
+            if check_method:
+                return check_method(txt)
+    except Exception:
+        return False
+
+    p = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+    return p.match(txt)
 
 
 class AutoMod2Settings(CogSettings):

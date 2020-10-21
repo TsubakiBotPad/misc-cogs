@@ -2,10 +2,11 @@ import asyncio
 import discord
 import logging
 import re
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline
+from redbot.core.utils.chat_formatting import inline, box
 from typing import Optional
 from tsutils import char_to_emoji
 from tsutils import tsutils
@@ -14,6 +15,7 @@ logger = logging.getLogger('red.misc-cogs.fancysay')
 
 
 class FancySay(commands.Cog):
+    """Allows the user to make the bot say things in a variety of ways."""
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -129,7 +131,7 @@ class FancySay(commands.Cog):
             used += char
 
 
-    @fancysay.command()
+    @fancysay.command(aliases=['tdif'])
     @checks.bot_has_permissions(embed_links=True)
     async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
@@ -159,7 +161,7 @@ class FancySay(commands.Cog):
             await ctx.send(embed=embed)
             await ctx.message.delete()
         except Exception as error:
-            logger.exception("failed to fancysay:")
+            await ctx.send(box(error.text))
 
     @commands.command(aliases=["parrot", "repeat"])
     @checks.mod_or_permissions(manage_messages=True)

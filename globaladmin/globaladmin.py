@@ -1,5 +1,6 @@
 import discord
 import logging
+from io import BytesIO
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, tsutils
@@ -8,6 +9,7 @@ logger = logging.getLogger('red.misc-cogs.globaladmin')
 
 
 class GlobalAdmin(commands.Cog):
+    """Set up authentication for admins for other cogs via tsutils"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot

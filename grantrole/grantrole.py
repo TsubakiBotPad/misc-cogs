@@ -6,6 +6,7 @@ from redbot.core.utils.chat_formatting import box, inline, pagify
 logger = logging.getLogger('red.misc-cogs.grantrole')
 
 class GrantRole(commands.Cog):
+    """Grant roles on user join or reaction add"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot

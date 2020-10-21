@@ -4,7 +4,7 @@
   ],
   "description": "Uses regex pattern matching to filter message content and set limits on users",
   "end_user_data_statement": "This cog stores id of users manually marked as problematic.",
-  "install_msg": "",
+  "install_msg": "Use [p]automod2 to get started and [p]automodhelp for help!",
   "short": "Filter messages via regex",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,10 +15,11 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils",
-    "prettytable"
+    "prettytable",
+    "re2"
   ],
   "tags": [
     "moderation",

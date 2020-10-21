@@ -9,6 +9,7 @@ from redbot.core.utils.chat_formatting import box, inline, pagify
 
 
 class MsgUtils(commands.Cog):
+    """Utilities to view raw messages"""
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot

@@ -6,6 +6,7 @@ from redbot.core.utils.chat_formatting import box, inline, pagify
 
 
 class ModTools(commands.Cog):
+    """Some chill commands for mods"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -23,6 +24,7 @@ class ModTools(commands.Cog):
         return
 
     @commands.command()
+    @checks.bot_has_permissions(manage_nicknames=True)
     async def revertname(self, ctx):
         """Unsets your nickname"""
         await ctx.author.edit(nick=None)
@@ -43,6 +45,7 @@ class ModTools(commands.Cog):
     @commands.command()
     @checks.mod_or_permissions(manage_guild=True)
     async def onlinecount(self, ctx):
+        """Counts online members of a guild"""
         gonline = gmobile = conline = cmobile = 0
         for member in ctx.guild.members:
             gonline += member.status.name == "online"
@@ -56,5 +59,5 @@ class ModTools(commands.Cog):
 
     @commands.command()
     async def servercount(self, ctx):
+        """Check how many servers this bot is in"""
         await ctx.send("{} is in {} servers.".format(self.bot.user.name, len(self.bot.guilds)))
-        

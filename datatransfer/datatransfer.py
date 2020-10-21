@@ -1,7 +1,7 @@
 import aiohttp
 import base64
 import discord
-import io
+from io import BytesIO
 import json
 import os
 import re
@@ -45,6 +45,7 @@ class DataTransfer(commands.Cog):
 
     @_import.command(name="alias")
     async def import_alias(self, ctx, bot_mention: discord.User, link_or_attatchment=""):
+        """Import aliases"""
         if not bot_mention == ctx.me:
             return
 
@@ -77,15 +78,17 @@ class DataTransfer(commands.Cog):
 
     @_export.command(name="alias")
     async def export_alias(self, ctx, bot_mention: discord.Member):
+        """export aliases"""
         if not bot_mention == ctx.me:
             return
 
         raw_data = (await self.bot.get_cog("Alias").config.all_guilds())[ctx.guild.id]
         data = base64.b64encode(json.dumps(raw_data).encode())
-        await ctx.send(file=discord.File(io.BytesIO(data), "alias_settings.enc"))
+        await ctx.send(file=discord.File(BytesIO(data), "alias_settings.enc"))
 
     @_import.command(name="customcom", aliases=["cc", "customcommands", "customcommand"])
     async def import_customcommand(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
+        """Import customcommands"""
         if not bot_mention == ctx.me:
             return
 
@@ -118,15 +121,17 @@ class DataTransfer(commands.Cog):
 
     @_export.command(name="customcom", aliases=["cc", "customcommands", "customcommand"])
     async def export_customcommand(self, ctx, bot_mention: discord.Member):
+        """Export customcommands"""
         if not bot_mention == ctx.me:
             return
 
         raw_data = (await self.bot.get_cog("CustomCommands").config.all_guilds())[ctx.guild.id]
         data = base64.b64encode(json.dumps(raw_data).encode())
-        await ctx.send(file=discord.File(io.BytesIO(data), "cc_settings.enc"))
+        await ctx.send(file=discord.File(BytesIO(data), "cc_settings.enc"))
 
     @_import.command(name="memes", aliases=["meme"])
     async def import_meme(self, ctx, bot_mention: discord.User, link_or_attatchment=None):
+        """Import memes"""
         if not bot_mention == ctx.me:
             return
 
@@ -157,6 +162,7 @@ class DataTransfer(commands.Cog):
 
     @_export.command(name="memes", aliases=["meme"])
     async def export(self, ctx, bot_mention: discord.Member):
+        """Export memes"""
         if not bot_mention == ctx.me:
             return
 
@@ -165,4 +171,4 @@ class DataTransfer(commands.Cog):
             'commands': self.bot.get_cog("Memes").c_commands[ctx.guild.id],
         }
         data = base64.b64encode(json.dumps(raw_data).encode())
-        await ctx.send(file=discord.File(io.BytesIO(data), "meme_settings.enc"))
+        await ctx.send(file=discord.File(BytesIO(data), "meme_settings.enc"))

@@ -4,7 +4,7 @@
   ],
   "description": "Allows users to see raw messages and manipulate bot messages in new ways.",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Go to https://github.com/TsubakiBotPad/misc-cogs/wiki/MsgUtils for a command list",
   "short": "Message manipulation",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [],
   "tags": [
     "administration"

@@ -2,11 +2,12 @@ import discord
 import json
 import random
 import re
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import box, inline
-from tsutils import CogSettings, clean_global_mentions
+from redbot.core.utils.chat_formatting import box, inline, escape
+from tsutils import CogSettings
 
 DONATE_MSG = """
 Patreon : <https://www.patreon.com/tsubaki_bot>
@@ -70,14 +71,14 @@ class Donations(commands.Cog):
 
         try:
             insults_json = json.load(open(INSULTS_FILE, "r"))
-        except:
+        except Exception:
             insults_json = {}
         self.insults_miru_reference = insults_json.get(
             'miru_references', DEFAULT_INSULTS['miru_references'])
         self.insults_list = insults_json.get('insults', DEFAULT_INSULTS['insults'])
         try:
             love_json = json.load(open(LOVE_FILE, "r"))
-        except:
+        except Exception:
             love_json = {}
         self.cute_list = love_json.get('cute', DEFAULT_LOVE['cute'])
         self.sexy_list = love_json.get('sexy', DEFAULT_LOVE['sexy'])
@@ -115,8 +116,11 @@ class Donations(commands.Cog):
         await self.bot.wait_until_ready()
         drole, prole, server = self.settings.getDPS()
         self.support_guild = self.bot.get_guild(server)
-        self.donor_role = self.support_guild.get_role(drole)
-        self.patron_role = self.support_guild.get_role(prole)
+        if self.support_guild:
+            self.donor_role = self.support_guild.get_role(drole)
+            self.patron_role = self.support_guild.get_role(prole)
+        else:
+            self.donor_role = self.patron_role = None
 
     @commands.command()
     async def donate(self, ctx):
@@ -133,7 +137,7 @@ class Donations(commands.Cog):
     @commands.check(is_donor)
     async def mycommand(self, ctx, command: str, *, text: str):
         """Sets your custom command."""
-        text = clean_global_mentions(text)
+        text = escape(text, mass_mentions=True)
 
         self.settings.addCustomCommand(ctx.author.id, command, text)
         await ctx.send(inline('I set up your command: ' + command))

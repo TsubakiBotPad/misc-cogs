@@ -2,9 +2,11 @@ import asyncio
 import datetime
 import discord
 import logging
+from io import BytesIO
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
+from tsutils import confirm_message
 
 logger = logging.getLogger('red.misc-cogs.globalban')
 
@@ -36,6 +38,10 @@ class GlobalBan(commands.Cog):
     @checks.admin_or_permissions(administrator=True)
     async def optin(self, ctx):
         """Opt your server in to the Global Ban system."""
+        if not await confirm_message("This will ban all users on the global"
+                                     " ban list. Are you sure you want to opt in?"):
+            return
+            
         async with self.config.opted() as opted:
             opted.append(ctx.guild.id)
         await self.update_gbs()
@@ -45,6 +51,11 @@ class GlobalBan(commands.Cog):
     @checks.admin_or_permissions(administrator=True)
     async def optout(self, ctx):
         """Opt your server out of the Global Ban system."""
+        if not await confirm_message("This will remove all bans that intersect"
+                                     " with the global ban list. Are you sure"
+                                     " you want to opt out?"):
+            return
+
         async with self.config.opted() as opted:
             while ctx.guild.id in opted:
                 opted.remove(ctx.guild.id)
@@ -54,18 +65,19 @@ class GlobalBan(commands.Cog):
     @globalban.command()
     @checks.is_owner()
     @checks.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx, user, *, reason=""):
+    async def ban(self, ctx, user: int, *, reason=""):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
-            banned[user] = reason
+            banned[str(user)] = reason
         await self.update_gbs()
         await ctx.tick()
 
     @globalban.command()
     @checks.is_owner()
     @checks.bot_has_permissions(ban_members=True)
-    async def unban(self, ctx, user):
+    async def unban(self, ctx, user: int):
         """Globally Unban a user across all opted-in servers."""
+        user = str(user)
         async with self.config.banned() as banned:
             if user in banned:
                 del banned[user]
@@ -76,7 +88,10 @@ class GlobalBan(commands.Cog):
         for gid in await self.config.opted():
             guild = self.bot.get_guild(int(gid))
             for uid, reason in (await self.config.banned()).items():
-                if uid in [b.user.id for b in await guild.bans()]:
+                try:
+                    if uid in [b.user.id for b in await guild.bans()]:
+                        continue
+                except AttributeError, discord.Forbidden:
                     continue
                 m = guild.get_member(int(uid))
                 try:
@@ -89,7 +104,7 @@ class GlobalBan(commands.Cog):
                         await guild.ban(m, reason="GlobalBan", delete_message_days=0)
                     await modlog.create_case(bot=self.bot,
                                              guild=guild,
-                                             created_at=datetime.datetime.now(),
+                                             created_at=datetime.datetime.now(datetime.timezone.utc),
                                              action_type="globalban",
                                              user=m,
                                              reason='GlobalBan')

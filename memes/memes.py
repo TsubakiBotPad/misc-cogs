@@ -1,16 +1,11 @@
 import base64
 import discord
 import io
-import json
 import os
 import re
-from redbot.core import checks, commands, data_manager
+from redbot.core import checks, commands, data_manager, Config
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings, get_role_from_id, safe_read_json
-
-
-def _data_file(file_name: str) -> str:
-    return os.path.join(str(data_manager.cog_data_path(raw_name='memes')), file_name)
+from tsutils import CogSettings
 
 
 class Memes(commands.Cog):
@@ -19,9 +14,9 @@ class Memes(commands.Cog):
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
-        self.file_path = _data_file('commands.json')
-        self.c_commands = safe_read_json(self.file_path)
-        self.c_commands = {int(k): v for k, v in self.c_commands.items()}  # Fix legacy issues
+
+        self.config = Config.get_conf(self, identifier=73735)
+        self.config.register_guild(memes={})
         self.settings = MemesSettings("memes")
 
     async def red_get_data_for_user(self, *, user_id):
@@ -48,21 +43,17 @@ class Memes(commands.Cog):
         Memes can be enhanced with arguments:
         https://twentysix26.github.io/Red-Docs/red_guide_command_args/
         """
-        guild = ctx.guild
         command = command.lower()
         if command in self.bot.all_commands.keys():
             await ctx.send("That meme is already a standard command.")
             return
-        if not guild.id in self.c_commands:
-            self.c_commands[guild.id] = {}
-        cmdlist = self.c_commands[guild.id]
-        if command not in cmdlist:
+
+        async with self.config.guild(ctx.guild).memes() as cmdlist:
+            if command in cmdlist:
+                await ctx.send("That command already exists. Use editmeme [command] [text]")
+                return
             cmdlist[command] = text
-            self.c_commands[guild.id] = cmdlist
-            json.dump(self.c_commands, open(self.file_path, 'w+'))
-            await ctx.send("Custom command successfully added.")
-        else:
-            await ctx.send("This command already exists. Use editmeme to edit it.")
+        await ctx.tick()
 
     @commands.command()
     @commands.guild_only()
@@ -73,19 +64,13 @@ class Memes(commands.Cog):
         Example:
         [p]editmeme yourcommand Text you want
         """
-        guild = ctx.guild
         command = command.lower()
-        if guild.id in self.c_commands:
-            cmdlist = self.c_commands[guild.id]
-            if command in cmdlist:
-                cmdlist[command] = text
-                self.c_commands[guild.id] = cmdlist
-                json.dump(self.c_commands, open(self.file_path, 'w+'))
-                await ctx.send("Custom command successfully edited.")
-            else:
+        async with self.config.guild(ctx.guild).memes() as cmdlist:
+            if command not in cmdlist:
                 await ctx.send("That command doesn't exist. Use addmeme [command] [text]")
-        else:
-            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
+                return
+            cmdlist[command] = text
+        await ctx.tick()
 
     @commands.command()
     @commands.guild_only()
@@ -95,19 +80,13 @@ class Memes(commands.Cog):
 
         Example:
         [p]delmeme yourcommand"""
-        guild = ctx.guild
         command = command.lower()
-        if guild.id in self.c_commands:
-            cmdlist = self.c_commands[guild.id]
-            if command in cmdlist:
-                cmdlist.pop(command, None)
-                self.c_commands[guild.id] = cmdlist
-                json.dump(self.c_commands, open(self.file_path, 'w+'))
-                await ctx.send("Custom meme successfully deleted.")
-            else:
+        async with self.config.guild(ctx.guild).memes() as cmdlist:
+            if command not in cmdlist:
                 await ctx.send("That meme doesn't exist.")
-        else:
-            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
+                return
+            del cmdlist[command]
+        await ctx.tick()
 
     @commands.command()
     @commands.guild_only()
@@ -125,23 +104,12 @@ class Memes(commands.Cog):
     @commands.guild_only()
     async def memes(self, ctx):
         """Shows custom memes list"""
-        guild = ctx.guild
-        if guild.id in self.c_commands and self.c_commands[guild.id]:
-            cmdlist = self.c_commands[guild.id]
-            i = 0
-            msg = ["```Custom memes:\n"]
-            for cmd in sorted([cmd for cmd in cmdlist.keys()]):
-                if len(msg[i]) + len(ctx.prefix) + len(cmd) + 5 > 2000:
-                    msg[i] += "```"
-                    i += 1
-                    msg.append("``` {}{}\n".format(ctx.prefix, cmd))
-                else:
-                    msg[i] += " {}{}\n".format(ctx.prefix, cmd)
-            msg[i] += "```"
-            for cmds in msg:
-                await ctx.author.send(cmds)
-        else:
-            await ctx.send("There are no custom memes in this server. Use addmeme [command] [text]")
+        cmdlist = await self.config.guild(ctx.guild).memes()
+        msg = "Custom memes:\n"
+        for cmd in sorted([cmd for cmd in cmdlist.keys()]):
+            msg += " {}{}\n".format(ctx.prefix, cmd)
+        for page in pagify(msg):
+            await ctx.author.send(box(page))
 
     @commands.Cog.listener('on_message')
     async def checkCC(self, message):
@@ -157,22 +125,21 @@ class Memes(commands.Cog):
         # MEME CODE
         role_id = self.settings.getPrivileged(guild.id)
         if role_id is not None:
-            role = get_role_from_id(self.bot, guild, role_id)
+            role = guild.get_role(role_id)
             if role not in message.author.roles:
                 return
 
         # MEME CODE
-        if guild.id in self.c_commands and not message.author.bot:
-            cmdlist = self.c_commands[guild.id]
-            cmd = message.content[len(prefix):]
-            if cmd in cmdlist.keys():
-                cmd = cmdlist[cmd]
-                cmd = self.format_cc(cmd, message)
-                await message.channel.send(cmd)
-            elif cmd.lower() in cmdlist.keys():
-                cmd = cmdlist[cmd.lower()]
-                cmd = self.format_cc(cmd, message)
-                await message.channel.send(cmd)
+        cmdlist = await self.config.guild(ctx.guild).memes()
+        cmd = message.content[len(prefix):]
+        if cmd in cmdlist.keys():
+            cmd = cmdlist[cmd]
+            cmd = self.format_cc(cmd, message)
+            await message.channel.send(cmd)
+        elif cmd.lower() in cmdlist.keys():
+            cmd = cmdlist[cmd.lower()]
+            cmd = self.format_cc(cmd, message)
+            await message.channel.send(cmd)
 
     async def get_prefix(self, message):
         for p in await self.bot.get_prefix(message):
@@ -191,6 +158,9 @@ class Memes(commands.Cog):
         """
         For security reasons only specific objects are allowed
         Internals are ignored
+
+        Credit:
+        https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/customcom/customcom.py#L734-L758
         """
         raw_result = "{" + result + "}"
         objects = {
