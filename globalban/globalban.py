@@ -44,7 +44,8 @@ class GlobalBan(commands.Cog):
 
         async with self.config.opted() as opted:
             opted.append(ctx.guild.id)
-        await self.update_gbs()
+        async with ctx.typing():
+            await self.update_gbs()
         await ctx.tick()
 
     @globalban.command()
@@ -59,7 +60,8 @@ class GlobalBan(commands.Cog):
         async with self.config.opted() as opted:
             while ctx.guild.id in opted:
                 opted.remove(ctx.guild.id)
-        await self.remove_gbs_guild(ctx.guild.id)
+        async with ctx.typing():
+            await self.remove_gbs_guild(ctx.guild.id)
         await ctx.tick()
 
     @globalban.command()
@@ -69,7 +71,8 @@ class GlobalBan(commands.Cog):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
             banned[str(user)] = reason
-        await self.update_gbs()
+        async with ctx.typing():
+            await self.update_gbs()
         await ctx.tick()
 
     @globalban.command()
@@ -81,7 +84,8 @@ class GlobalBan(commands.Cog):
         async with self.config.banned() as banned:
             if user in banned:
                 del banned[user]
-        await self.remove_gbs_user(user)
+        async with ctx.typing():
+            await self.remove_gbs_user(user)
         await ctx.tick()
 
     async def update_gbs(self):
