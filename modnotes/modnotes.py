@@ -3,6 +3,7 @@ Utilities for managing moderator notes about users.
 """
 import discord
 import re
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red

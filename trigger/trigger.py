@@ -2,11 +2,17 @@ import asyncio
 import datetime
 import discord
 import os
-import re
 from random import choice
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, escape, pagify
 
+try:
+    import re2 as re
+except ImportError:
+    try:
+        import regex as re
+    except ImportError:
+        import re
 
 class TriggerError(Exception):
     pass
@@ -32,6 +38,8 @@ class Trigger(commands.Cog):
         self.config = Config.get_conf(self, identifier=7173306)
         self.config.register_global(triggers=[])
 
+        self._stats_loop = bot.loop.create_task(self.save_stats())
+
         self.triggers = []
 
     async def red_get_data_for_user(self, *, user_id):
@@ -48,6 +56,9 @@ class Trigger(commands.Cog):
         for trigger in self.triggers:
             if trigger.owner == user_id:
                 trigger.owner = None
+
+    def cog_unload(self):
+         self._stats_loop.cancel()
 
     @commands.group()
     @commands.guild_only()

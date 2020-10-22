@@ -19,7 +19,7 @@
   "requirements": [
     "tsutils",
     "prettytable",
-    "re2"
+    "regex"
   ],
   "tags": [
     "moderation",

@@ -4,7 +4,7 @@
   ],
   "description": "Audio helper functions for other cogs + a few commands of its own.",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Use [p]setapikey to set up your Azure API.",
   "short": "Audio helper commands",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,13 +15,9 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils",
-    "google-api",
-    "google-api-python-client",
-    "google-cloud",
-    "google-cloud-texttospeech",
     "azure-cognitiveservices-speech",
     "PyNaCl==1.3.0"
   ],

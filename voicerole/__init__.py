@@ -1,4 +1,4 @@
-from .voicerole import *
+from .voicerole import VoiceRole
 
 __red_end_user_data_statement__ = "No personal data is stored."
 

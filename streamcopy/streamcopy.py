@@ -3,16 +3,18 @@ import discord
 import logging
 import random
 import traceback
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline
-from tsutils import CogSettings, get_role, get_role_from_id
+from tsutils import CogSettings
 
 logger = logging.getLogger('red.misc-cogs.streamcopy')
 
 
 class StreamCopy(commands.Cog):
+    """Show which members are streaming and opt members in and out of being public for the guild"""
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -51,13 +53,8 @@ class StreamCopy(commands.Cog):
     @streamcopy.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def setStreamerRole(self, ctx, *, role_name: str):
-        try:
-            role = get_role(ctx.guild.roles, role_name)
-        except:
-            await ctx.send(inline('Unknown role'))
-            return
-
+    async def setStreamerRole(self, ctx, *, role_name: discord.Role):
+        """Sets the streamer role."""
         self.settings.set_streamer_role(ctx.guild.id, role.id)
         await ctx.send(inline('Done. Make sure that role is below the bot in the hierarchy'))
 
@@ -65,18 +62,21 @@ class StreamCopy(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def clearStreamerRole(self, ctx):
+        """Removes the streamer role."""
         self.settings.clear_streamer_role(ctx.guild.id)
         await ctx.tick()
 
     @streamcopy.command(name="adduser")
     @checks.is_owner()
     async def addUser(self, ctx, user: discord.User):
+        """Opts a user into streamcopy"""
         self.settings.add_user(user.id)
         await ctx.tick()
 
     @streamcopy.command(name="rmuser")
     @checks.is_owner()
     async def rmUser(self, ctx, user):
+        """Opts a user out of streamcopy"""
         try:
             u = await commands.MemberConverter().convert(ctx, user)
             self.settings.rm_user(u.id)
@@ -92,6 +92,7 @@ class StreamCopy(commands.Cog):
     @streamcopy.command(name="list")
     @checks.is_owner()
     async def list(self, ctx):
+        """Lists all users who are opted into streamcopy"""
         user_ids = self.settings.users().keys()
         members = {x.id: x for x in self.bot.get_all_members() if x.id in user_ids}
 
@@ -104,12 +105,14 @@ class StreamCopy(commands.Cog):
     @streamcopy.command(name="refresh")
     @checks.is_owner()
     async def refresh(self, ctx):
+        """Refreshes the streamcopy cog data"""
         other_stream = await self.do_refresh()
         if other_stream:
             await ctx.send(inline('Updated stream'))
         else:
             await ctx.send(inline('Could not find a streamer'))
 
+    @commands.Cog.listener('on_member_update')
     async def check_stream(self, before, after):
         streamer_role_id = self.settings.get_streamer_role(before.guild.id)
         if streamer_role_id:
@@ -128,17 +131,13 @@ class StreamCopy(commands.Cog):
         except Exception as ex:
             logger.exception("Stream checking failed")
 
-    async def ensure_user_streaming_role(self, server, streamer_role_id: discord.Role, user: discord.Member):
+    async def ensure_user_streaming_role(self, server, streamer_role: discord.Role, user: discord.Member):
         user_is_playing = self.is_playing(user)
-        try:
-            streamer_role = get_role_from_id(self.bot, server, streamer_role_id)
-            user_has_streamer_role = streamer_role in user.roles
-            if user_is_playing and not user_has_streamer_role:
-                await user.add_roles(streamer_role)
-            elif not user_is_playing and user_has_streamer_role:
-                await user.remove_roles(streamer_role)
-        except Exception as ex:
-            pass
+        user_has_streamer_role = streamer_role in user.roles
+        if user_is_playing and not user_has_streamer_role:
+            await user.add_roles(streamer_role)
+        elif not user_is_playing and user_has_streamer_role:
+            await user.remove_roles(streamer_role)
 
     async def do_refresh(self):
         other_stream = self.find_stream()

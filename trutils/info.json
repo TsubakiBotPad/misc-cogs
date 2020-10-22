@@ -4,7 +4,7 @@
   ],
   "description": "Commands for bot owners.",
   "end_user_data_statement": "No personal data is stored.",
-  "install_msg": "",
+  "install_msg": "Go to https://github.com/TsubakiBotPad/misc-cogs/wiki/TrUtils for a full list of commands",
   "short": "Owner Utils",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [],
   "tags": [
     "developer"

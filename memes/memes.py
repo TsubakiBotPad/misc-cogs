@@ -1,8 +1,8 @@
 import base64
 import discord
-import io
 import os
 import re
+from io import BytesIO
 from redbot.core import checks, commands, data_manager, Config
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings
@@ -130,7 +130,7 @@ class Memes(commands.Cog):
                 return
 
         # MEME CODE
-        cmdlist = await self.config.guild(ctx.guild).memes()
+        cmdlist = await self.config.guild(message.guild).memes()
         cmd = message.content[len(prefix):]
         if cmd in cmdlist.keys():
             cmd = cmdlist[cmd]

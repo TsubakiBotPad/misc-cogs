@@ -1,8 +1,10 @@
+from io import BytesIO
 from redbot.core import checks, commands
 from redbot.core.utils.chat_formatting import box, pagify
 
 
 class Playground(commands.Cog):
+    """A temporary place for test commands that don't last long."""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot

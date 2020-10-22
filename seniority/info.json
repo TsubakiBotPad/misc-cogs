@@ -4,7 +4,7 @@
   ],
   "description": "Assigns a role to active members.",
   "end_user_data_statement": "Activity data is stored.",
-  "install_msg": "",
+  "install_msg": "Use [p]seniority to get started.",
   "short": "Activity Tracker",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": [
     "tsutils",
     "aioodbc",

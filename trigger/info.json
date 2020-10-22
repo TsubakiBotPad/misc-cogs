@@ -5,7 +5,7 @@
   ],
   "description": "Setup commands that trigger certain behaviors.",
   "end_user_data_statement": "Triggers are stored persistantly.",
-  "install_msg": "",
+  "install_msg": "Use [p]trigger and [p]triggerset to use this cog",
   "short": "You're an eyesore!",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -16,8 +16,8 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
-  "requirements": [],
+  "required_cogs": {},
+  "requirements": ["regex"],
   "tags": [
     "general",
     "customcommands"

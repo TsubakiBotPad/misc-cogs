@@ -8,6 +8,7 @@ import re
 import sys
 import timeit
 import tsutils
+from io import BytesIO
 from collections import deque
 from datetime import datetime, timedelta
 from redbot.core import checks
@@ -240,9 +241,9 @@ class Seniority(commands.Cog):
         msg += 'Roles:'
         for role_id, config in self.settings.roles(server_id).items():
             try:
-                role = tsutils.get_role_from_id(self.bot, server, role_id)
+                role = server.get_role(role_id)
                 role_name = role.name
-            except:
+            except AttributeError:
                 role_name = role_id
             msg += '\n\t{}'.format(role_name)
             msg += '\n\t\tremove_amount : {}'.format(config['remove_amount'])
@@ -555,7 +556,7 @@ class Seniority(commands.Cog):
 
     @config.command()
     @commands.guild_only()
-    async def role(self, ctx, role_name: str, remove_amount: int, warn_amount: int, grant_amount: int):
+    async def role(self, ctx, role: discord.Role, remove_amount: int, warn_amount: int, grant_amount: int):
         """Set the configuration for a role.
 
         role_name: Role name to configure
@@ -566,8 +567,11 @@ class Seniority(commands.Cog):
         remove_amount must be less than grant_amount.
         Set all three to 0 to delete the entry.
         """
+        if ctx.author.top_role <= role:
+            await ctx.send("The role must be lower than your highest role.")
+            return
+
         server = ctx.guild
-        role = tsutils.get_role(server.roles, role_name)
         self.settings.set_role(server.id, role.id, remove_amount, warn_amount, grant_amount)
 
         if remove_amount == 0 and grant_amount == 0:

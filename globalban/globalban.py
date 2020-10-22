@@ -41,7 +41,7 @@ class GlobalBan(commands.Cog):
         if not await confirm_message("This will ban all users on the global"
                                      " ban list. Are you sure you want to opt in?"):
             return
-            
+
         async with self.config.opted() as opted:
             opted.append(ctx.guild.id)
         await self.update_gbs()
@@ -91,7 +91,7 @@ class GlobalBan(commands.Cog):
                 try:
                     if uid in [b.user.id for b in await guild.bans()]:
                         continue
-                except AttributeError, discord.Forbidden:
+                except (AttributeError, discord.Forbidden):
                     continue
                 m = guild.get_member(int(uid))
                 try:
