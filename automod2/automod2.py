@@ -249,7 +249,8 @@ class AutoMod2(commands.Cog):
                 output += '\t\t{}\n'.format(name)
             output += '\n\tImage Limit: {}'.format(image_limit)
             output += '\n\tAuto Emojis Type: {}'.format(auto_emojis_type)
-        await boxPagifySay(ctx.send, output)
+        for page in pagify(output):
+            await ctx.send(box(page))
 
     @automod2.command()
     @commands.guild_only()
@@ -259,7 +260,8 @@ class AutoMod2(commands.Cog):
         patterns = self.settings.getPatterns(ctx.guild.id)
         output = 'AutoMod patterns for this server\n\n'
         output += self.patternsToTableText(patterns.values())
-        await boxPagifySay(ctx.send, output)
+        for page in pagify(output):
+            await ctx.send(box(page))
 
     @automod2.command()
     @commands.guild_only()
