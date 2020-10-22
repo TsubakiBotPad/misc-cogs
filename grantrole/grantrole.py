@@ -12,7 +12,7 @@ class GrantRole(commands.Cog):
         super().__init__(*args, **kwargs)
         self.bot = bot
         self.config = Config.get_conf(self, identifier=624772073)
-        self.config.register_guild(messages={}, on_join=[], on_react={})
+        self.config.register_guild(on_join=[], on_react={})
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -37,6 +37,7 @@ class GrantRole(commands.Cog):
 
     @onjoin.command(name="add")
     async def onjoin_add(self, ctx, role: discord.Role):
+        """Add an onjoin role"""
         if not await self.can_assign(ctx, role):
             return
         async with self.config.guild(ctx.guild).on_join() as on_join:
@@ -48,6 +49,7 @@ class GrantRole(commands.Cog):
 
     @onjoin.command(name="remove")
     async def onjoin_remove(self, ctx, role: discord.Role):
+        """Remove an onjoin role"""
         async with self.config.guild(ctx.guild).on_join() as on_join:
             if role.id not in on_join:
                 await ctx.send("This role isn't assigned on join.")
@@ -57,6 +59,7 @@ class GrantRole(commands.Cog):
 
     @onjoin.command(name="list")
     async def onjoin_list(self, ctx):
+        """List onjoin roles"""
         o = []
         for role_id in await self.config.guild(ctx.guild).on_join():
             o.append("#{}".format(ctx.guild.get_role(role_id) or "deleted_role"))
@@ -67,8 +70,15 @@ class GrantRole(commands.Cog):
         """Manipulate roles granted on emoji react"""
 
     @onreact.command(name="add")
-    async def onreact_add(self, ctx, message: discord.Message, emoji: discord.Emoji, role: discord.Role):
+    async def onreact_add(self, ctx, message: discord.Message, emoji, role: discord.Role):
         """Add a role on a reaction"""
+        try:
+            emoji = await commands.EmojiConverter().convert(ctx, emoji)
+        except commands.BadArgument:
+            if emoji not in emoji_module.UNICODE_EMOJI:
+                await ctx.send("I do not have access to emoji `{}`".format(emoji))
+                return
+
         if not await self.can_assign(ctx, role):
             return
         await message.add_reaction(emoji)
@@ -77,22 +87,16 @@ class GrantRole(commands.Cog):
             on_react[str(message.id)][str(emoji.id)] = role.id
         await ctx.tick()
 
-    @onreact_add.error
-    async def onreact_error(self, ctx, error):
-        if isinstance(error, commands.errors.ConversionFailure) and error.converter == discord.Role:
-            await ctx.send(("I do not have access to `{}`.  Please add me to the"
-                            " server it's hosted in or use a different emoji.".format(error.argument)))
-        elif isinstance(error, commands.errors.ConversionFailure):
-            raise error
-        elif isinstance(error, discord.ext.commands.UserInputError):
-            await ctx.send_help()
-        else:
-            raise error
-
     @onreact.command(name="remove")
-    async def onreact_remove(self, ctx, message: discord.Message, emoji: discord.Emoji):
+    async def onreact_remove(self, ctx, message: discord.Message, emoji):
         """Remove a role from a reaction"""
-        await message.add_reaction(emoji)
+        try:
+            emoji = await commands.EmojiConverter().convert(ctx, emoji)
+        except commands.BadArgument:
+            if emoji not in emoji_module.UNICODE_EMOJI:
+                await ctx.send("I do not have access to emoji `{}`".format(emoji))
+                return
+
         async with self.config.guild(ctx.guild).on_react() as on_react:
             if not on_react.get(str(message.id)) or not on_react.get(str(message.id), {}).get(str(emoji.id)):
                 await ctx.send("That emoji isn't mapped to a role.")
@@ -102,6 +106,7 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="list")
     async def onreact_list(self, ctx, message: discord.Message):
+        """List all emoji for a message"""
         roles = await self.config.guild(message.guild).on_react()
         if str(message.id) not in roles:
             await ctx.send("That message isn't configured with onreact")
@@ -117,6 +122,7 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="serverlist")
     async def onreact_serverlist(self, ctx):
+        """List all grantrole setups on this server"""
         async with ctx.typing():
             roles = await self.config.guild(ctx.guild).on_react()
             msg = []
@@ -143,6 +149,7 @@ class GrantRole(commands.Cog):
 
     @onreact.command(name="catchup")
     async def onreact_catchup(self, ctx, message: discord.Message):
+        """Catchup on a message (in case bot goes down)"""
         roles = await self.config.guild(message.guild).on_react()
         if str(message.id) not in roles:
             await ctx.send("That message isn't configured with onreact")
@@ -193,7 +200,7 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(member.guild).on_react()
         try:
-            emoji = payload.emoji if isinstance(payload.emoji, str) else str(payload.emoji.id)
+            emoji = payload.emoji.name if isinstance(payload.emoji, discord.PartialEmoji) else str(payload.emoji.id)
             role = roles.get(str(payload.message_id), {}).get(emoji)
             if role is None:
                 return
