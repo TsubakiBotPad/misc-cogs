@@ -5,6 +5,7 @@ import re
 import time
 import traceback
 import tsutils
+from io import BytesIO
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from redbot.core import Config, checks, commands
@@ -69,6 +70,8 @@ class TimeCog(commands.Cog):
         |   |   |   |   message: str
         """
 
+        self._reminder_loop = bot.loop.create_task(n.reminderloop())
+
         self.bot = bot
 
     async def red_get_data_for_user(self, *, user_id):
@@ -85,6 +88,9 @@ class TimeCog(commands.Cog):
     async def red_delete_data_for_user(self, *, requester, user_id):
         """Delete a user's personal data."""
         await self.config.user_from_id(user_id).clear()
+
+    def cog_unload(self):
+         self._reminder_loop.cancel()
 
     @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
     async def remindme(self, ctx, *, time):
@@ -446,29 +452,38 @@ class TimeCog(commands.Cog):
             await ctx.send(inline("Invalid tzstr: " + tzstr))
 
     async def reminderloop(self):
-        await self.bot.wait_until_ready()
-        async for _ in tsutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
-            urs = await self.config.all_users()
-            gds = await self.config.all_guilds()
-            now = datetime.utcnow()
-            for u in urs:
-                for c, rm in enumerate(urs[u]['reminders']):
-                    if datetime.fromtimestamp(float(rm[0])) < now:
-                        async with self.config.user(self.bot.get_user(u)).reminders() as rms:
-                            if len(rm) == 3:
-                                rms[c][0] += rms[c][2]
-                            else:
-                                rms.remove(rm)
-                        await self.bot.get_user(u).send(rm[1])
-            for g in gds:
-                for n, sc in gds[g]['schedules'].items():
-                    if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
-                        continue
-                    if datetime.fromtimestamp(float(sc['time'])) < now:
-                        async with self.config.guild(self.bot.get_guild(g)).schedules() as scs:
-                            scs[n]['time'] += scs[n]['interval']
-                        for ch in sc['channels']:
-                            await self.bot.get_channel(ch).send(sc['message'])
+        try:
+            await self.bot.wait_until_ready()
+            async for _ in tsutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
+                urs = await self.config.all_users()
+                gds = await self.config.all_guilds()
+                now = datetime.utcnow()
+                for u in urs:
+                    for c, rm in enumerate(urs[u]['reminders']):
+                        if datetime.fromtimestamp(float(rm[0])) < now:
+                            async with self.config.user(self.bot.get_user(u)).reminders() as rms:
+                                if len(rm) == 3:
+                                    rms[c][0] += rms[c][2]
+                                else:
+                                    rms.remove(rm)
+                            try:
+                                await self.bot.get_user(u).send(rm[1])
+                            except discord.Forbidden:
+                                pass
+                for g in gds:
+                    for n, sc in gds[g]['schedules'].items():
+                        if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
+                            continue
+                        if datetime.fromtimestamp(float(sc['time'])) < now:
+                            async with self.config.guild(self.bot.get_guild(g)).schedules() as scs:
+                                scs[n]['time'] += scs[n]['interval']
+                            for ch in sc['channels']:
+                                try:
+                                    await self.bot.get_channel(ch).send(sc['message'])
+                                except AttributeError, discord.Forbidden:
+                                    pass
+        except asyncio.CancelledError:
+            pass
 
     @commands.command()
     async def time(self, ctx, *, tz: str):
