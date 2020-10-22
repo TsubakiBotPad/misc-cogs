@@ -7,7 +7,6 @@ import pytz
 import re
 import sys
 import timeit
-import tsutils
 from io import BytesIO
 from collections import deque
 from datetime import datetime, timedelta
@@ -379,11 +378,7 @@ class Seniority(commands.Cog):
 
     def roles_and_amounts(self, server: discord.Guild, check_name: str):
         for role_id, role_config in self.settings.roles(server.id).items():
-            amount = role_config[check_name]
-            try:
-                role = tsutils.get_role_from_id(self.bot, server, role_id)
-            except:
-                role = None
+            role = server.get_role(role_id)
             yield role_id, role, amount
 
     async def get_grant_ignore_users(self,
@@ -407,7 +402,7 @@ class Seniority(commands.Cog):
         return grant_users, ignored_users
 
     async def get_lookback_points(self, server: discord.Guild, lookback_days: int):
-        lookback_date = datetime.now(tsutils.NA_TZ_OBJ) - timedelta(days=lookback_days)
+        lookback_date = datetime.now(NA_TZ_OBJ) - timedelta(days=lookback_days)
         lookback_date_str = lookback_date.date().isoformat()
 
         async with self.pool.acquire() as conn:
@@ -658,7 +653,7 @@ class Seniority(commands.Cog):
         server = message.guild
         server_id = server.id
         if self.settings.ignore_commands(server_id):
-            if await tsutils.get_prefix(self.bot, message):
+            if await bot.get_prefix(message)
                 return False, text, 'Ignored command'
 
         if self.settings.ignore_room_codes(server_id):
@@ -817,7 +812,7 @@ def ensure_map(item, key, default_value):
 
 
 def now_date():
-    return datetime.now(tsutils.NA_TZ_OBJ).date().isoformat()
+    return datetime.now(NA_TZ_OBJ).date().isoformat()
 
 
 class SenioritySettings(CogSettings):
