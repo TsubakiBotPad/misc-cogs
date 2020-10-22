@@ -1,12 +1,14 @@
 import asyncio
 import json
 import re
+from io import BytesIO
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
-import tsutils
+from tsutils import confirm_message
 
 
 class Todo(commands.Cog):
+    """A virtual todo list in cog form"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -70,7 +72,7 @@ class Todo(commands.Cog):
     async def purge(self, ctx):
         """Remove the nth item from your todo list."""
         focus = await self.config.user(ctx.author).focus()
-        if not await tsutils.confirm_message(ctx, "Are you sure you want to clear the todo list '{}'?".format(focus)):
+        if not await confirm_message(ctx, "Are you sure you want to clear the todo list '{}'?".format(focus)):
             return
         async with self.config.user(ctx.author).todos() as todos:
             todos[focus] = []

@@ -4,7 +4,7 @@
   ],
   "description": "Adds todo lists for users.",
   "end_user_data_statement": "Todo lists are stored.",
-  "install_msg": "",
+  "install_msg": "Use [p]todo to get started.",
   "short": "Todo lists",
   "min_bot_version": "3.4.0",
   "max_bot_version": "3.4.0",
@@ -15,7 +15,7 @@
   ],
   "hidden": false,
   "disabled": false,
-  "require_cogs": {},
+  "required_cogs": {},
   "requirements": ["tsutils"],
   "tags": [
     "todo"
