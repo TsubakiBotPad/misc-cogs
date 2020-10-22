@@ -1,4 +1,5 @@
 import logging
+import discord
 from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands

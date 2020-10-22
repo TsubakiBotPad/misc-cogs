@@ -17,7 +17,7 @@
   "hidden": false,
   "disabled": false,
   "required_cogs": {},
-  "requirements": ["re2"],
+  "requirements": ["regex"],
   "tags": [
     "general",
     "customcommands"

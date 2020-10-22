@@ -130,7 +130,7 @@ class Memes(commands.Cog):
                 return
 
         # MEME CODE
-        cmdlist = await self.config.guild(ctx.guild).memes()
+        cmdlist = await self.config.guild(message.guild).memes()
         cmd = message.content[len(prefix):]
         if cmd in cmdlist.keys():
             cmd = cmdlist[cmd]

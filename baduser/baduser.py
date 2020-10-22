@@ -179,19 +179,19 @@ class BadUser(commands.Cog):
         output = 'Punishment roles:\n'
         for role_id in self.settings.getPunishmentRoles(server.id):
             role = server.get_role(role_id)
-            if role is not None
+            if role is not None:
                 output += '\t' + role.name + '\n'
 
         output += '\nPositive roles:\n'
         for role_id in self.settings.getPositiveRoles(server.id):
             role = server.get_role(role_id)
-            if role is not None
+            if role is not None:
                 output += '\t' + role.name + '\n'
 
         output += '\nNeutral roles:\n'
         for role_id in self.settings.getNeutralRoles(server.id):
             role = server.get_role(role_id)
-            if role is not None
+            if role is not None:
                 output += '\t' + role.name + '\n'
 
         output += '\nStrike contents are private'

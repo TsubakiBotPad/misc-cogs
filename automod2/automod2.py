@@ -8,7 +8,6 @@ import asyncio
 import discord
 import logging
 import prettytable
-import re2 as re
 import tsutils
 from collections import defaultdict
 from collections import deque
@@ -18,6 +17,14 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings, boxPagifySay
+
+try:
+    import re2 as re
+except ImportError:
+    try:
+        import regex as re
+    except ImportError:
+        import re
 
 logger = logging.getLogger('red.misc-cogs.automod2')
 

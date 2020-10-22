@@ -77,7 +77,7 @@ class Speech(commands.Cog):
     async def vcsay(self, ctx, *, text):
         """Speak into the current user's voice channel."""
         if not self.aservice:
-            await ctx.send('Set up an Azure API key file first via `{}setapikey!`'.format(ctx.prefix`))
+            await ctx.send('Set up an Azure API key file first via `{}setapikey!`'.format(ctx.prefix))
             return
 
         voice = ctx.author.voice

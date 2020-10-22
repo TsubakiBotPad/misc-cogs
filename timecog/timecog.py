@@ -70,7 +70,7 @@ class TimeCog(commands.Cog):
         |   |   |   |   message: str
         """
 
-        self._reminder_loop = bot.loop.create_task(n.reminderloop())
+        self._reminder_loop = bot.loop.create_task(self.reminderloop())
 
         self.bot = bot
 
@@ -480,7 +480,7 @@ class TimeCog(commands.Cog):
                             for ch in sc['channels']:
                                 try:
                                     await self.bot.get_channel(ch).send(sc['message'])
-                                except AttributeError, discord.Forbidden:
+                                except (AttributeError, discord.Forbidden):
                                     pass
         except asyncio.CancelledError:
             pass
