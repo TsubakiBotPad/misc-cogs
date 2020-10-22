@@ -7,6 +7,7 @@ from redbot.core.utils.chat_formatting import box, inline, pagify
 
 
 class TrUtils(commands.Cog):
+    """Owner Utilities"""
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
