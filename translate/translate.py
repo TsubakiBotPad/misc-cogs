@@ -85,7 +85,7 @@ class Translate(commands.Cog):
         return res[0]['translations'][0]['text']
 
     async def translate_to_embed(self, ctx, source, target, query):
-        if not (self.gservice or self.aservice):
+        if not self.aservice:
             await ctx.send(inline('Set up an API key first!'))
             return
 
