@@ -1,11 +1,11 @@
 import logging
-
+from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import *
+from redbot.core.utils.chat_formatting import box
 
-from tsutils import CogSettings, get_role_from_id
+from tsutils import CogSettings
 
 logger = logging.getLogger('red.misc-cogs.voicerole')
 
@@ -43,9 +43,10 @@ class VoiceRole(commands.Cog):
         if channel_id not in channel_roles:
             return
 
-        role_id = channel_roles[channel_id]
+        role = guild.get_role(channel_roles[channel_id])
+        if role is None:
+            return
         try:
-            role = get_role_from_id(self.bot, guild, role_id)
             if member.voice:
                 await member.add_roles(role)
             else:
@@ -72,6 +73,9 @@ class VoiceRole(commands.Cog):
 
         To reference a role, make it pingable.
         """
+        if ctx.author.top_role < role:
+            await ctx.send("The role must be lower than your highest role.")
+            return
         self.settings.add_channel_role(ctx.guild.id, channel.id, role.id)
         await ctx.tick()
 

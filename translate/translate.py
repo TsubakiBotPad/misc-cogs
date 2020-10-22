@@ -4,6 +4,7 @@ import json
 import logging
 import romkan
 import uuid
+from io import BytesIO
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
