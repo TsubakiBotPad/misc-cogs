@@ -193,20 +193,25 @@ class GrantRole(commands.Cog):
 
     @commands.Cog.listener('on_raw_reaction_remove')
     async def on_reaction_remove(self, payload):
-        member = self.bot.get_guild(payload.guild_id).get_member(payload.user_id)
+        try:
+            member = self.bot.get_guild(payload.guild_id).get_member(payload.user_id)
+            guild = member.guild
+        except AttributeError:
+            return
+
         if not payload.guild_id \
                   or member.bot \
-                  or await self.bot.cog_disabled_in_guild(self, member.guild):
+                  or await self.bot.cog_disabled_in_guild(self, guild):
             return
-        roles = await self.config.guild(member.guild).on_react()
+        roles = await self.config.guild(guild).on_react()
         try:
             emoji = payload.emoji.name if isinstance(payload.emoji, discord.PartialEmoji) else str(payload.emoji.id)
             role = roles.get(str(payload.message_id), {}).get(emoji)
             if role is None:
                 return
-            await member.remove_roles(member.guild.get_role(role), reason="On React Role Grant")
+            await member.remove_roles(guild.get_role(role), reason="On React Role Grant")
         except discord.Forbidden:
-            logger.exception("Unable to remove roles in guild: {}".format(payload.guild_id))
+            logger.exception("Unable to remove roles in guild: {}".format(guild.id))
 
     async def can_assign(self, ctx, role):
         if ctx.author.id == ctx.guild.owner_id:
