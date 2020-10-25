@@ -379,7 +379,7 @@ class Seniority(commands.Cog):
     def roles_and_amounts(self, server: discord.Guild, check_name: str):
         for role_id, role_config in self.settings.roles(server.id).items():
             role = server.get_role(role_id)
-            yield role_id, role, amount
+            yield role_id, role, role_config[check_name]
 
     async def get_grant_ignore_users(self,
                                      server: discord.Guild,
