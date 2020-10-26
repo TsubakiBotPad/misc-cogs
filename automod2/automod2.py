@@ -16,7 +16,7 @@ from io import BytesIO
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings, boxPagifySay
+from tsutils import CogSettings
 
 try:
     import re2 as re
