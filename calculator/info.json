@@ -7,7 +7,7 @@
   "install_msg": "Use [p]calculator to get started, and use [p]helpcalc for help.",
   "short": "A fancy python powered calculator",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.0",
+  "max_bot_version": "3.4.2",
   "min_python_version": [
     3,
     8,

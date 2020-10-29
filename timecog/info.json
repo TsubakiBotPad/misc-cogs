@@ -7,7 +7,7 @@
   "install_msg": "Go to https://github.com/TsubakiBotPad/misc-cogs/wiki/TimeCog for a full command list.",
   "short": "remindme and scheduler",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.0",
+  "max_bot_version": "3.4.2",
   "min_python_version": [
     3,
     8,
