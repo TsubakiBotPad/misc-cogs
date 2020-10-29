@@ -7,7 +7,7 @@
   "install_msg": "Use [p]globalban to get started. NOTE: This cog can be API intense, and time scales with opted in servers and size of the ban list.",
   "short": "Ban users across multiple servers",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.0",
+  "max_bot_version": "3.4.2",
   "min_python_version": [
     3,
     8,
