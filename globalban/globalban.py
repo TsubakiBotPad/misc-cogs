@@ -96,6 +96,7 @@ class GlobalBan(commands.Cog):
                     if uid in [b.user.id for b in await guild.bans()]:
                         continue
                 except (AttributeError, discord.Forbidden):
+                    logger.exception(f"Error with guild with id '{gid}'")
                     continue
                 m = guild.get_member(int(uid))
                 try:
@@ -129,7 +130,11 @@ class GlobalBan(commands.Cog):
     async def remove_gbs_user(self, uid):
         for gid in await self.config.opted():
             guild = self.bot.get_guild(int(gid))
-            users = [b.user for b in await guild.bans() if b.user.id == int(uid)]
+            try:
+                users = [b.user for b in await guild.bans() if b.user.id == int(uid)]
+            except (AttributeError, discord.Forbidden):
+                logger.exception(f"Error with guild with id '{gid}'")
+                continue
             if users:
                 try:
                     await guild.unban(users[0])

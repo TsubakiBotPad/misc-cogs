@@ -390,7 +390,7 @@ class BadUser(commands.Cog):
     async def mod_ban(self, guild, user):
         if guild.id not in self.settings.buEnabled():
             return
-        await self.recordBadUser(user, 'BANNED')
+        await self.recordBadUser(user, 'BANNED', guild=guild)
 
     @commands.Cog.listener('on_member_remove')
     async def mod_user_left(self, member):
@@ -462,7 +462,10 @@ class BadUser(commands.Cog):
                 await self.recordRoleChange(after, role.name, False, send_ping=False)
                 return
 
-    async def recordBadUser(self, member, role_name):
+    async def recordBadUser(self, member, role_name, guild=None):
+        if guild is None:
+            guild = member.guild
+
         latest_messages = self.logs.get(member.id, "")
         msg = 'Name={} Nick={} ID={} Joined={} Role={}\n'.format(
                                     member.name,
@@ -471,12 +474,12 @@ class BadUser(commands.Cog):
                                     member.joined_at if isinstance(member, discord.Member) else 'N/A',
                                     role_name)
         msg += '\n'.join(latest_messages)
-        self.settings.updateBadUser(member.guild.id, member.id, msg)
-        strikes = self.settings.countUserStrikes(member.guild.id, member.id)
+        self.settings.updateBadUser(guild.id, member.id, msg)
+        strikes = self.settings.countUserStrikes(guild.id, member.id)
 
-        update_channel = self.settings.getChannel(member.guild.id)
+        update_channel = self.settings.getChannel(guild.id)
         if update_channel is not None:
-            channel_obj = member.guild.get_channel(update_channel)
+            channel_obj = guild.get_channel(update_channel)
             await channel_obj.send(inline('Detected bad user'))
             await channel_obj.send(box(msg))
             followup_msg = 'Hey @here please leave a note explaining why this user is punished'
@@ -486,14 +489,15 @@ class BadUser(commands.Cog):
             try:
                 dm_msg = ('You were assigned the punishment role "{}" in the server "{}".\n'
                           'The Mods will contact you shortly regarding this.\n'
-                          'Attempting to clear this role yourself will result in punishment.').format(role_name,
-                                                                                                      member.guild.name)
+                          'Attempting to clear this role yourself will result in punishment.').format(role_name, guild.name)
                 await member.send(box(dm_msg))
                 await channel_obj.send('User successfully notified')
             except Exception as e:
                 await channel_obj.send('Failed to notify the user! I might be blocked\n' + box(str(e)))
 
-    async def recordRoleChange(self, member, role_name, is_added, send_ping=True):
+    async def recordRoleChange(self, member, role_name, is_added, send_ping=True, guild=None):
+        if guild is None:
+            guild = member.guild
         msg = 'Detected role {} : Name={} Nick={} ID={} Joined={} Role={}'.format(
                                         "Added" if is_added else "Removed",
                                         member.name,
@@ -502,9 +506,9 @@ class BadUser(commands.Cog):
                                         member.joined_at if isinstance(member, discord.Member) else 'N/A',
                                         role_name)
 
-        update_channel = self.settings.getChannel(member.guild.id)
+        update_channel = self.settings.getChannel(guild.id)
         if update_channel is not None:
-            channel_obj = member.guild.get_channel(update_channel)
+            channel_obj = guild.get_channel(update_channel)
             try:
                 await channel_obj.send(inline(msg))
                 if send_ping:
