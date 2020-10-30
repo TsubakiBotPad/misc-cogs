@@ -465,7 +465,11 @@ class BadUser(commands.Cog):
     async def recordBadUser(self, member, role_name):
         latest_messages = self.logs.get(member.id, "")
         msg = 'Name={} Nick={} ID={} Joined={} Role={}\n'.format(
-            member.name, member.display_name, member.id, member.joined_at, role_name)
+                                    member.name,
+                                    member.display_name,
+                                    member.id,
+                                    member.joined_at if isinstance(member, discord.Member) else 'N/A',
+                                    role_name)
         msg += '\n'.join(latest_messages)
         self.settings.updateBadUser(member.guild.id, member.id, msg)
         strikes = self.settings.countUserStrikes(member.guild.id, member.id)
@@ -491,7 +495,12 @@ class BadUser(commands.Cog):
 
     async def recordRoleChange(self, member, role_name, is_added, send_ping=True):
         msg = 'Detected role {} : Name={} Nick={} ID={} Joined={} Role={}'.format(
-            "Added" if is_added else "Removed", member.name, member.display_name, member.id, member.joined_at, role_name)
+                                        "Added" if is_added else "Removed",
+                                        member.name,
+                                        member.display_name,
+                                        member.id,
+                                        member.joined_at if isinstance(member, discord.Member) else 'N/A',
+                                        role_name)
 
         update_channel = self.settings.getChannel(member.guild.id)
         if update_channel is not None:

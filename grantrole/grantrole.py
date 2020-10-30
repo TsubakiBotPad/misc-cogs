@@ -194,9 +194,9 @@ class GrantRole(commands.Cog):
     @commands.Cog.listener('on_raw_reaction_remove')
     async def on_reaction_remove(self, payload):
         try:
-            member = self.bot.get_guild(payload.guild_id).get_member(payload.user_id)
-            guild = member.guild
-        except AttributeError:
+            guild = self.bot.get_guild(payload.guild_id)
+            member = await guild.fetch_member(payload.user_id)
+        except (AttributeError, discord.NotFound):
             return
 
         if not payload.guild_id \
