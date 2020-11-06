@@ -799,7 +799,7 @@ class Seniority(commands.Cog):
             len(rows), round(execution_time, 2), tbl.get_string())
 
         if total:
-            result_text += '\n\nTotal: {}'.format(grand_total)
+            result_text += '\n\nTotal: {}'.format(round(grand_total, 2))
 
         for p in pagify(result_text):
             await ctx.send(box(p))
