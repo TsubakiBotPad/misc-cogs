@@ -7,7 +7,7 @@
   "install_msg": "Have fun!  Use [p]onlinecount to check server members! NOTE: This cog allows users to unset their nickname without permissions using [p]revertname.",
   "short": "Some chill commands for mods (and superfuckingban)",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.2",
+  "max_bot_version": "0.0.0",
   "min_python_version": [
     3,
     8,

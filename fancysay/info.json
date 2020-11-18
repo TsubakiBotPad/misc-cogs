@@ -7,7 +7,7 @@
   "install_msg": "Get started with [p]fancysay.  See https://github.com/TsubakiBotPad/misc-cogs/wiki/FancySay for a full list of commands.",
   "short": "Say things with \u2728style\u2728~",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.2",
+  "max_bot_version": "0.0.0",
   "min_python_version": [
     3,
     8,
