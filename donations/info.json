@@ -7,7 +7,7 @@
   "install_msg": "Set up your donor and patron roles via [p]setup.  Go to https://github.com/TsubakiBotPad/misc-cogs/wiki/Donations for more help.",
   "short": "Patreon/Donor perks",
   "min_bot_version": "3.4.0",
-  "max_bot_version": "3.4.2",
+  "max_bot_version": "0.0.0",
   "min_python_version": [
     3,
     8,
