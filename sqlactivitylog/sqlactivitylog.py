@@ -415,9 +415,6 @@ class SqlActivityLogger(commands.Cog):
             table_row = list()
             cols = next(zip(*row.cursor_description))
 
-            print(row)
-            print(cols)
-            print()
             for col in column_names:
                 if col not in cols:
                     table_row.append('')

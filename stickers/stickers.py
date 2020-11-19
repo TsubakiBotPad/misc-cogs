@@ -10,7 +10,7 @@ from tsutils import CogSettings
 
 
 async def is_sticker_admin_check(ctx):
-    return ctx.get_cog("Stickers").settings.check_admin(ctx.author.id) or await ctx.bot.is_owner(ctx.author)
+    return ctx.bot.get_cog("Stickers").settings.check_admin(ctx.author.id) or await ctx.bot.is_owner(ctx.author)
 
 
 def is_sticker_admin():

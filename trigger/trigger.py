@@ -206,7 +206,6 @@ class Trigger(commands.Cog):
                         if c.guild.id == ctx.guild.id:
                             msg+="  #{}\n".format(c.name)
                     except Exception as e:
-                        print(e)
                         msg+="  {} (unknown)\n".format(channel)
             msg += "Cooldown: {} seconds\n".format(trigger.cooldown)
             msg += "Triggered By: \"{}\"\n".format(trigger.triggered_by.replace("`", "\\`"))
