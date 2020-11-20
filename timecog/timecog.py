@@ -461,21 +461,21 @@ class TimeCog(commands.Cog):
                 for u in urs:
                     for c, rm in enumerate(urs[u]['reminders']):
                         if datetime.fromtimestamp(float(rm[0])) < now:
-                            async with self.config.user(self.bot.get_user(u)).reminders() as rms:
+                            async with self.config.user(discord.Object(id=u)).reminders() as rms:
                                 if len(rm) == 3:
                                     rms[c][0] += rms[c][2]
                                 else:
                                     rms.remove(rm)
                             try:
                                 await self.bot.get_user(u).send(rm[1])
-                            except discord.Forbidden:
+                            except (discord.Forbidden, AttributeError):
                                 pass
                 for g in gds:
                     for n, sc in gds[g]['schedules'].items():
                         if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
                             continue
                         if datetime.fromtimestamp(float(sc['time'])) < now:
-                            async with self.config.guild(self.bot.get_guild(g)).schedules() as scs:
+                            async with self.config.guild(iscord.Object(id=g)).schedules() as scs:
                                 scs[n]['time'] += scs[n]['interval']
                             for ch in sc['channels']:
                                 try:
