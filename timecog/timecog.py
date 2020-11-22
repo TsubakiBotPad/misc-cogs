@@ -475,7 +475,7 @@ class TimeCog(commands.Cog):
                         if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
                             continue
                         if datetime.fromtimestamp(float(sc['time'])) < now:
-                            async with self.config.guild(iscord.Object(id=g)).schedules() as scs:
+                            async with self.config.guild(discord.Object(id=g)).schedules() as scs:
                                 scs[n]['time'] += scs[n]['interval']
                             for ch in sc['channels']:
                                 try:
