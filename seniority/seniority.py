@@ -477,9 +477,10 @@ class Seniority(commands.Cog):
 
     @seniority.command()
     @commands.guild_only()
-    async def checktext(self, ctx, text: str):
+    async def checktext(self, ctx, *, text: str):
         """Check if text is considered significant by the current config.
         """
+        ctx.message.content = text
         is_good, cleaned_text, reason = await self.check_acceptable(ctx.message, text)
         if is_good:
             await ctx.send(box('Message accepted, cleaned text:\n{}'.format(cleaned_text)))
@@ -653,7 +654,7 @@ class Seniority(commands.Cog):
         server = message.guild
         server_id = server.id
         if self.settings.ignore_commands(server_id):
-            if await self.bot.get_prefix(message):
+            if (await self.bot.get_context(message)).prefix:
                 return False, text, 'Ignored command'
 
         if self.settings.ignore_room_codes(server_id):
