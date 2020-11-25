@@ -16,7 +16,7 @@
   "hidden": false,
   "disabled": false,
   "required_cogs": {},
-  "requirements": [],
+  "requirements": ["emoji"],
   "tags": [
     "Tsubaki",
     "feedback"
