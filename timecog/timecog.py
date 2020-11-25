@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import pytz
+import logger
 import re
 import time
 import traceback
@@ -11,6 +12,8 @@ from dateutil.relativedelta import relativedelta
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
+
+logger = logging.getLogger('red.misc-cogs.timecog')
 
 tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
                   for x in pytz.all_timezones])
@@ -97,6 +100,10 @@ class TimeCog(commands.Cog):
             try:
                 await asyncio.sleep(60 * 60)
                 self._reminder_loop.cancel()
+                logger.info("Refreshing TimeCog loop...")
+                e = self._reminder_loop.exception()
+                if e:
+                    logger.error("Exception in TimeCog loop: {!r}".format(e))
                 self._reminder_loop = bot.loop.create_task(self.reminderloop())
             except Exception:
                 pass
