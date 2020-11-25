@@ -1,4 +1,5 @@
 import discord
+import emoji as emoji_module
 import logging
 from io import BytesIO
 from redbot.core import checks, commands, Config, modlog
