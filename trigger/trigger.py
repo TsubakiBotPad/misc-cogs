@@ -532,10 +532,13 @@ class Trigger(commands.Cog):
             payload = trigger.payload()
             for p in payload:
                 resp_type, resp = self.elaborate_response(trigger, p)
-                if resp_type == "text":
-                    await channel.send(resp)
-                elif resp_type == "file":
-                    await channel.send(file=resp)
+                try:
+                    if resp_type == "text":
+                        await channel.send(resp)
+                    elif resp_type == "file":
+                        await channel.send(file=resp)
+                except discord.Forbidden:
+                    pass
 
     async def save_stats(self):
         """Saves triggers every 10 minutes to preserve stats"""

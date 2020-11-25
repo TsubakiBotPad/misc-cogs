@@ -92,6 +92,15 @@ class TimeCog(commands.Cog):
     def cog_unload(self):
          self._reminder_loop.cancel()
 
+    async def restart_loop(self):
+        while True:
+            try:
+                await asyncio.sleep(60 * 60)
+                self._reminder_loop.cancel()
+                self._reminder_loop = bot.loop.create_task(self.reminderloop())
+            except Exception:
+                pass
+
     @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
     async def remindme(self, ctx, *, time):
         """Reminds you to do something at a specified time
