@@ -83,9 +83,10 @@ class GrantRole(commands.Cog):
         if not await self.can_assign(ctx, role):
             return
         await message.add_reaction(emoji)
+        emoji_id = str(emoji.id) if isinstance(emoji, discord.Emoji) else emoji
         async with self.config.guild(ctx.guild).on_react() as on_react:
             on_react[str(message.id)] = on_react.get(str(message.id), {})
-            on_react[str(message.id)][str(emoji.id)] = role.id
+            on_react[str(message.id)][emoji_id] = role.id
         await ctx.tick()
 
     @onreact.command(name="remove")
@@ -98,11 +99,12 @@ class GrantRole(commands.Cog):
                 await ctx.send("I do not have access to emoji `{}`".format(emoji))
                 return
 
+        emoji_id = str(emoji.id) if isinstance(emoji, discord.Emoji) else emoji
         async with self.config.guild(ctx.guild).on_react() as on_react:
-            if not on_react.get(str(message.id)) or not on_react.get(str(message.id), {}).get(str(emoji.id)):
+            if not on_react.get(str(message.id), {}).get(emoji_id):
                 await ctx.send("That emoji isn't mapped to a role.")
                 return
-            del on_react[str(message.id)][str(emoji.id)]
+            del on_react[str(message.id)][emoji_id]
         await ctx.tick()
 
     @onreact.command(name="list")
@@ -115,7 +117,7 @@ class GrantRole(commands.Cog):
         emojis = roles[str(message.id)]
         msg = []
         for eid,rid in emojis.items():
-            e = self.bot.get_emoji(int(eid))
+            e = self.bot.get_emoji(int(eid)) if eid.isdigit() else e
             r = ctx.guild.get_role(rid)
             if None not in (e, r):
                 msg.append("{}: {}".format(str(e), r.mention))
@@ -136,7 +138,7 @@ class GrantRole(commands.Cog):
                     emojis = roles[mid]
                     smsg = []
                     for eid,rid in emojis.items():
-                        e = self.bot.get_emoji(int(eid))
+                        e = self.bot.get_emoji(int(eid)) if eid.isdigit() else e
                         r = ctx.guild.get_role(rid)
                         if None not in (e, r):
                             smsg.append("\n\t{}: {}".format(str(e), r.mention))
@@ -157,8 +159,9 @@ class GrantRole(commands.Cog):
             return
         emojis = roles[str(message.id)]
         for r in message.reactions:
-            if str(r.emoji.id) in emojis:
-                role = ctx.guild.get_role(emojis[str(r.emoji.id)])
+            emoji_id = str(r.emoji.id) if isinstance(r.emoji, discord.Emoji) else r.emoji
+            if emoji_id in emojis:
+                role = ctx.guild.get_role(emojis[emoji_id])
                 async for member in r.users():
                     await member.add_roles(role, reason="On React Role Catchup")
         await ctx.tick()
@@ -184,8 +187,8 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(payload.member.guild).on_react()
         try:
-            emoji = payload.emoji if isinstance(payload.emoji, str) else str(payload.emoji.id)
-            role = roles.get(str(payload.message_id), {}).get(emoji)
+            emoji = payload.emoji.id or payload.emoji.name
+            role = roles.get(str(payload.message_id), {}).get(str(emoji))
             if role is None:
                 return
             await payload.member.add_roles(payload.member.guild.get_role(role), reason="On React Role Grant")
@@ -206,8 +209,8 @@ class GrantRole(commands.Cog):
             return
         roles = await self.config.guild(guild).on_react()
         try:
-            emoji = payload.emoji.name if isinstance(payload.emoji, discord.PartialEmoji) else str(payload.emoji.id)
-            role = roles.get(str(payload.message_id), {}).get(emoji)
+            emoji = payload.emoji.id or payload.emoji.name
+            role = roles.get(str(payload.message_id), {}).get(str(emoji))
             if role is None:
                 return
             await member.remove_roles(guild.get_role(role), reason="On React Role Grant")
