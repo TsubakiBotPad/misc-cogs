@@ -1,7 +1,7 @@
 import asyncio
 import discord
 import pytz
-import logger
+import logging
 import re
 import time
 import traceback
