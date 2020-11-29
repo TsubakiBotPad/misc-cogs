@@ -99,12 +99,12 @@ class TimeCog(commands.Cog):
         while True:
             try:
                 await asyncio.sleep(60 * 60)
-                self._reminder_loop.cancel()
-                logger.info("Refreshing TimeCog loop...")
-                e = self._reminder_loop.exception()
-                if e:
-                    logger.error("Exception in TimeCog loop: {!r}".format(e))
-                self._reminder_loop = bot.loop.create_task(self.reminderloop())
+                if self._reminder_loop.done():
+                    logger.info("Refreshing TimeCog loop...")
+                    e = self._reminder_loop.exception()
+                    if e:
+                        logger.error("Exception in TimeCog loop: {!r}".format(e))
+                    self._reminder_loop = bot.loop.create_task(self.reminderloop())
             except Exception:
                 pass
 
