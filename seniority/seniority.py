@@ -692,7 +692,7 @@ class Seniority(commands.Cog):
                 continue
             async for m in channel.history(after=datetime.utcnow()-timedelta(days=days_ago_start), 
                                            before=datetime.utcnow()-timedelta(days=days_ago_end)):
-                await self.process_message(message, message.created_at.date().isoformat())
+                await self.process_message(m, m.created_at.date().isoformat())
         await ctx.tick()
 
     async def process_message(self, message: discord.Message, now_date_str: str):
