@@ -681,6 +681,19 @@ class Seniority(commands.Cog):
             return
         now_date_str = now_date()
         await self.process_message(message, now_date_str)
+        
+    @seniority.command()
+    @commands.guild_only()
+    async def catchup(self, ctx, days_ago_start: int, days_ago_end: int = 0):
+        """Catchup messages from `days_ago_start` days ago to `days_ago_end` days ago"""
+        for cid in self.settings.channels(ctx.guild.id):
+            channel = self.bot.get_channel(cid)
+            if channel is None:
+                continue
+            async for m in channel.history(after=datetime.utcnow()-timedelta(days=days_ago_start), 
+                                           before=datetime.utcnow()-timedelta(days=days_ago_end)):
+                await self.process_message(message, message.created_at.date().isoformat())
+        await ctx.tick()
 
     async def process_message(self, message: discord.Message, now_date_str: str):
         if self.lock:
