@@ -684,14 +684,14 @@ class Seniority(commands.Cog):
         
     @seniority.command()
     @commands.guild_only()
-    async def catchup(self, ctx, days_after: int, days_before: int = 0):
-        """Catchup messages from `days_after` days ago to `days_before` days ago"""
+    async def catchup(self, ctx, after_days_ago: int, before_days_ago: int = 0):
+        """Catchup messages from `after_days_ago` days ago to `before_days_ago` days ago"""
         for cid in self.settings.channels(ctx.guild.id):
             channel = self.bot.get_channel(cid)
             if channel is None:
                 continue
-            async for m in channel.history(after=datetime.utcnow()-timedelta(days=days_after), 
-                                           before=datetime.utcnow()-timedelta(days=days_before)):
+            async for m in channel.history(after=datetime.utcnow()-timedelta(days=after_days_ago), 
+                                           before=datetime.utcnow()-timedelta(days=before_days_ago)):
                 await self.process_message(message, message.created_at.date().isoformat())
         await ctx.tick()
 
