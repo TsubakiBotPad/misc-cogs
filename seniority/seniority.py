@@ -681,6 +681,14 @@ class Seniority(commands.Cog):
             return
         now_date_str = now_date()
         await self.process_message(message, now_date_str)
+        
+    @seniority.command()
+    @commands.guild_only()
+    async def catchup(self, ctx, days_after: int, days_before: int = 0):
+      async for m in ctx.history(after=datetime.utcnow()-timedelta(days=days_after), 
+                                 before=datetime.utcnow()-timedelta(days=days_before)):
+        await self.process_message(message, message.created_at.date().isoformat())
+      await ctx.tick()
 
     async def process_message(self, message: discord.Message, now_date_str: str):
         if self.lock:
