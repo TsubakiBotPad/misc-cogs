@@ -28,7 +28,7 @@ class MsgUtils(commands.Cog):
         return
 
     @commands.command()
-    @checks.mod_or_permissions(manage_guild=True)
+    @checks.mod_or_permissions(manage_messages=True)
     async def editmsg(self, ctx, channel: discord.TextChannel, msg_id: int, *, new_msg: str):
         """Given a channel and an ID for a message printed in that channel, replaces it.
 
@@ -51,7 +51,7 @@ class MsgUtils(commands.Cog):
         await ctx.tick()
 
     @commands.command()
-    @checks.mod_or_permissions(manage_guild=True)
+    @checks.mod_or_permissions(manage_messages=True)
     async def dumpchannel(self, ctx, channel: discord.TextChannel, msg_id: int = None):
         """Given a channel and an ID for a message printed in that channel, dumps it
         boxed with formatting escaped and some issues cleaned up.
