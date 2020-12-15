@@ -5,7 +5,7 @@ import logging
 from io import BytesIO
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline
+from redbot.core.utils.chat_formatting import inline, pagify, box
 from tsutils import confirm_message
 
 logger = logging.getLogger('red.misc-cogs.globalban')
@@ -30,7 +30,7 @@ class GlobalBan(commands.Cog):
         """
         return
 
-    @commands.group()
+    @commands.group(aliases=['gban'])
     async def globalban(self, ctx):
         """Global ban related commands."""
 
@@ -67,7 +67,7 @@ class GlobalBan(commands.Cog):
     @globalban.command()
     @checks.is_owner()
     @checks.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx, user: int, *, reason=""):
+    async def ban(self, ctx, user: int, *, reason):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
             banned[str(user)] = reason
@@ -87,6 +87,16 @@ class GlobalBan(commands.Cog):
         async with ctx.typing():
             await self.remove_gbs_user(user)
         await ctx.tick()
+
+    @globalban.command(name="list")
+    @checks.is_owner()
+    async def _list(self, ctx):
+        o = '\n'.join(str(k)+'\t'+v for k,v in (await self.config.banned()).items())
+        if not o:
+            await ctx.send(inline("There are no banned users."))
+            return
+        for page in pagify(o):
+            await ctx.send(box(page))
 
     async def update_gbs(self):
         for gid in await self.config.opted():
