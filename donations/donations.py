@@ -115,8 +115,8 @@ class Donations(commands.Cog):
         msg = DONATE_MSG.format(count=len(donor_names), donors=', '.join(sorted(donor_names)))
         await ctx.send(msg)
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def mycommand(self, ctx, command: str, *, text: str):
         """Sets your custom command."""
         text = escape(text, mass_mentions=True)
@@ -124,8 +124,8 @@ class Donations(commands.Cog):
         self.settings.addCustomCommand(ctx.author.id, command, text)
         await ctx.send(inline('I set up your command: ' + command))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def myembed(self, ctx, command: str, title: str, url: str, footer: str):
         """Sets your custom embed command.
 
@@ -143,14 +143,14 @@ class Donations(commands.Cog):
         self.settings.addCustomEmbed(ctx.author.id, command, title, url, footer)
         await ctx.send(inline('I set up your embed: ' + command))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def spankme(self, ctx):
         """You are trash."""
         await ctx.send(ctx.author.mention + ' ' + random.choice(self.insults_list))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def insultme(self, ctx):
         """You are consistently trash."""
         user_id = ctx.author.id
@@ -158,22 +158,22 @@ class Donations(commands.Cog):
         self.settings.addInsultsEnabled(user_id)
         await ctx.send(ctx.author.mention + ' ' 'Oh, I will.\n' + random.choice(self.insults_list))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def plsno(self, ctx):
         """I am merciful."""
 
         self.settings.rmInsultsEnabled(ctx.author.id)
         await ctx.send('I will let you off easy this time.')
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def kissme(self, ctx):
         """You are so cute!."""
         await ctx.send(ctx.author.mention + ' ' + random.choice(self.cute_list))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def lewdme(self, ctx):
         """So nsfw.."""
         if 'nsfw' in ctx.channel.name.lower():
@@ -182,8 +182,8 @@ class Donations(commands.Cog):
             await ctx.send(ctx.author.mention + ' Oooh naughty...')
             await ctx.author.send(random.choice(self.sexy_list))
 
-    @commands.command()
     @is_donor()
+    @commands.command()
     async def pervme(self, ctx):
         """Hentai!!!."""
         if 'nsfw' in ctx.channel.name.lower():
