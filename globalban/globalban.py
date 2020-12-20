@@ -38,8 +38,8 @@ class GlobalBan(commands.Cog):
     @checks.admin_or_permissions(administrator=True)
     async def optin(self, ctx):
         """Opt your server in to the Global Ban system."""
-        if not await confirm_message("This will ban all users on the global"
-                                     " ban list. Are you sure you want to opt in?"):
+        if not await confirm_message(ctx, "This will ban all users on the global"
+                                          " ban list. Are you sure you want to opt in?"):
             return
 
         async with self.config.opted() as opted:
@@ -52,9 +52,9 @@ class GlobalBan(commands.Cog):
     @checks.admin_or_permissions(administrator=True)
     async def optout(self, ctx):
         """Opt your server out of the Global Ban system."""
-        if not await confirm_message("This will remove all bans that intersect"
-                                     " with the global ban list. Are you sure"
-                                     " you want to opt out?"):
+        if not await confirm_message(ctx, "This will remove all bans that intersect"
+                                          " with the global ban list. Are you sure"
+                                          " you want to opt out?"):
             return
 
         async with self.config.opted() as opted:
@@ -67,12 +67,25 @@ class GlobalBan(commands.Cog):
     @globalban.command()
     @checks.is_owner()
     @checks.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx, user: int, *, reason):
+    async def ban(self, ctx, user: int, *, reason=''):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
             banned[str(user)] = reason
         async with ctx.typing():
             await self.update_gbs()
+        await ctx.tick()
+
+    @globalban.command()
+    @checks.is_owner()
+    async def editreason(self, ctx, user: int, *, reason=""):
+        """Edit a user's ban reason."""
+        async with self.config.banned() as banned:
+            if str(user) not in banned:
+                await ctx.send("This user is not banned.")
+                return
+            if reason == "" and not await confirm_message(ctx, "Are you sure you want to remove the reason?"):
+                return
+            banned[str(user)] = reason
         await ctx.tick()
 
     @globalban.command()
@@ -129,7 +142,7 @@ class GlobalBan(commands.Cog):
     async def remove_gbs_guild(self, gid):
         guild = self.bot.get_guild(int(gid))
         for ban in await guild.bans():
-            user = b.user
+            user = ban.user
             if user.id not in await self.config.banned():
                 continue
             try:
