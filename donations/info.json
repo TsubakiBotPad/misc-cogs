@@ -17,7 +17,7 @@
   "disabled": false,
   "required_cogs": {},
   "requirements": [
-    "tsutils>=1.2.0"
+    "tsutils>=2.0.0"
   ],
   "tags": [
     "donations",
