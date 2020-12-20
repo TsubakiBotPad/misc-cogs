@@ -3,7 +3,8 @@ import logging
 from io import BytesIO
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings, tsutils
+from tsutils import CogSettings
+import tsutils
 
 logger = logging.getLogger('red.misc-cogs.globaladmin')
 
