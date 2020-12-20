@@ -7,7 +7,7 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, escape
-from tsutils import CogSettings
+from tsutils import CogSettings, is_donor
 
 DONATE_MSG = """
 Patreon : <https://www.patreon.com/tsubaki_bot>
@@ -41,24 +41,6 @@ DEFAULT_LOVE = {
 
 def roll(chance: int):
     return random.randrange(100) < chance
-
-
-def is_patron(ctx):
-    DCOG = ctx.bot.get_cog("Donations")
-    if not DCOG.support_guild: return False
-    author = DCOG.support_guild.get_member(ctx.author.id)
-    if author is None or DCOG.patron_role not in author.roles:
-        return False
-    return True
-
-
-def is_donor(ctx):
-    DCOG = ctx.bot.get_cog("Donations")
-    if not DCOG.support_guild: return False
-    author = DCOG.support_guild.get_member(ctx.author.id)
-    if author is None or (DCOG.donor_role not in author.roles and DCOG.patron_role not in author.roles):
-        return False
-    return True
 
 
 class Donations(commands.Cog):
@@ -134,7 +116,7 @@ class Donations(commands.Cog):
         await ctx.send(msg)
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def mycommand(self, ctx, command: str, *, text: str):
         """Sets your custom command."""
         text = escape(text, mass_mentions=True)
@@ -143,7 +125,7 @@ class Donations(commands.Cog):
         await ctx.send(inline('I set up your command: ' + command))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def myembed(self, ctx, command: str, title: str, url: str, footer: str):
         """Sets your custom embed command.
 
@@ -162,13 +144,13 @@ class Donations(commands.Cog):
         await ctx.send(inline('I set up your embed: ' + command))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def spankme(self, ctx):
         """You are trash."""
         await ctx.send(ctx.author.mention + ' ' + random.choice(self.insults_list))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def insultme(self, ctx):
         """You are consistently trash."""
         user_id = ctx.author.id
@@ -177,7 +159,7 @@ class Donations(commands.Cog):
         await ctx.send(ctx.author.mention + ' ' 'Oh, I will.\n' + random.choice(self.insults_list))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def plsno(self, ctx):
         """I am merciful."""
 
@@ -185,13 +167,13 @@ class Donations(commands.Cog):
         await ctx.send('I will let you off easy this time.')
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def kissme(self, ctx):
         """You are so cute!."""
         await ctx.send(ctx.author.mention + ' ' + random.choice(self.cute_list))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def lewdme(self, ctx):
         """So nsfw.."""
         if 'nsfw' in ctx.channel.name.lower():
@@ -201,7 +183,7 @@ class Donations(commands.Cog):
             await ctx.author.send(random.choice(self.sexy_list))
 
     @commands.command()
-    @commands.check(is_donor)
+    @is_donor()
     async def pervme(self, ctx):
         """Hentai!!!."""
         if 'nsfw' in ctx.channel.name.lower():
@@ -352,12 +334,16 @@ class Donations(commands.Cog):
             await message.author.send(msg)
             return
 
-    def is_patron(self, ctx):
-        return is_patron(ctx)
-
-    def is_donor(self, ctx):
-        return is_donor(ctx)
-
+    def is_donor(self, ctx, only_patron=False):
+        if ctx.author.id in ctx.bot.owner_ids:
+            return True
+        if not self.support_guild:
+            return False
+        author = self.support_guild.get_member(ctx.author.id)
+        if author is None:
+            return False
+        return (self.patron_role in author.roles or
+                (self.donor_role in author.roles and not only_patron))
 
 class DonationsSettings(CogSettings):
     def make_default_settings(self):
