@@ -67,12 +67,23 @@ class GlobalBan(commands.Cog):
     @globalban.command()
     @checks.is_owner()
     @checks.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx, user: int, *, reason):
+    async def ban(self, ctx, user: int, *, reason=''):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
             banned[str(user)] = reason
         async with ctx.typing():
             await self.update_gbs()
+        await ctx.tick()
+
+    @globalban.command()
+    @checks.is_owner()
+    async def editreason(self, ctx, user: int, *, reason):
+        """Edit a user's ban reason."""
+        async with self.config.banned() as banned:
+            if str(user) not in banned:
+                await ctx.send("This user is not banned.")
+                return
+            banned[str(user)] = reason
         await ctx.tick()
 
     @globalban.command()
