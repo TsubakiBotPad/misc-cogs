@@ -73,7 +73,11 @@ class MsgUtils(commands.Cog):
 
     async def _dump(self, ctx, channel: discord.TextChannel = None, msg_id: int = None):
         if msg_id:
-            msg = await channel.fetch_message(msg_id)
+            try:
+                msg = await channel.fetch_message(msg_id)
+            except discord.NotFound:
+                await ctx.send("Invalid message id")
+                return
         else:
             msg_limit = 2 if channel == ctx.channel else 1
             async for message in channel.history(limit=msg_limit):
