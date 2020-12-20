@@ -142,7 +142,7 @@ class GlobalBan(commands.Cog):
     async def remove_gbs_guild(self, gid):
         guild = self.bot.get_guild(int(gid))
         for ban in await guild.bans():
-            user = b.user
+            user = ban.user
             if user.id not in await self.config.banned():
                 continue
             try:
