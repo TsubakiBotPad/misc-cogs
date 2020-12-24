@@ -1,7 +1,7 @@
 # LEGACY DEPS - WILL UNCOMMENT AS THINGS ARE CONFIRMED NECESSARY
 setuptools
 wheel
-Red-DiscordBot[postgres]
+Red-DiscordBot
 backoff
 prettytable
 git+https://github.com/tejstead/python-romkan
@@ -17,3 +17,4 @@ opencv-python
 Pillow
 pytz
 aiohttp
+tsutils
