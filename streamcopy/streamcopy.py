@@ -53,7 +53,7 @@ class StreamCopy(commands.Cog):
     @streamcopy.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def setStreamerRole(self, ctx, *, role_name: discord.Role):
+    async def setStreamerRole(self, ctx, *, role: discord.Role):
         """Sets the streamer role."""
         self.settings.set_streamer_role(ctx.guild.id, role.id)
         await ctx.send(inline('Done. Make sure that role is below the bot in the hierarchy'))
@@ -128,7 +128,7 @@ class StreamCopy(commands.Cog):
                 return
 
             await self.do_refresh()
-        except Exception as ex:
+        except Exception:
             logger.exception("Stream checking failed")
 
     async def ensure_user_streaming_role(self, server, streamer_role: discord.Role, user: discord.Member):

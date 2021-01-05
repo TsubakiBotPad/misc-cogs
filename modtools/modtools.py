@@ -49,10 +49,10 @@ class ModTools(commands.Cog):
         """Counts online members of a guild"""
         gonline = gmobile = conline = cmobile = 0
         for member in ctx.guild.members:
-            gonline += member.status.name == "online"
+            gonline += member.status is discord.Status.online
             gmobile += member.is_on_mobile()
         for member in ctx.channel.members:
-            conline += member.status.name == "online"
+            conline += member.status is discord.Status.online
             cmobile += member.is_on_mobile()
         await ctx.send(box("There are {} members online ({} online on mobile).\n"
                            "There are {} members online in this channel ({} online on mobile).")
