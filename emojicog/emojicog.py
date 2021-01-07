@@ -1,7 +1,7 @@
 import logging
+import re
 from io import BytesIO
 
-import discord
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -31,13 +31,21 @@ class EmojiCog(commands.Cog):
     @commands.command()
     @checks.mod_or_permissions(manage_emojis=True)
     @checks.bot_has_permissions(manage_emojis=True)
-    async def stealemoji(self, ctx, *emojis: discord.PartialEmoji):
-        """Steal some emoji and add them to this server \N{CAT FACE WITH WRY SMILE}\N{SMILING FACE WITH HORNS}"""
+    async def stealemoji(self, ctx, *, emojis):
+        """Steal some emoji and add them to this server \N{CAT FACE WITH WRY SMILE} \N{SMILING FACE WITH HORNS}"""
+        try:
+            m = await commands.MessageConverter('message', ctx, emojis)
+            emojis = m.content
+        except commands.errors.MessageNotFound:
+            pass
+
+        emojis = [await commands.PartialEmojiConverter('emoji', ctx, e) for e in re.findall(r'<(a?):(\w+):(\d+)>')]
+
         if not emojis:
             await ctx.send_help()
             return
 
-        ae = ctx.guild.emojis + emojis
+        ae = list(ctx.guild.emojis) + emojis
         if len([e for e in ae if not e.animated]) > ctx.guild.emoji_limit:
             await ctx.send("Not enough emoji slots")
         if len([e for e in ae if e.animated]) > ctx.guild.emoji_limit:
@@ -45,5 +53,7 @@ class EmojiCog(commands.Cog):
 
         async with ctx.typing():
             for emoji in emojis:
+                if emoji.name in [e.name for e in ctx.guild.emojis]:
+                    continue
                 await ctx.guild.create_custom_emoji(name=emoji.name, image=await emoji.url.read())
         await ctx.tick()
