@@ -34,12 +34,13 @@ class EmojiCog(commands.Cog):
     async def stealemoji(self, ctx, *, emojis):
         """Steal some emoji and add them to this server \N{CAT FACE WITH WRY SMILE} \N{SMILING FACE WITH HORNS}"""
         try:
-            m = await commands.MessageConverter('message', ctx, emojis)
+            m = await commands.MessageConverter().convert(ctx, emojis)
             emojis = m.content
-        except commands.errors.MessageNotFound:
+        except commands.MessageNotFound:
             pass
 
-        emojis = [await commands.PartialEmojiConverter('emoji', ctx, e) for e in re.findall(r'<(a?):(\w+):(\d+)>')]
+        emojis = [await commands.PartialEmojiConverter().convert(ctx, e) for e in
+                  re.findall(r'<a?:\w+:\d+>', emojis)]
 
         if not emojis:
             await ctx.send_help()
