@@ -1,14 +1,15 @@
 import asyncio
-import discord
-import sys
 import re
+import sys
 from io import BytesIO
-from redbot.core import checks, commands, modlog
-from redbot.core.utils.chat_formatting import box, inline, pagify
+
+from redbot.core import checks, commands
+from redbot.core.utils.chat_formatting import inline
 
 
-class TrUtils(commands.Cog):
+class DevUtils(commands.Cog):
     """Owner Utilities"""
+
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -25,9 +26,9 @@ class TrUtils(commands.Cog):
         """
         return
 
-    @commands.command()
+    @commands.command(aliases=['freload', 'creload'])
     @checks.is_owner()
-    async def freload(self, ctx, cmd, *, args=""):
+    async def rlthen(self, ctx, cmd, *, args=""):
         """Run a command after reloading its base cog."""
         full_cmd = "{}{} {}".format(ctx.prefix, cmd, args)
         cmd = self.bot.get_command(cmd)
@@ -36,10 +37,10 @@ class TrUtils(commands.Cog):
             return
         _send = ctx.send
 
-        async def fakesend(*args, **kwargs):
-            if "Reloaded " in args[0]:
+        async def fakesend(text, *args, **kwargs):
+            if "Reloaded " in text:
                 return
-            await _send(*args, **kwargs)
+            await _send(text, *args, **kwargs)
 
         ctx.send = fakesend
         await self.bot.get_cog("Core").reload(ctx, cmd.cog.__module__.split('.')[0])
@@ -48,7 +49,7 @@ class TrUtils(commands.Cog):
         ctx.message.content = full_cmd
         await self.bot.process_commands(ctx.message)
 
-    @commands.command()
+    @commands.command(aliases=['delaysend'])
     async def delaycommand(self, ctx, time, *, command):
         """Run a command after waiting a period of time.
 
@@ -70,6 +71,9 @@ class TrUtils(commands.Cog):
             await ctx.send("Time must be less than 15 minutes.")
             return
 
+        if command.startswith(ctx.prefix):
+            command = command[len(ctx.prefix):]
+
         cname = []
         for sc in command.split():
             if self.bot.get_command(" ".join(cname) + " " + sc) is None:
@@ -78,7 +82,7 @@ class TrUtils(commands.Cog):
 
         cmd = self.bot.get_command(" ".join(cname))
         if cmd is None:
-            await ctx.send("Invalid Command. \nNOTE: Aliases aren't valid with this command")
+            await ctx.send("Invalid Command.\nNOTE: Aliases aren't valid with this command")
             return
         if not await cmd.can_run(ctx):
             await ctx.send("You do not have permission to run the command `{}`".format(" ".join(cname)))
