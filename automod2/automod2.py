@@ -77,6 +77,9 @@ EMOJIS = {
         '\N{THUMBS UP SIGN}',
         '\N{THUMBS DOWN SIGN}',
         '\N{EYES}',
+    ],
+    'eyes': [
+        '\N{EYES}',
     ]
 }
 
