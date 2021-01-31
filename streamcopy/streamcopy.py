@@ -82,7 +82,7 @@ class StreamCopy(commands.Cog):
     async def rmuser(self, ctx, user):
         """Opts a user out of streamcopy"""
         try:
-            user = await commands.MemberConverter().convert(ctx, user).id
+            user = (await commands.MemberConverter().convert(ctx, user)).id
         except commands.BadArgument:
             try:
                 user = int(user)
