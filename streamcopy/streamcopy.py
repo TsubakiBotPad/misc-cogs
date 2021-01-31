@@ -1,24 +1,28 @@
 import asyncio
-import discord
 import logging
 import random
-import traceback
 from io import BytesIO
-from redbot.core import checks
+
+import discord
+from redbot.core import checks, Config
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import box, inline
-from tsutils import CogSettings
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 logger = logging.getLogger('red.misc-cogs.streamcopy')
 
 
 class StreamCopy(commands.Cog):
     """Show which members are streaming and opt members in and out of being public for the guild"""
+
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
-        self.settings = StreamCopySettings("streamcopy")
+
+        self.config = Config.get_conf(self, identifier=5723477047)
+        self.config.register_global(opted_in=[])
+        self.config.register_guild(streamer_rid=None)
+
         self.current_user_id = None
 
     async def red_get_data_for_user(self, *, user_id):
@@ -52,57 +56,62 @@ class StreamCopy(commands.Cog):
 
     @streamcopy.command()
     @commands.guild_only()
-    @checks.mod_or_permissions(manage_guild=True)
-    async def setStreamerRole(self, ctx, *, role: discord.Role):
+    async def setstreamerrole(self, ctx, *, role: discord.Role):
         """Sets the streamer role."""
-        self.settings.set_streamer_role(ctx.guild.id, role.id)
+        await self.config.guild(ctx.guild).streamer_rid.set(role.id)
         await ctx.send(inline('Done. Make sure that role is below the bot in the hierarchy'))
 
     @streamcopy.command()
     @commands.guild_only()
-    @checks.mod_or_permissions(manage_guild=True)
-    async def clearStreamerRole(self, ctx):
+    async def clearstreamerrole(self, ctx):
         """Removes the streamer role."""
-        self.settings.clear_streamer_role(ctx.guild.id)
+        await self.config.guild(ctx.guild).streamer_rid.set(None)
         await ctx.tick()
 
-    @streamcopy.command(name="adduser")
+    @streamcopy.command()
     @checks.is_owner()
-    async def addUser(self, ctx, user: discord.User):
+    async def adduser(self, ctx, user: discord.User):
         """Opts a user into streamcopy"""
-        self.settings.add_user(user.id)
+        async with self.config.opted_in() as users:
+            if user.id not in users:
+                users.append(user.id)
         await ctx.tick()
 
-    @streamcopy.command(name="rmuser")
+    @streamcopy.command()
     @checks.is_owner()
-    async def rmUser(self, ctx, user):
+    async def rmuser(self, ctx, user):
         """Opts a user out of streamcopy"""
         try:
-            u = await commands.MemberConverter().convert(ctx, user)
-            self.settings.rm_user(u.id)
-        except commands.BadArgument as e:
+            user = await commands.MemberConverter().convert(ctx, user).id
+        except commands.BadArgument:
             try:
-                u = int(user)
-                self.settings.rm_user(u)
+                user = int(user)
             except ValueError:
                 await ctx.send(inline("Invalid user id."))
                 return
+        async with self.config.opted_in() as users:
+            if user not in users:
+                await ctx.send("User is not already opted in")
+                return
+            users.remove(user)
         await ctx.tick()
 
-    @streamcopy.command(name="list")
+    @streamcopy.command()
     @checks.is_owner()
     async def list(self, ctx):
         """Lists all users who are opted into streamcopy"""
-        user_ids = self.settings.users().keys()
-        members = {x.id: x for x in self.bot.get_all_members() if x.id in user_ids}
+        output = []
+        for uid in await self.config.opted_in():
+            user = self.bot.get_user(uid)
+            if user is None:
+                output.append("Deleted User ({})".format(uid))
+            else:
+                output.append("({}) : {}".format('+' if self.is_playing(user) else '-', user.name))
 
-        output = "Users:"
-        for m_id, m in members.items():
-            output += "\n({}) : {}".format('+' if self.is_playing(m) else '-', m.name)
+        for page in pagify('\n'.join(output)):
+            await ctx.send(box(page))
 
-        await ctx.send(box(output))
-
-    @streamcopy.command(name="refresh")
+    @streamcopy.command()
     @checks.is_owner()
     async def refresh(self, ctx):
         """Refreshes the streamcopy cog data"""
@@ -114,13 +123,11 @@ class StreamCopy(commands.Cog):
 
     @commands.Cog.listener('on_member_update')
     async def check_stream(self, before, after):
-        streamer_role_id = self.settings.get_streamer_role(before.guild.id)
-        if streamer_role_id:
-            await self.ensure_user_streaming_role(after.guild, streamer_role_id, after)
+        await self.ensure_user_streaming_role(after.guild, after)
 
         try:
-            tracked_users = self.settings.users()
-            if before.id not in tracked_users:
+            tracked_users = self.config.opted_in()
+            if after.id not in tracked_users:
                 return
 
             if self.is_playing(after):
@@ -131,8 +138,11 @@ class StreamCopy(commands.Cog):
         except Exception:
             logger.exception("Stream checking failed")
 
-    async def ensure_user_streaming_role(self, server, streamer_role: discord.Role, user: discord.Member):
+    async def ensure_user_streaming_role(self, guild, user):
         user_is_playing = self.is_playing(user)
+        streamer_role = await self.config.guild(guild).streamer_rid()
+        if streamer_role is None:
+            return
         user_has_streamer_role = streamer_role in user.roles
         if user_is_playing and not user_has_streamer_role:
             await user.add_roles(streamer_role)
@@ -140,7 +150,7 @@ class StreamCopy(commands.Cog):
             await user.remove_roles(streamer_role)
 
     async def do_refresh(self):
-        other_stream = self.find_stream()
+        other_stream = await self.find_stream()
         if other_stream:
             await self.copy_playing(other_stream)
         else:
@@ -148,68 +158,19 @@ class StreamCopy(commands.Cog):
         return other_stream
 
     async def do_ensure_roles(self):
-        servers = self.bot.guilds
-        for server in servers:
-            streamer_role_id = self.settings.get_streamer_role(server.id)
-            if not streamer_role_id:
-                continue
-            for member in server.members:
-                await self.ensure_user_streaming_role(member.guilds, streamer_role_id, member)
+        for guild in self.bot.guilds:
+            for member in guild.members:
+                await self.ensure_user_streaming_role(member.guild, member)
 
-    def find_stream(self):
-        user_ids = self.settings.users().keys()
-        members = {x.id: x for x in self.bot.get_all_members() if x.id in user_ids and self.is_playing(x)}
-        games = [x.activity for x in members.values()]
+    async def find_stream(self):
+        user_ids = await self.config.opted_in()
+        games = [x.activity for x in self.bot.get_all_members() if x.id in user_ids and self.is_playing(x)]
         random.shuffle(games)
-        return games[0] if len(games) else None
+        return games[0] if games else None
 
-    def is_playing(self, member: discord.Member):
-        return member and member.activity and member.activity.type == 1 and member.activity.url
+    def is_playing(self, member):
+        return member and member.activity == discord.ActivityType.streaming and member.activity.url
 
-    async def copy_playing(self, stream: discord.Streaming):
+    async def copy_playing(self, stream):
         new_stream = discord.Game(name=stream.name, url=stream.url, type=stream.type)
         await self.bot.change_presence(activity=new_stream)
-
-
-class StreamCopySettings(CogSettings):
-    def make_default_settings(self):
-        config = {
-            'users': {},
-            'servers': {}
-        }
-        return config
-
-    def users(self):
-        return self.bot_settings['users']
-
-    def add_user(self, user_id):
-        users = self.users()
-        users[user_id] = {'priority': 100}  # This is for stupid legacy reasons
-        self.save_settings()
-
-    def rm_user(self, user_id):
-        users = self.users()
-        if user_id in users:
-            users.pop(user_id)
-            self.save_settings()
-
-    def get_guild(self, guild_id):
-        guilds = self.bot_settings['servers']
-        if guild_id not in guilds:
-            guilds[guild_id] = {}
-        return guilds[guild_id]
-
-    def set_streamer_role(self, server_id, role_id):
-        server = self.get_guild(server_id)
-        server['role'] = role_id
-        self.save_settings()
-
-    def get_streamer_role(self, server_id):
-        server = self.get_guild(server_id)
-        return server.get('role', None)
-
-    def clear_streamer_role(self, server_id):
-        server = self.get_guild(server_id)
-        if 'role' in server:
-            server.pop('role')
-            self.save_settings()
