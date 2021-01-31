@@ -126,7 +126,7 @@ class StreamCopy(commands.Cog):
         await self.ensure_user_streaming_role(after.guild, after)
 
         try:
-            tracked_users = self.config.opted_in()
+            tracked_users = await self.config.opted_in()
             if after.id not in tracked_users:
                 return
 
