@@ -121,8 +121,15 @@ class DevUtils(commands.Cog):
     @commands.command()
     async def relast(self, ctx):
         async for message in ctx.channel.history(limit=200):
+            b = False
             if message.author == ctx.author and "relast" not in message.content:
-                break
+                for prefix in await self.bot.get_valid_prefixes():
+                    if message.content.startswith(prefix) \
+                            and self.bot.get_command(message.content[len(prefix):]):
+                        b = True
+                        break
+                if b:
+                    break
         else:
             await ctx.send("Your most recent message could not be found.")
             return
