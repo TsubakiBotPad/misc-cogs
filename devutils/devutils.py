@@ -117,3 +117,13 @@ class DevUtils(commands.Cog):
             await ctx.send(inline("Error (sent via DM)"))
         else:
             await ctx.tick()
+
+    @commands.command()
+    async def relast(self, ctx):
+        async for message in ctx.channel.history(limit=200):
+            if message.author == ctx.author and "relast" not in message.content:
+                break
+        else:
+            await ctx.send("Your most recent message could not be found.")
+            return
+        await self.bot.process_commands(message)
