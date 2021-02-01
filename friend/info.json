@@ -1,0 +1,23 @@
+{
+  "author": [
+    "Aradia Megido#2552"
+  ],
+  "description": "Set up friend stuff for your menus.",
+  "end_user_data_statement": "Manually added friends are stored by user ID.",
+  "install_msg": "Use [p]menufriend to get started.",
+  "short": "Discord Menu Friends",
+  "min_bot_version": "3.4.0",
+  "max_bot_version": "0.0.0",
+  "min_python_version": [
+    3,
+    8,
+    1
+  ],
+  "hidden": false,
+  "disabled": false,
+  "required_cogs": {},
+  "requirements": [
+    "discord-menu"
+  ],
+  "tags": ["menu"]
+}
