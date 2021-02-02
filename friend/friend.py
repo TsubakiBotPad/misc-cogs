@@ -67,4 +67,8 @@ class Friend(commands.Cog):
 
     async def is_friend(self, author_id: int, user_id: int):
         # noinspection PyTypeChecker
-        return user_id in await self.config.user(discord.Object(author_id)).friends()
+        return user_id in await self.get_friends(author_id)
+
+    async def get_friends(self, author_id: int):
+        # noinspection PyTypeChecker
+        return await self.config.user(discord.Object(author_id)).friends()
