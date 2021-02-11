@@ -1,13 +1,13 @@
 import asyncio
-import discord
-import pytz
 import logging
 import re
 import time
-import traceback
-import tsutils
-from io import BytesIO
 from datetime import datetime, timedelta
+from io import BytesIO
+
+import discord
+import pytz
+import tsutils
 from dateutil.relativedelta import relativedelta
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -24,7 +24,8 @@ time_at_regeces = [
 
 time_in_regeces = [
     r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.+)$',  # One tinstr
-    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*(?:\||in|start(?:ing)? in)\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',  # Unused
+    r'^\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+)\b\s*(?:\||in|start(?:ing)? in)\s*((?:-?\d+ ?(?:m|h|d|w|y|s)\w* ?)+|now)\b (.*)$',
+    # Unused
 ]
 
 exact_tats = [
@@ -93,7 +94,7 @@ class TimeCog(commands.Cog):
         await self.config.user_from_id(user_id).clear()
 
     def cog_unload(self):
-         self._reminder_loop.cancel()
+        self._reminder_loop.cancel()
 
     async def restart_loop(self):
         while True:
@@ -104,7 +105,7 @@ class TimeCog(commands.Cog):
                     e = self._reminder_loop.exception()
                     if e:
                         logger.error("Exception in TimeCog loop: {!r}".format(e))
-                    self._reminder_loop = bot.loop.create_task(self.reminderloop())
+                    self._reminder_loop = self.bot.loop.create_task(self.reminderloop())
             except Exception:
                 pass
 
@@ -218,10 +219,11 @@ class TimeCog(commands.Cog):
             rms.append((start, input, tin2tdelta(tinstrs).seconds))
         m = await ctx.send("I will tell you {} and every {} seconds after that."
                            "".format(format_rm_time(
-                                     datetime.utcnow() + tin2tdelta(tinstart),
-                                     input,
-                                     tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC')),
-                           tin2tdelta(tinstrs).seconds))
+            datetime.utcnow() + tin2tdelta(tinstart),
+            input,
+            tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC')),
+            tin2tdelta(tinstrs).seconds))
+
     @remindme.command(aliases=["list"])
     async def get(self, ctx):
         """Get a list of all pending reminders"""
@@ -368,25 +370,16 @@ class TimeCog(commands.Cog):
         await ctx.tick()
 
     @channel.command(name="remove")
-    async def channel_remove(self, ctx, name, channel):
+    async def channel_remove(self, ctx, name, channel: discord.TextChannel):
         """Remove a channel."""
-        c = bot.get_channel()
-        if c is None and channel.isdigit():
-            channel_id = channel
-        elif c:
-            channel_id = channel.id
-        else:
-            await ctx.send("Invalid channel.")
-            return
-
         async with self.config.guild(ctx.guild).schedules() as schedules:
             if name not in schedules:
                 await ctx.send("There is no schedule with this name.")
                 return
-            if channel_id not in schedules[name]['channels']:
+            if channel.id not in schedules[name]['channels']:
                 await ctx.send("This channel is not registered.")
                 return
-            schedules[name]['channels'].remove(channel_id)
+            schedules[name]['channels'].remove(channel.id)
         await ctx.tick()
 
     @channel.command(name="list")
@@ -477,7 +470,7 @@ class TimeCog(commands.Cog):
                 for u in urs:
                     for c, rm in enumerate(urs[u]['reminders']):
                         if datetime.fromtimestamp(float(rm[0])) < now:
-                            async with self.config.user(discord.Object(id=u)).reminders() as rms:
+                            async with self.config.user(discord.Object(u)).reminders() as rms:
                                 if len(rm) == 3:
                                     rms[c][0] += rms[c][2]
                                 else:
@@ -491,7 +484,7 @@ class TimeCog(commands.Cog):
                         if datetime.fromtimestamp(sc['end']) < now or not sc['enabled']:
                             continue
                         if datetime.fromtimestamp(float(sc['time'])) < now:
-                            async with self.config.guild(discord.Object(id=g)).schedules() as scs:
+                            async with self.config.guild(discord.Object(g)).schedules() as scs:
                                 scs[n]['time'] += scs[n]['interval']
                             for ch in sc['channels']:
                                 try:
@@ -516,17 +509,27 @@ class TimeCog(commands.Cog):
 
     @commands.command()
     async def timeto(self, ctx, tz: str, *, time: str):
-        """Compute the time remaining until the [timezone] [time]"""
+        """Compute the time remaining until the [timezone] [time].
+
+        The order of arguments does not matter.
+        Times should either contain am or pm or will be interpreted in 24-hour time.
+        """
+        tz_obj = time_obj = None
+
         try:
             tz_obj = tzstr_to_tz(tz)
-        except Exception as e:
-            await ctx.send("Failed to parse tz: " + tz)
-            return
+        except Exception:
+            try:
+                tz_obj = tzstr_to_tz(time)
+                time, tz = tz, time
+            except Exception:
+                await ctx.send("Failed to parse tz: " + tz)
+                return
 
         try:
             time_obj = timestr_to_time(time)
         except Exception as e:
-            await ctx.send("Failed to parse time: " + time)
+            await ctx.send("Failed to parse argument: " + time)
             return
 
         now = datetime.now(tz_obj)
@@ -537,7 +540,7 @@ class TimeCog(commands.Cog):
         delta = req_time - now
 
         msg = ("There are " + fmt_hrs_mins(delta.seconds).strip() +
-               " until " + time.strip() + " in " + now.strftime('%Z'))
+               " until " + req_time.strftime('%-I:%M%p').lower() + " in " + now.strftime('%Z'))
         await ctx.send(inline(msg))
 
     async def exact_tartintodt(self, ctx, time, allowtat=True):
@@ -607,15 +610,15 @@ def timestr_to_time(timestr):
     timestr = timestr.replace(" ", "")
     try:
         return time.strptime(timestr, "%H:%M")
-    except:
+    except ValueError:
         pass
     try:
         return time.strptime(timestr, "%I:%M%p")
-    except:
+    except ValueError:
         pass
     try:
         return time.strptime(timestr, "%I%p")
-    except:
+    except ValueError:
         pass
     raise commands.UserFeedbackCheckFailure("Invalid Time: " + timestr)
 
@@ -699,10 +702,14 @@ def ydhm(seconds):
     m, seconds = divmod(seconds, 60)
     y, d, h, m = [int(ydhm) for ydhm in (y, d, h, m)]
     ydhm = []
-    if y: ydhm.append("{} yr".format(y) + ("s" if y > 1 else ''))
-    if d: ydhm.append("{} day".format(d) + ("s" if d > 1 else ''))
-    if h: ydhm.append("{} hr".format(h) + ("s" if h > 1 else ''))
-    if m: ydhm.append("{} min".format(m) + ("s" if m > 1 else ''))
+    if y:
+        ydhm.append("{} yr".format(y) + ("s" if y > 1 else ''))
+    if d:
+        ydhm.append("{} day".format(d) + ("s" if d > 1 else ''))
+    if h:
+        ydhm.append("{} hr".format(h) + ("s" if h > 1 else ''))
+    if m:
+        ydhm.append("{} min".format(m) + ("s" if m > 1 else ''))
     return " ".join(ydhm) or "<1 minute"
 
 
