@@ -118,6 +118,8 @@ class GlobalBan(commands.Cog):
     async def update_gbs(self):
         for gid in await self.config.opted():
             guild = self.bot.get_guild(int(gid))
+            if guild is None:
+                continue
             for uid, reason in (await self.config.banned()).items():
                 try:
                     if int(uid) in [b.user.id for b in await guild.bans()]:
@@ -161,6 +163,8 @@ class GlobalBan(commands.Cog):
     async def remove_gbs_user(self, uid):
         for gid in await self.config.opted():
             guild = self.bot.get_guild(int(gid))
+            if guild is None:
+                continue
             if uid in await self.config.guild(guild).banlist():
                 continue
             try:

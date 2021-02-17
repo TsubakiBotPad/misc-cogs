@@ -612,7 +612,10 @@ class AutoMod2(commands.Cog):
     async def deleteAndReport(self, delete_msg, outgoing_msg):
         try:
             await delete_msg.delete()
-            await delete_msg.author.send(outgoing_msg)
+            try:
+                await delete_msg.author.send(outgoing_msg)
+            except discord.Forbidden:
+                pass
         except Exception as e:
             logger.exception('Failure while deleting message from {}, tried to send : {}'.format(
                 delete_msg.author.name, outgoing_msg))
