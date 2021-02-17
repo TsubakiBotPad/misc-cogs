@@ -93,9 +93,9 @@ class DevUtils(commands.Cog):
         ctx.message.content = ctx.prefix + command
         await self.bot.process_commands(ctx.message)
 
-    @commands.command()
+    @commands.command(aliases=["pipupgrade"])
     @checks.is_owner()
-    async def pipupdate(self, ctx, module="Red-DiscordBot", updatepip=True):
+    async def pipupdate(self, ctx, module, updatepip=True):
         async with ctx.typing():
             process = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "pip", "install", "-U", module,
