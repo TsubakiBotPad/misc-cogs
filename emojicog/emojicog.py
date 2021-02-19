@@ -63,7 +63,8 @@ class EmojiCog(commands.Cog):
 
     @commands.command()
     async def unicodename(self, ctx, glyph):
+        """Get the name of a non-custom emote"""
         if len(glyph) > 5:
-            await ctx.send("The input must be a single emoji.")
+            await ctx.send("The input must be a single unicode (non-custom) emoji.")
             return
         await ctx.send(inline(''.join(f'\\N{{{unicodedata.name(c)}}}' for c in glyph)))
