@@ -8,6 +8,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
+import discord
+
 logger = logging.getLogger('red.misc-cogs.emoji')
 
 
@@ -63,7 +65,7 @@ class EmojiCog(commands.Cog):
 
     @commands.command()
     async def unicodename(self, ctx, glyph):
-        """Get the name of a non-custom emote"""
+        """Get the name of a unicode glyph"""
         if len(glyph) > 5:
             await ctx.send("The input must be a single unicode (non-custom) emoji.")
             return
