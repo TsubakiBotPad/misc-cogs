@@ -1,10 +1,12 @@
 import logging
 import re
+import unicodedata
 from io import BytesIO
 
 from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
+from redbot.core.utils.chat_formatting import inline
 
 logger = logging.getLogger('red.misc-cogs.emoji')
 
@@ -58,3 +60,10 @@ class EmojiCog(commands.Cog):
                     continue
                 await ctx.guild.create_custom_emoji(name=emoji.name, image=await emoji.url.read())
         await ctx.tick()
+
+    @commands.command()
+    async def unicodename(self, ctx, glyph):
+        if len(glyph) > 5:
+            await ctx.send("The input must be a single emoji.")
+            return
+        await ctx.send(inline(''.join(f'\\N{{{unicodedata.name(c)}}}' for c in glyph)))
