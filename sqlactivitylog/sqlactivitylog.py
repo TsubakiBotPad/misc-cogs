@@ -1,18 +1,18 @@
-import aioodbc
-import discord
 import logging
 import os
-import prettytable
-import pytz
-import pyodbc
-import sqlite3 as lite
 import textwrap
 import timeit
-import tsutils
-import sys
-from io import BytesIO
 from collections import deque
 from datetime import datetime, timedelta
+from io import BytesIO
+
+import aioodbc
+import discord
+import prettytable
+import pyodbc
+import pytz
+import sys
+import tsutils
 from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
@@ -157,6 +157,7 @@ FROM messages
 WHERE user_id = ?
 '''
 
+
 async def conn_attributes(conn):
     conn.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')
     conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
@@ -178,7 +179,7 @@ class SqlActivityLogger(commands.Cog):
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
         values = [
-            user.id,
+            user_id,
         ]
         column_data = [
             ('timestamp', 'Time (PT)'),
@@ -191,7 +192,7 @@ class SqlActivityLogger(commands.Cog):
                 "so data deletion requests can only be made by the bot owner and "
                 "Discord itself.  If you need your data deleted, please contact a "
                 "bot owner.\n\n\n")
-        data += await self.queryAndSave(None, None, GET_USER_DATA_QUERY, values, column_data)
+        data += await self.query_and_save(None, None, GET_USER_DATA_QUERY, values, column_data)
 
         return {"user_data.txt": BytesIO(data.encode())}
 
@@ -242,10 +243,11 @@ class SqlActivityLogger(commands.Cog):
         self.lock = False
 
         logger.debug('Seniority: init complete')
+
     @commands.command()
     @checks.is_owner()
     async def rawquery(self, ctx, *, query: str):
-        await self.queryAndPrint(ctx, ctx.guild, query, {}, {})
+        await self.query_and_print(ctx, ctx.guild, query, {}, {})
 
     @commands.command()
     @checks.is_owner()
@@ -297,7 +299,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, USER_QUERY, values, column_data)
+        await self.query_and_print(ctx, server, USER_QUERY, values, column_data)
 
     @exlog.command()
     async def channel(self, ctx, channel: discord.TextChannel, count=10):
@@ -322,7 +324,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, CHANNEL_QUERY, values, column_data)
+        await self.query_and_print(ctx, server, CHANNEL_QUERY, values, column_data)
 
     @exlog.command()
     async def userchannel(self, ctx, user: discord.User, channel: discord.TextChannel, count=10):
@@ -345,7 +347,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, USER_CHANNEL_QUERY, values, column_data)
+        await self.query_and_print(ctx, server, USER_CHANNEL_QUERY, values, column_data)
 
     @exlog.command()
     async def query(self, ctx, query, count=10):
@@ -376,14 +378,14 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.queryAndPrint(ctx, server, CONTENT_QUERY, values, column_data)
+        await self.query_and_print(ctx, server, CONTENT_QUERY, values, column_data)
 
-    async def queryAndPrint(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
-        result_text = await self.queryAndSave(ctx, server, query, values, column_data, max_rows, verbose)
+    async def query_and_print(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
+        result_text = await self.query_and_save(ctx, server, query, values, column_data, max_rows, verbose)
         for p in pagify(result_text):
             await ctx.send(box(p))
 
-    async def queryAndSave(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
+    async def query_and_save(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
         before_time = timeit.default_timer()
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
