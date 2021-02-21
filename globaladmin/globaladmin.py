@@ -36,13 +36,9 @@ class GlobalAdmin(commands.Cog):
 
     @globaladmin.group(aliases=['auths'])
     async def perms(self, ctx):
-        """Perm commands"""
+        """Perm commands
 
-    @perms.command()
-    async def setdefault(self, ctx, perm_name, default: bool = False):
-        """Set the default value of a permission"""
-        self.settings.register_perm(perm_name, default)
-        await ctx.tick()
+        Cogs automatically register their perms with gadmin; you don't need to add them"""
 
     def register_perm(self, perm_name, default=False):
         self.settings.add_perm(perm_name, default)
