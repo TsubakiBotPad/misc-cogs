@@ -1,17 +1,21 @@
-import discord
-import emoji as emoji_module
 import logging
 from io import BytesIO
-from redbot.core import checks, commands, Config, modlog
-from redbot.core.utils.chat_formatting import box, inline, pagify
+
+import discord
+import emoji as emoji_module
+from redbot.core import checks, commands, Config
+from redbot.core.utils.chat_formatting import box, pagify
 
 logger = logging.getLogger('red.misc-cogs.grantrole')
 
+
 class GrantRole(commands.Cog):
     """Grant roles on user join or reaction add"""
+
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
+
         self.config = Config.get_conf(self, identifier=624772073)
         self.config.register_guild(on_join=[], on_react={})
 
@@ -116,8 +120,8 @@ class GrantRole(commands.Cog):
             return
         emojis = roles[str(message.id)]
         msg = []
-        for eid,rid in emojis.items():
-            e = self.bot.get_emoji(int(eid)) if eid.isdigit() else e
+        for eid, rid in emojis.items():
+            e = self.bot.get_emoji(int(eid)) if eid.isdigit() else eid
             r = ctx.guild.get_role(rid)
             if None not in (e, r):
                 msg.append("{}: {}".format(str(e), r.mention))
@@ -137,7 +141,7 @@ class GrantRole(commands.Cog):
                         continue
                     emojis = roles[mid]
                     smsg = []
-                    for eid,rid in emojis.items():
+                    for eid, rid in emojis.items():
                         e = self.bot.get_emoji(int(eid)) if eid.isdigit() else e
                         r = ctx.guild.get_role(rid)
                         if None not in (e, r):
@@ -163,7 +167,8 @@ class GrantRole(commands.Cog):
             if emoji_id in emojis:
                 role = ctx.guild.get_role(emojis[emoji_id])
                 async for member in r.users():
-                    await member.add_roles(role, reason="On React Role Catchup")
+                    if member != ctx.me:
+                        await member.add_roles(role, reason="On React Role Catchup")
         await ctx.tick()
 
     @commands.Cog.listener('on_member_join')
@@ -177,13 +182,13 @@ class GrantRole(commands.Cog):
                 if r is not None:
                     await member.add_roles(r, reason="On Join Role Grant")
         except discord.Forbidden:
-            logger.exception("Unable to add roles in guild: {}".format(guild.id))
+            logger.exception("Unable to add roles in guild: {}".format(member.guild.id))
 
     @commands.Cog.listener('on_raw_reaction_add')
     async def on_reaction_add(self, payload):
         if not payload.guild_id \
-                  or payload.member.bot \
-                  or await self.bot.cog_disabled_in_guild(self, payload.member.guild):
+                or payload.member.bot \
+                or await self.bot.cog_disabled_in_guild(self, payload.member.guild):
             return
         roles = await self.config.guild(payload.member.guild).on_react()
         try:
@@ -204,8 +209,8 @@ class GrantRole(commands.Cog):
             return
 
         if not payload.guild_id \
-                  or member.bot \
-                  or await self.bot.cog_disabled_in_guild(self, guild):
+                or member.bot \
+                or await self.bot.cog_disabled_in_guild(self, guild):
             return
         roles = await self.config.guild(guild).on_react()
         try:
