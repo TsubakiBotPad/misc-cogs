@@ -177,5 +177,5 @@ class SpeechSettings(CogSettings):
         self.bot_settings['azure_api_key'] = api_key
         self.save_settings()
 
-    def valid_keys():
+    def valid_keys(self):
         return any(self.bot_settings.values())
