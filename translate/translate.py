@@ -1,10 +1,11 @@
-import aiohttp
-import discord
 import json
 import logging
-import romkan
 import uuid
 from io import BytesIO
+
+import aiohttp
+import discord
+import romkan
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
@@ -57,9 +58,12 @@ class Translate(commands.Cog):
 
     @commands.command()
     @checks.bot_has_permissions(embed_links=True)
-    async def translate(self, from_language, to_language, ctx, *, query):
+    async def translate(self, ctx, from_language, to_language, *, query):
         """Translates from one langauge to another"""
-        await self.translate_to_embed(ctx, from_language, to_language, query)
+        try:
+            await self.translate_to_embed(ctx, from_language, to_language, query)
+        except KeyError:
+            await ctx.send("Invalid query.")
 
     @commands.command()
     async def kanrom(self, ctx, *, query):
@@ -74,7 +78,7 @@ class Translate(commands.Cog):
 
         params = {
             'api-version': '3.0',
-            'from':  source,
+            'from': source,
             'to': target,
         }
         headers = {
@@ -97,7 +101,8 @@ class Translate(commands.Cog):
 
         if self.aservice:
             translation = await self.a_translate_lang(source, target, query)
-        await ctx.send(embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
+        await ctx.send(
+            embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
 
     @translation.command()
     async def setakey(self, ctx, api_key):
