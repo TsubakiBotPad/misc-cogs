@@ -140,7 +140,7 @@ class AutoMod2(commands.Cog):
         for page in pagify(AUTOMOD_HELP.format(ctx.prefix), delims=['\n'], shorten_by=8):
             await ctx.author.send(box(page))
 
-    @commands.group()
+    @commands.group(aliases=['am2'])
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def automod2(self, ctx):
@@ -304,20 +304,22 @@ class AutoMod2(commands.Cog):
             user_logs = self.channel_user_logs[key]
             count = 0
             for m in user_logs:
-                count += linked_img_count(m)
+                if (datetime.utcnow() - m.created_at).total_seconds() < 300: # only check messages in past 300 seconds
+                    count += linked_img_count(m)
             if count <= image_limit:
                 return
 
             for m in list(user_logs):
-                if linked_img_count(m) > 0:
-                    try:
-                        await m.delete()
-                    except Exception:
-                        pass
-                    try:
-                        user_logs.remove(m)
-                    except Exception:
-                        pass
+                if (datetime.utcnow() - m.created_at).total_seconds() < 300: #don't delete image messages from over 300s
+                    if linked_img_count(m) > 0:
+                        try:
+                            await m.delete()
+                        except Exception:
+                            pass
+                        try:
+                            user_logs.remove(m)
+                        except Exception:
+                            pass
 
             msg = m.author.mention + inline(' Upload multiple images to an imgur gallery #endimagespam')
             alert_msg = await message.channel.send(msg)
