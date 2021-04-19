@@ -158,7 +158,6 @@ class Donations(commands.Cog):
         self.settings.addInsultsEnabled(user_id)
         await ctx.send(ctx.author.mention + ' ' 'Oh, I will.\n' + random.choice(self.insults_list))
 
-    @is_donor()
     @commands.command()
     async def plsno(self, ctx):
         """I am merciful."""
