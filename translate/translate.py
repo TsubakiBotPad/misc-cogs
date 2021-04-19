@@ -99,13 +99,13 @@ class Translate(commands.Cog):
             translation = await self.a_translate_lang(source, target, query)
         await ctx.send(embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
 
-    @translate.command()
+    @translation.command()
     async def setakey(self, ctx, api_key):
         """Sets the azure api key."""
         await self.config.a_api_key.set(api_key)
         await ctx.tick()
 
-    @translate.command()
+    @translation.command()
     async def getakey(self, ctx):
         """Gets the azure api key."""
         await ctx.author.send(await self.config.a_api_key())
