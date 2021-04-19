@@ -37,7 +37,7 @@ class Translate(commands.Cog):
 
     @commands.group()
     @checks.is_owner()
-    async def translate(self, context):
+    async def translation(self, context):
         """Translation utilities."""
 
     async def build_service(self):
@@ -54,6 +54,12 @@ class Translate(commands.Cog):
     async def zhen(self, ctx, *, query):
         """Translates from Chinese to English"""
         await self.translate_to_embed(ctx, "zh", "en", query)
+
+    @commands.command()
+    @checks.bot_has_permissions(embed_links=True)
+    async def translate(self, from_language, to_language, ctx, *, query):
+        """Translates from one langauge to another"""
+        await self.translate_to_embed(ctx, from_language, to_language, query)
 
     @commands.command()
     async def kanrom(self, ctx, *, query):
