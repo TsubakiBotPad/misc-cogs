@@ -11,6 +11,7 @@ from redbot.core.utils.chat_formatting import box, inline, pagify
 
 class MsgUtils(commands.Cog):
     """Utilities to view raw messages"""
+
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -82,10 +83,14 @@ class MsgUtils(commands.Cog):
             msg_limit = 2 if channel == ctx.channel else 1
             async for message in channel.history(limit=msg_limit):
                 msg = message
-        content = msg.content.strip()
-        content = re.sub(r'<(:[0-9a-z_]+:)\d{18}>', r'\1', content, flags=re.IGNORECASE)
-        content = box(content.replace('`', u'\u200b`'))
-        await ctx.send(content)
+        if not msg.embeds:  # if no embeds
+            content = msg.content.strip()
+            content = re.sub(r'<(:[0-9a-z_]+:)\d{18}>', r'\1', content, flags=re.IGNORECASE)  # emojis
+            content = box(content.replace('`', u'\u200b`'))
+            await ctx.send(content)
+        else:
+            for embed in msg.embeds:  # if embeds
+                await ctx.send(embed=embed)
 
     @commands.command()
     async def dumpmsgexact(self, ctx, msg_id: int):
