@@ -304,13 +304,13 @@ class AutoMod2(commands.Cog):
             user_logs = self.channel_user_logs[key]
             count = 0
             for m in user_logs:
-                if abs((m.created_at - datetime.utcnow()).total_seconds()) < 300: # only check messages in past 300 seconds
+                if (datetime.utcnow() - m.created_at).total_seconds() < 300: # only check messages in past 300 seconds
                     count += linked_img_count(m)
             if count <= image_limit:
                 return
 
             for m in list(user_logs):
-                if abs((m.created_at - datetime.utcnow()).total_seconds()) < 300: #don't delete image messages from over 300s
+                if (datetime.utcnow() - m.created_at).total_seconds() < 300: #don't delete image messages from over 300s
                     if linked_img_count(m) > 0:
                         try:
                             await m.delete()
