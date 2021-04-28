@@ -6,7 +6,6 @@ from typing import Any, Mapping, Tuple, Union, TYPE_CHECKING
 import discord
 
 from menulistener.errors import CogNotLoaded, MissingImsMenuType, InvalidImsMenuType
-from menulistener.menuabc import MenuABC
 from discordmenu.embed.emoji import EmbedMenuEmojiConfig
 from discordmenu.intra_message_state import IntraMessageState
 from discordmenu.reaction_filter import ValidEmojiReactionFilter, BotAuthoredMessageReactionFilter, \
@@ -163,7 +162,7 @@ class MenuListener(commands.Cog):
             return await cog.get_menu_default_data(ims)
         return {}
 
-    async def register(self, cog: Union[commands.Cog, MenuABC]):
+    async def register(self, cog: commands.Cog):
         async with self.config.cogs() as cogs:
             if cog.__class__.__name__ not in cogs:
                 cogs.append(cog.__class__.__name__)
