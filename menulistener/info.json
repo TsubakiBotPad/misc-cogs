@@ -1,0 +1,23 @@
+{
+  "author": [
+    "The Tsubaki Bot Team"
+  ],
+  "description": "The central listener for all menu listeners.",
+  "end_user_data_statement": "No personal data is stored.",
+  "install_msg": "MenuListener has been installed",
+  "short": "Discord Menu Listener",
+  "min_bot_version": "3.4.0",
+  "max_bot_version": "0.0.0",
+  "min_python_version": [
+    3,
+    8,
+    1
+  ],
+  "hidden": false,
+  "disabled": false,
+  "required_cogs": {},
+  "requirements": [
+    "discord-menu"
+  ],
+  "tags": ["menu"]
+}
