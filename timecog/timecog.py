@@ -141,7 +141,7 @@ class TimeCog(commands.Cog):
                 'day': now.day,
                 'hour': now.hour,
                 'minute': 0,
-                'merid': 'NONE'
+                'merid': 'AM'
             }
             if not any([match[k] for k in defaults]):
                 continue
