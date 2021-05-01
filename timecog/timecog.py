@@ -61,6 +61,7 @@ class TimeCog(commands.Cog):
         |   |   |   |   TIME: int (timestamp)
         |   |   |   |   TEXT: str
         |   |   |   |   INTERVAL: Optional[int]
+        |   |   |   |   CHAN_ID: int
         |   |   tz: str (tzstr)
         |   CHANNELS: Config
         |   |   schedules: dict
@@ -109,8 +110,7 @@ class TimeCog(commands.Cog):
             except Exception:
                 pass
 
-    @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
-    async def remindme(self, ctx, *, time):
+    async def remindme_parse(self, ctx, time):
         """Reminds you to do something at a specified time
 
         [p]remindme 2020-04-13 06:12 Do something!
@@ -183,10 +183,34 @@ class TimeCog(commands.Cog):
         if rmtime < (datetime.utcnow() - timedelta(seconds=1)):
             raise commands.UserFeedbackCheckFailure(inline("You can't set a reminder in the past!  If only..."))
 
+        return rmtime, input
+
+    @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
+    async def remindme(self, ctx, *, time):
+        rmtime, input = await self.remindme_parse(ctx, time)
+        user_tz_str = await self.config.user(ctx.author).tz()
+        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+
         async with self.config.user(ctx.author).reminders() as rms:
-            rms.append((rmtime.timestamp(), input))
+            rms.append((rmtime.timestamp(), input, -1, 0))
 
         response = "I will tell you " + format_rm_time(rmtime, input, user_timezone)
+        if not user_tz_str:
+            response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
+                ctx)
+        await ctx.send(response)
+
+    @commands.command()
+    @checks.mod_or_permissions(manage_messages=True)
+    async def remindmehere(self, ctx, *, time):
+        rmtime, input = await self.remindme_parse(ctx, time)
+        user_tz_str = await self.config.user(ctx.author).tz()
+        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+
+        async with self.config.user(ctx.author).reminders() as rms:
+            rms.append((rmtime.timestamp(), input, -1, ctx.channel.id))
+
+        response = "In this channel, I will tell you " + format_rm_time(rmtime, input, user_timezone)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -216,7 +240,7 @@ class TimeCog(commands.Cog):
             tinstrs, input = match.groups()
         start = (datetime.utcnow() + tin2tdelta(tinstart)).timestamp()
         async with self.config.user(ctx.author).reminders() as rms:
-            rms.append((start, input, tin2tdelta(tinstrs).seconds))
+            rms.append((start, input, tin2tdelta(tinstrs).seconds, 0))
         m = await ctx.send("I will tell you {} and every {} seconds after that."
                            "".format(format_rm_time(
             datetime.utcnow() + tin2tdelta(tinstart),
@@ -237,8 +261,10 @@ class TimeCog(commands.Cog):
             timestamp = rm[0]
             input = rm[1]
             ftime = format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz)
-            if len(rm) > 2:
-                ftime += " (every {} seconds)".format(rm[2])
+            if len(rm) > 2 and rm[2] != -1:
+                ftime += f" (every {rm[2]} seconds)"
+            if len(rm) > 3 and rm[3] != 0:
+                ftime += f" (in #{self.bot.get_channel(rm[3])})"
             o.append(str(c + 1) + ": " + ftime)
         await ctx.send(box('\n'.join(o)))
 
@@ -471,12 +497,15 @@ class TimeCog(commands.Cog):
                     for c, rm in enumerate(urs[u]['reminders']):
                         if datetime.fromtimestamp(float(rm[0])) < now:
                             async with self.config.user(discord.Object(u)).reminders() as rms:
-                                if len(rm) == 3:
+                                if len(rm) > 2 and rm[2] != -1:
                                     rms[c][0] += rms[c][2]
                                 else:
                                     rms.remove(rm)
                             try:
-                                await self.bot.get_user(u).send(rm[1])
+                                if len(rm) > 3 and rm[3] != 0:
+                                    await self.bot.get_channel(rm[3]).send(rm[1])
+                                else:
+                                    await self.bot.get_user(u).send(rm[1])
                             except (discord.Forbidden, AttributeError):
                                 pass
                 for g in gds:
