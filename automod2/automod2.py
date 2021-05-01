@@ -5,6 +5,8 @@ or blacklists to a channel.
 If a violation occurs, the message will be deleted and the user notified.
 """
 import asyncio
+from typing import Optional
+
 import discord
 import logging
 import prettytable
@@ -185,10 +187,10 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def addwhitelist(self, ctx, *, name):
+    async def addwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Add the named pattern as a whitelist for this channel."""
         name = name.strip('"')
-        if self.settings.addWhitelist(ctx.guild.id, ctx.channel.id, name):
+        if self.settings.addWhitelist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Added whitelist config for: ' + name))
         else:
             await ctx.send(inline("Rule '{}' is undefined.".format(name)))
@@ -196,9 +198,9 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def rmwhitelist(self, ctx, *, name):
+    async def rmwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Remove the named pattern as a whitelist for this channel."""
-        if self.settings.rmWhitelist(ctx.guild.id, ctx.channel.id, name):
+        if self.settings.rmWhitelist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Removed whitelist config for: ' + name))
         else:
             await ctx.send(inline("Rule '{}' is undefined.".format(name)))
@@ -206,10 +208,10 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def addblacklist(self, ctx, *, name):
+    async def addblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Add the named pattern as a blacklist for this channel."""
         name = name.strip('"')
-        if self.settings.addBlacklist(ctx.guild.id, ctx.channel.id, name):
+        if self.settings.addBlacklist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Added blacklist config for: ' + name))
         else:
             await ctx.send(inline("Rule '{}' is undefined.".format(name)))
@@ -217,9 +219,9 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def rmblacklist(self, ctx, *, name):
+    async def rmblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Remove the named pattern as a blacklist for this channel."""
-        if self.settings.rmBlacklist(ctx.guild.id, ctx.channel.id, name):
+        if self.settings.rmBlacklist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Removed blacklist config for: ' + name))
         else:
             await ctx.send(inline("Rule '{}' is undefined.".format(name)))
@@ -228,7 +230,7 @@ class AutoMod2(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def list(self, ctx):
-        """List the whitelist/blacklist configuration for the current channel."""
+        """List the whitelist/blacklist configuration for the current guild."""
         output = 'AutoMod configs\n'
         channels = self.settings.getChannels(ctx.guild.id)
         for channel_id, config in channels.items():
@@ -269,7 +271,7 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def imagelimit(self, ctx, limit: int):
+    async def imagelimit(self, ctx, limit: int, channel: discord.TextChannel = None,):
         """Prevents users from spamming images in a channel.
 
         If a user attempts to link/attach more than <limit> images in the active channel
@@ -279,7 +281,7 @@ class AutoMod2(commands.Cog):
 
         Set to -1 to enable image only.
         """
-        self.settings.setImageLimit(ctx.guild.id, ctx.channel.id, limit)
+        self.settings.setImageLimit(ctx.guild.id, channel or ctx.channel.id, limit)
         if limit == 0:
             await ctx.send(inline('Limit cleared'))
         elif limit == -1:
