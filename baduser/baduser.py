@@ -352,7 +352,6 @@ class BadUser(commands.Cog):
     @checks.is_owner()
     async def rmban(self, ctx, user_id: int):
         """Remove a banned user"""
-        user_id = str(user_id)
         self.settings.rm_banned_user(user_id)
         await ctx.tick()
 
@@ -487,13 +486,14 @@ class BadUser(commands.Cog):
             await channel_obj.send('This user now has {} strikes'.format(strikes))
 
             try:
-                dm_msg = ('You were assigned the punishment role "{}" in the server "{}".\n'
-                          'The Mods will contact you shortly regarding this.\n'
-                          'Attempting to clear this role yourself will result in punishment.').format(role_name, guild.name)
+                dm_msg = (f'You were assigned the punishment role "{role_name}" in the server "{guild.name}".\n'
+                          f'The Mods will contact you shortly regarding this.\n'
+                          f'Attempting to clear this role yourself will result in punishment.')
                 await member.send(box(dm_msg))
                 await channel_obj.send('User successfully notified')
             except Exception as e:
-                await channel_obj.send('Failed to notify the user! I might be blocked\n' + box(str(e)))
+                if role_name != "BANNED":
+                    await channel_obj.send('Failed to notify the user! I might be blocked\n' + box(str(e)))
 
     async def record_role_change(self, member, role_name, is_added, send_ping=True, guild=None):
         if guild is None:
@@ -514,8 +514,8 @@ class BadUser(commands.Cog):
                 if send_ping:
                     followup_msg = 'Hey @here please leave a note explaining why this role was modified'
                     await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
-            except:
-                logger.warning('Failed to notify in {} {}'.format(update_channel, msg))
+            except Exception:
+                logger.exception('Failed to notify in {} {}'.format(update_channel, msg))
 
 
 class BadUserSettings(CogSettings):
