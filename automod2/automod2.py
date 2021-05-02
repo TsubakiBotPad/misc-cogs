@@ -271,7 +271,7 @@ class AutoMod2(commands.Cog):
     @automod2.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def imagelimit(self, ctx, limit: int, channel: discord.TextChannel = None,):
+    async def imagelimit(self, ctx, limit: int, channel: discord.TextChannel = None):
         """Prevents users from spamming images in a channel.
 
         If a user attempts to link/attach more than <limit> images in the active channel
