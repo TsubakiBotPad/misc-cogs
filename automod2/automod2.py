@@ -188,7 +188,7 @@ class AutoMod2(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def addwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
-        """Add the named pattern as a whitelist for this channel."""
+        """Add the named pattern as a whitelist for the given channel (this channel if not specified)."""
         name = name.strip('"')
         if self.settings.addWhitelist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Added whitelist config for: ' + name))
@@ -199,7 +199,7 @@ class AutoMod2(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def rmwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
-        """Remove the named pattern as a whitelist for this channel."""
+        """Remove the named pattern as a whitelist for the given channel (this channel if not specified)."""
         if self.settings.rmWhitelist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Removed whitelist config for: ' + name))
         else:
@@ -209,7 +209,7 @@ class AutoMod2(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def addblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
-        """Add the named pattern as a blacklist for this channel."""
+        """Add the named pattern as a blacklist for the given channel (this channel if not specified)."""
         name = name.strip('"')
         if self.settings.addBlacklist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Added blacklist config for: ' + name))
@@ -220,7 +220,7 @@ class AutoMod2(commands.Cog):
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def rmblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
-        """Remove the named pattern as a blacklist for this channel."""
+        """Remove the named pattern as a blacklist for the given channel (this channel if not specified)."""
         if self.settings.rmBlacklist(ctx.guild.id, channel or ctx.channel.id, name):
             await ctx.send(inline('Removed blacklist config for: ' + name))
         else:
