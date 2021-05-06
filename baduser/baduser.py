@@ -73,9 +73,6 @@ class BadUser(commands.Cog):
         The scope of this module has expanded a bit. It now covers both 'positive' and 'negative'
         roles. The goal is to assist coordination across moderators.
 
-        When a user receives a negative role, a strike is automatically recorded for them. This
-        captures their recent message history.
-
         You can specify a moderation channel for announcements. An announcement occurs on the
         following events:
         * User gains or loses a negative/positive role (includes a ping to @here)
@@ -473,7 +470,6 @@ class BadUser(commands.Cog):
                                     member.joined_at if isinstance(member, discord.Member) else 'N/A',
                                     role_name)
         msg += '\n'.join(latest_messages)
-        self.settings.update_bad_user(guild.id, member.id, msg)
         strikes = self.settings.count_user_strikes(guild.id, member.id)
 
         update_channel = self.settings.get_channel(guild.id)
@@ -481,9 +477,9 @@ class BadUser(commands.Cog):
             channel_obj = guild.get_channel(update_channel)
             await channel_obj.send(inline('Detected bad user'))
             await channel_obj.send(box(msg))
-            followup_msg = 'Hey @here please leave a note explaining why this user is punished'
+            followup_msg = 'Hey @here please manually strike this user explaining why they are punished'
             await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
-            await channel_obj.send('This user now has {} strikes'.format(strikes))
+            await channel_obj.send('This user has {} strikes'.format(strikes))
 
             try:
                 dm_msg = (f'You were assigned the punishment role "{role_name}" in the server "{guild.name}".\n'
