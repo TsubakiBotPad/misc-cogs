@@ -451,6 +451,9 @@ class BadUser(commands.Cog):
                 return
 
         for role in removed_roles:
+            if role.id in bad_role_ids:
+                await self.record_role_change(after, role.name, False, send_ping=False)
+                return
             if role.id in positive_role_ids:
                 await self.record_role_change(after, role.name, False)
                 return
