@@ -4,18 +4,20 @@ A cloned and improved version of paddo's calculator cog.
 
 import asyncio
 import discord
-import numbers
-import os
 import re
-import shlex
-import subprocess
 import sys
 from io import BytesIO
 from functools import reduce
 from redbot.core import Config, checks, commands
-from redbot.core.utils.chat_formatting import box, inline
+from redbot.core.utils.chat_formatting import box, inline, humanize_number
+from tsutils import timeout_after
 
-ACCEPTED_TOKENS = r'[\[\]\-()*+/0-9=.,% |&<>~_^]|>=|<=|==|!=|factorial|randrange|isfinite|copysign|radians|isclose|degrees|randint|lgamma|choice|random|round|log1p|log10|ldexp|isnan|isinf|hypot|gamma|frexp|floor|expm1|atanh|atan2|asinh|acosh|False|range|tanh|sqrt|sinh|modf|log2|fmod|fabs|erfc|cosh|ceil|atan|asin|acos|else|True|fsum|tan|sin|pow|nan|log|inf|gcd|sum|exp|erf|cos|for|not|and|ans|pi|in|is|or|if|e|x'
+ACCEPTED_TOKENS = (r'[\[\]\-()*+/0-9=.,% |&<>~_^]|>=|<=|==|!=|factorial|randrange|isfinite|copysign'
+                   r'|radians|isclose|degrees|randint|lgamma|choice|random|round|log1p|log10|ldexp'
+                   r'|isnan|isinf|hypot|gamma|frexp|floor|expm1|atanh|atan2|asinh|acosh|False|range'
+                   r'|tanh|sqrt|sinh|modf|log2|fmod|fabs|erfc|cosh|ceil|atan|asin|acos|else|True'
+                   r'|fsum|tan|sin|pow|nan|log|inf|gcd|sum|exp|erf|cos|for|not|abs|and|ans|pi|in|is|or'
+                   r'|if|e|j|x')
 
 ALTERED_TOKENS = {'^': '**', '_': 'ans'}
 
@@ -56,7 +58,7 @@ class Calculator(commands.Cog):
 
     @commands.group()
     async def helpcalc(self, ctx):
-        '''Whispers info on how to use the calculator.'''
+        """Whispers info on how to use the calculator."""
         help_msg = HELP_MSG + '\n' + ACCEPTED_TOKENS
         try:
             await ctx.author.send(box(help_msg))
@@ -66,9 +68,9 @@ class Calculator(commands.Cog):
     @commands.command(aliases=['calc', 'math'])
     @checks.bot_has_permissions(embed_links=True)
     async def calculator(self, ctx, *, inp):
-        '''Evaluate equations. Use helpcalc for more info.'''
+        """Evaluate equations. Use helpcalc for more info."""
         inp = inp.lower()
-        unaccepted = list(filter(None, re.split(ACCEPTED_TOKENS, inp)))
+        unaccepted = re.sub(ACCEPTED_TOKENS, '', inp)
         for token in ALTERED_TOKENS:
             inp = inp.replace(token, ALTERED_TOKENS[token])
 
@@ -79,11 +81,26 @@ class Calculator(commands.Cog):
             return
 
         ans = (await self.config.user(ctx.author).ans()).get(str(ctx.channel.id))
+
         if re.search(r'\bans\b', inp) and ans is None:
             await ctx.send("You don't have a previous result saved.")
             return
 
-        cmd = """{} -c "from math import *;from random import *;ans = {};print(eval('{}'), end='', flush=True)" """.format(
+        try:
+            timeout_after(.2)(eval)(ans)
+        except Exception:
+            if re.search(r'\bans\b', inp):
+                await ctx.send(f"The previous saved result ({ans}) was invalid.")
+                return
+            ans = "None"
+
+        if re.sub(ACCEPTED_TOKENS, '', ans):
+            if re.search(r'\bans\b', inp):
+                await ctx.send(f"The previous saved result ({ans}) was invalid.")
+                return
+            ans = "None"
+
+        cmd = '''{} -c "from math import *;from random import *;ans = {};print(eval('{}'), end='', flush=True)"'''.format(
             sys.executable, ans, inp)
 
         try:
@@ -101,16 +118,17 @@ class Calculator(commands.Cog):
             await ctx.send(inline('Command took too long to execute. Quit trying to break the bot.'))
             return
 
-        if len(str(calc_result)) > 1024:
+        if len(calc_result) > 1024:
             await ctx.send(inline("The result is obnoxiously long!  Try a request under 1k characters!"))
-        elif len(str(calc_result)) > 0:
-            if isinstance(calc_result, numbers.Number):
-                if calc_result > 1:
-                    calc_result = round(calc_result, 3)
+        elif len(calc_result) > 0:
+            if re.fullmatch(r'0\.\d+', calc_result):
+                calc_result = str(round(float(calc_result), 3))
 
             em = discord.Embed(color=discord.Color.greyple())
             em.add_field(name='Input', value='`{}`'.format(inp))
             em.add_field(name='Result', value=calc_result)
+            if re.fullmatch(r'-?\d{5,}\.?\d*', calc_result):
+                em.add_field(name='Result (Fancy)', value=humanize_number(float(calc_result)), inline=False)
             async with self.config.user(ctx.author).ans() as ans:
                 if calc_result is not None:
                     ans[ctx.channel.id] = calc_result
@@ -118,18 +136,29 @@ class Calculator(commands.Cog):
 
     @commands.command()
     @checks.bot_has_permissions(embed_links=True)
-    async def add(self, ctx, *, inp):
+    async def add(self, ctx, *inp: int):
         """Adds a string of numbers"""
+        if not inp:
+            await ctx.send_help()
+            return
         em = discord.Embed(color=discord.Color.greyple())
-        em.add_field(name='Input', value='`{}`'.format('+'.join(filter(None, re.split(r'\D', inp)))))
-        em.add_field(name='Result', value=sum(map(lambda x: int('0' + x), re.split(r'\D', inp))))
+        em.add_field(name='Input', value='`{}`'.format('+'.join(map(str, inp))))
+        em.add_field(name='Result', value=str(sum(inp)))
+        if abs(sum(inp)) >= 1e5:
+            em.add_field(name='Result (Fancy)', value=humanize_number(sum(inp)))
         await ctx.send(embed=em)
 
     @commands.command()
     @checks.bot_has_permissions(embed_links=True)
-    async def multiply(self, ctx, *, inp):
+    async def multiply(self, ctx, *inp: int):
         """Multiplies a string of numbers"""
+        if not inp:
+            await ctx.send_help()
+            return
         em = discord.Embed(color=discord.Color.greyple())
-        em.add_field(name='Input', value='`{}`'.format('*'.join(filter(None, re.split(r'\D', inp)))))
-        em.add_field(name='Result', value=reduce(lambda x, y: x * int(y) if y else x, re.split(r'\D', inp), 1))
+        result = reduce(lambda x, y: x * y, inp, 1)
+        em.add_field(name='Input', value='`{}`'.format('*'.join(map(str, inp))))
+        em.add_field(name='Result', value=str(result))
+        if abs(result) >= 1e5:
+            em.add_field(name='Result (Fancy)', value=humanize_number(result))
         await ctx.send(embed=em)
