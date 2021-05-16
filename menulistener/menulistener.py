@@ -94,18 +94,26 @@ class MenuListener(commands.Cog):
 
     @commands.Cog.listener('on_raw_reaction_add')
     @commands.Cog.listener('on_raw_reaction_remove')
-    async def test_reaction_add(self, payload: discord.RawReactionActionEvent):
+    async def on_raw_reaction_update(self, payload: discord.RawReactionActionEvent):
         emoji_clicked = self.get_emoji_clicked(payload)
         if emoji_clicked is None:
             return
 
         channel = self.bot.get_channel(payload.channel_id)
+        if payload.event_type == "REACTION_REMOVE" and not isinstance(channel, discord.DMChannel):
+            return
+
         message = discord.utils.get(self.bot.cached_messages, id=payload.message_id)
         if message is None:
             message = await channel.fetch_message(payload.message_id)
-        reaction = discord.utils.get(message.reactions, emoji=emoji_clicked)
+        reaction = discord.utils.find((lambda r:
+                                       r.emoji == payload.emoji.name
+                                       if payload.emoji.is_unicode_emoji()
+                                       else r.emoji == payload.emoji),
+                                      message.reactions)
+        if reaction is None:
+            return
         member = payload.member or self.bot.get_user(payload.user_id)
-
         ims = message.embeds and IntraMessageState.extract_data(message.embeds[0])
         if not ims:
             return
