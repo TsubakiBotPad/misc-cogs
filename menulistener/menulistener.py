@@ -1,9 +1,10 @@
 import logging
 from copy import deepcopy
 from io import BytesIO
-from typing import Any, Mapping, Tuple, TYPE_CHECKING, Protocol, Optional
+from typing import Any, Mapping, Tuple, Protocol, Optional, Sequence
 
 import discord
+from discordmenu.embed.menu import EmbedMenu
 
 from menulistener.errors import CogNotLoaded, MissingImsMenuType, InvalidImsMenuType
 from discordmenu.embed.emoji import EmbedMenuEmojiConfig
@@ -15,7 +16,27 @@ from redbot.core.utils.chat_formatting import box, pagify
 
 logger = logging.getLogger('red.misc-cogs.menulistener')
 
-MenuObject = MenuPanes = object
+
+# TODO: Put these in discordmenu for use as superclasses
+class MenuObject(Protocol):
+    @staticmethod
+    def menu() -> EmbedMenu:
+        ...
+
+
+class ChildDataCallbackProtocol(Protocol):
+    def __call__(self, __ims, __emoji, **kwargs) -> Tuple[Optional[dict], str]: ...
+
+
+class MenuPanes(Protocol):
+    @classmethod
+    def emoji_names(cls) -> Sequence[str]:
+        ...
+
+    @classmethod
+    def get_child_data_func(cls, emoji: str) -> Optional[ChildDataCallbackProtocol]:
+        """Only defined for menus that support having children"""
+        ...
 
 
 class MenuEnabledCog(Protocol):
