@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from io import BytesIO
-from typing import Any, Mapping, Tuple, Union, TYPE_CHECKING
+from typing import Any, Mapping, Tuple, TYPE_CHECKING, Protocol, Optional
 
 import discord
 
@@ -15,8 +15,14 @@ from redbot.core.utils.chat_formatting import box, pagify
 
 logger = logging.getLogger('red.misc-cogs.menulistener')
 
-if TYPE_CHECKING:
-    from padinfo.menu.common import MenuPanes
+MenuObject = MenuPanes = object
+
+
+class MenuEnabledCog(Protocol):
+    menu_map: Mapping[str, Tuple[MenuObject, MenuPanes]]
+
+    def get_menu_default_data(self) -> Mapping[str, Any]:
+        ...
 
 
 class MenuListener(commands.Cog):
@@ -29,7 +35,7 @@ class MenuListener(commands.Cog):
         self.config = Config.get_conf(self, identifier=7377709)
         self.config.register_global(cogs=[])
 
-        self.menu_map = {}  # type: Mapping[str, Tuple[str, Any, MenuPanes]]
+        self.menu_map = {}  # type: Mapping[str, Tuple[str, MenuObject, MenuPanes]]
         self.completed = False
 
     async def red_get_data_for_user(self, *, user_id):
@@ -65,13 +71,19 @@ class MenuListener(commands.Cog):
             cogs.remove(cog_name)
         await ctx.tick()
 
-    @commands.Cog.listener('on_reaction_add')
-    async def test_reaction_add(self, reaction, member):
-        emoji_clicked = self.get_emoji_clicked(reaction)
+    @commands.Cog.listener('on_raw_reaction_add')
+    async def test_reaction_add(self, payload: discord.RawReactionActionEvent):
+        emoji_clicked = self.get_emoji_clicked(payload)
         if emoji_clicked is None:
             return
 
-        message = reaction.message
+        channel = self.bot.get_channel(payload.channel_id)
+        message = discord.utils.get(self.bot.cached_messages, id=payload.message_id)
+        if message is None:
+            message = await channel.fetch_message(payload.message_id)
+        reaction = discord.utils.get(message.reactions, emoji=emoji_clicked)
+        member = payload.member or self.bot.get_user(payload.user_id)
+
         ims = message.embeds and IntraMessageState.extract_data(message.embeds[0])
         if not ims:
             return
@@ -91,8 +103,8 @@ class MenuListener(commands.Cog):
         await menu.transition(message, deepcopy(ims), emoji_clicked, member, **data)
         await self.listener_respond_with_child(deepcopy(ims), message, emoji_clicked, member)
 
-    def get_emoji_clicked(self, reaction):
-        emoji_obj = reaction.emoji
+    def get_emoji_clicked(self, payload: discord.RawReactionActionEvent) -> Optional[str]:
+        emoji_obj = payload.emoji
         if isinstance(emoji_obj, str):
             emoji_clicked = emoji_obj
         else:
@@ -162,7 +174,7 @@ class MenuListener(commands.Cog):
             return await cog.get_menu_default_data(ims)
         return {}
 
-    async def register(self, cog: commands.Cog):
+    async def register(self, cog: MenuEnabledCog):
         async with self.config.cogs() as cogs:
             if cog.__class__.__name__ not in cogs:
                 cogs.append(cog.__class__.__name__)
