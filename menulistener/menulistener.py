@@ -72,6 +72,7 @@ class MenuListener(commands.Cog):
         await ctx.tick()
 
     @commands.Cog.listener('on_raw_reaction_add')
+    @commands.Cog.listener('on_raw_reaction_remove')
     async def test_reaction_add(self, payload: discord.RawReactionActionEvent):
         emoji_clicked = self.get_emoji_clicked(payload)
         if emoji_clicked is None:
