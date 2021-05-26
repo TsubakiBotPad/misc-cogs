@@ -390,7 +390,7 @@ class BadUser(commands.Cog):
         """Get notified when a user comes online so you can punish them accordingly >:)"""
 
     @onlinenotify.command(name="add")
-    async def on_add(self, ctx, member: discord.Member, timeout: float = 10):
+    async def oln_add(self, ctx, member: discord.Member, timeout: float = 10):
         """Add a user to your notificaitons"""
         async with self.config.user(member).listeners() as listeners:
             listeners[ctx.author.id] = {
@@ -403,7 +403,7 @@ class BadUser(commands.Cog):
         await ctx.tick()
 
     @onlinenotify.command(name="remove", aliases=["delete", "del", "rm"])
-    async def on_remove(self, ctx, member):
+    async def oln_remove(self, ctx, member):
         """Remove a user from your notifications"""
         try:
             memberstr = await commands.MemberConverter().convert(ctx, member)
@@ -424,7 +424,7 @@ class BadUser(commands.Cog):
         await ctx.send(f"\N{WHITE HEAVY CHECK MARK} {memberstr} ({member}) will no longer notify you.")
 
     @onlinenotify.command(name="list")
-    async def on_list(self, ctx):
+    async def oln_list(self, ctx):
         """List all setup notifications"""
         users = []
         for uid, data in (await self.config.all_users()).items():
