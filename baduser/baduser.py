@@ -2,12 +2,14 @@
 Utilities for managing misbehaving users and facilitating administrator
 communication about role changes.
 """
+import time
+from typing import Optional
 
 import discord
 import logging
 from collections import defaultdict
 from collections import deque
-from redbot.core import checks
+from redbot.core import checks, Config
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
@@ -18,6 +20,17 @@ logger = logging.getLogger('red.misc-cogs.baduser')
 
 LOGS_PER_USER = 10
 
+ONLINE_STATUSES = [discord.Status.online, discord.Status.idle]
+
+STATUS_EMOJI = {
+    discord.Status.online: "\N{LARGE GREEN CIRCLE}",
+    discord.Status.idle: "\N{LARGE YELLOW CIRCLE}",
+    discord.Status.dnd: "\N{LARGE RED CIRCLE}",
+    discord.Status.do_not_disturb: "\N{LARGE RED CIRCLE}",
+    discord.Status.offline: "\N{GHOST}",
+    discord.Status.invisible: "\N{GHOST}",
+}
+
 
 def opted_in(ctx):
     return ctx.guild.id in ctx.bot.get_cog("BadUser").settings.bu_enabled()
@@ -25,9 +38,13 @@ def opted_in(ctx):
 
 class BadUser(commands.Cog):
     """Allows for more specific punishments than regular discord including global strikes and positive/negative roles"""
-    def __init__(self, bot: Red, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+
+    def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
+
+        self.config = Config.get_conf(self, identifier=8407532)
+        self.config.register_user(listeners={})
 
         self.settings = BadUserSettings("baduser")
         self.logs = defaultdict(lambda: deque(maxlen=LOGS_PER_USER))
@@ -354,17 +371,76 @@ class BadUser(commands.Cog):
 
     @baduser.command()
     @checks.is_owner()
-    async def opt_in(self, ctx):
+    async def optin(self, ctx):
         """Opt this server into baduser"""
         self.settings.add_bu_enabled(ctx.guild.id)
         await ctx.tick()
 
     @baduser.command()
     @checks.mod_or_permissions(manage_guild=True)
-    async def opt_out(self, ctx):
+    async def optout(self, ctx):
         """Opt this server out of baduser"""
         self.settings.rm_bu_enabled(ctx.guild.id)
         await ctx.tick()
+
+    @commands.group(aliases=["notifyonline"])
+    @commands.guild_only()
+    @checks.mod_or_permissions(manage_guild=True)
+    async def onlinenotify(self, ctx):
+        """Get notified when a user comes online so you can punish them accordingly >:)"""
+
+    @onlinenotify.command(name="add")
+    async def on_add(self, ctx, member: discord.Member, timeout: float = 10):
+        """Add a user to your notificaitons"""
+        async with self.config.user(member).listeners() as listeners:
+            listeners[ctx.author.id] = {
+                "timeout": max(timeout, .1),
+                "last": 0,
+            }
+            if member.status == discord.Status.online:
+                await ctx.send("The user is online right now.")
+                listeners[ctx.author.id]['last'] = time.time()
+        await ctx.tick()
+
+    @onlinenotify.command(name="remove", aliases=["delete", "del", "rm"])
+    async def on_remove(self, ctx, member):
+        """Remove a user from your notifications"""
+        try:
+            memberstr = await commands.MemberConverter().convert(ctx, member)
+            member = memberstr.id
+        except commands.BadArgument as e:
+            try:
+                memberstr = "An invalid user"
+                member = int(member)
+            except (ValueError, TypeError):
+                await ctx.send(inline("Invalid user."))
+                return
+
+        async with self.config.user(discord.Object(member)).listeners() as listeners:
+            if str(ctx.author.id) not in listeners:
+                await ctx.send("This user is not set up to notify you.")
+                return
+            del listeners[str(ctx.author.id)]
+        await ctx.send(f"\N{WHITE HEAVY CHECK MARK} {memberstr} ({member}) will no longer notify you.")
+
+    @onlinenotify.command(name="list")
+    async def on_list(self, ctx):
+        """List all setup notifications"""
+        users = []
+        for uid, data in (await self.config.all_users()).items():
+            if str(ctx.author.id) not in data['listeners']:
+                continue
+            if (member := self.get_member(uid)):
+                users.append(f"{STATUS_EMOJI[member.status]} {member} ({member.id})")
+            elif (user := self.bot.get_user(uid)):
+                users.append(f"\N{BLACK QUESTION MARK ORNAMENT} {user} ({user.id})")
+            else:
+                users.append(f"\N{BLACK QUESTION MARK ORNAMENT} {uid}")
+        if not users:
+            await ctx.send("You aren't listening to the status of any members.")
+            return
+        for page in pagify("\n".join(users)):
+            await ctx.send(box(page))
 
     @commands.Cog.listener('on_message')
     async def log_message(self, message):
@@ -461,17 +537,36 @@ class BadUser(commands.Cog):
                 await self.record_role_change(after, role.name, False, send_ping=False)
                 return
 
+    @commands.Cog.listener('on_member_update')
+    async def check_online_listener(self, before, after):
+        if before.status in ONLINE_STATUSES or after.status not in ONLINE_STATUSES:
+            return
+
+        current = await self.config.user(after).listeners()
+        for uid, listener in (await self.config.user(after).listeners()).items():
+            if not (user := self.bot.get_user(int(uid))):
+                continue
+            if listener['last'] + listener['timeout'] * 60 >= time.time():
+                continue
+
+            current[uid]['last'] = time.time()
+            await self.config.user(after).listeners.set(current)
+            try:
+                await user.send(f"{after} is online.")
+            except discord.Forbidden:
+                pass
+
     async def record_bad_user(self, member, role_name, guild=None):
         if guild is None:
             guild = member.guild
 
         latest_messages = self.logs.get(member.id, "")
         msg = 'Name={} Nick={} ID={} Joined={} Role={}\n'.format(
-                                    member.name,
-                                    member.display_name,
-                                    member.id,
-                                    member.joined_at if isinstance(member, discord.Member) else 'N/A',
-                                    role_name)
+            member.name,
+            member.display_name,
+            member.id,
+            member.joined_at if isinstance(member, discord.Member) else 'N/A',
+            role_name)
         msg += '\n'.join(latest_messages)
         strikes = self.settings.count_user_strikes(guild.id, member.id)
 
@@ -498,12 +593,12 @@ class BadUser(commands.Cog):
         if guild is None:
             guild = member.guild
         msg = 'Detected role {} : Name={} Nick={} ID={} Joined={} Role={}'.format(
-                                        "Added" if is_added else "Removed",
-                                        member.name,
-                                        member.display_name,
-                                        member.id,
-                                        member.joined_at if isinstance(member, discord.Member) else 'N/A',
-                                        role_name)
+            "Added" if is_added else "Removed",
+            member.name,
+            member.display_name,
+            member.id,
+            member.joined_at if isinstance(member, discord.Member) else 'N/A',
+            role_name)
 
         update_channel = self.settings.get_channel(guild.id)
         if update_channel is not None:
@@ -515,6 +610,12 @@ class BadUser(commands.Cog):
                     await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
             except Exception:
                 logger.exception('Failed to notify in {} {}'.format(update_channel, msg))
+
+    def get_member(self, user_id: int) -> Optional[discord.Member]:
+        user = self.bot.get_user(user_id)
+        if user is None or not user.mutual_guilds:
+            return None
+        return user.mutual_guilds[0].get_member(user_id)
 
 
 class BadUserSettings(CogSettings):
