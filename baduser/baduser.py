@@ -20,7 +20,7 @@ logger = logging.getLogger('red.misc-cogs.baduser')
 
 LOGS_PER_USER = 10
 
-ONLINE_STATUSES = [discord.Status.online, discord.Status.idle]
+ONLINE_STATUSES = [discord.Status.online, discord.Status.dnd, discord.Status.do_not_disturb]
 
 STATUS_EMOJI = {
     discord.Status.online: "\N{LARGE GREEN CIRCLE}",
