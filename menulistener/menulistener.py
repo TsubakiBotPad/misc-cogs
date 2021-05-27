@@ -170,7 +170,7 @@ class MenuListener(commands.Cog):
                 return
             emoji_simulated_clicked_2, extra_ims = None, {}
             if child_data_func is not None:
-                emoji_simulated_clicked_2, extra_ims = child_data_func(menu_1_ims, emoji_clicked, **data)
+                emoji_simulated_clicked_2, extra_ims = await child_data_func(menu_1_ims, emoji_clicked, **data)
             if emoji_simulated_clicked_2 is not None:
                 fctx = await self.bot.get_context(message_1)
                 try:
