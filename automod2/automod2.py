@@ -577,7 +577,7 @@ class AutoMod2(commands.Cog):
         output_msg = '**Watchdog:** {} spoke in {} ({} monitored because [{}])\n{}'.format(
             message.author.mention, message.channel.mention,
             request_user_txt, reason, box(message.clean_content))
-        await self._watchdog_print(watchdog_channel_id, output_msg)
+        await self._watchdog_show(watchdog_channel_id, output_msg)
 
     async def mod_message_watchdog_phrase(self, message):
         server_id = message.guild.id
@@ -606,10 +606,10 @@ class AutoMod2(commands.Cog):
                 output_msg = '**Watchdog:** {} spoke in {} `(rule [{}] matched phrase [{}])`\n{}'.format(
                     message.author.mention, message.channel.mention,
                     name, phrase, box(message.clean_content))
-                await self._watchdog_print(watchdog_channel_id, output_msg)
+                await self._watchdog_show(watchdog_channel_id, output_msg)
                 return
 
-    async def _watchdog_print(self, watchdog_channel_id, output_msg):
+    async def _watchdog_show(self, watchdog_channel_id, output_msg):
         try:
             watchdog_channel = self.bot.get_channel(watchdog_channel_id)
             await watchdog_channel.send(output_msg)
