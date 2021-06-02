@@ -247,7 +247,7 @@ class SqlActivityLogger(commands.Cog):
     @commands.command()
     @checks.is_owner()
     async def rawquery(self, ctx, *, query: str):
-        await self.query_and_print(ctx, ctx.guild, query, {}, {})
+        await self.query_and_show(ctx, ctx.guild, query, {}, {})
 
     @commands.command()
     @checks.is_owner()
@@ -299,7 +299,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.query_and_print(ctx, server, USER_QUERY, values, column_data)
+        await self.query_and_show(ctx, server, USER_QUERY, values, column_data)
 
     @exlog.command()
     async def channel(self, ctx, channel: discord.TextChannel, count=10):
@@ -324,7 +324,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.query_and_print(ctx, server, CHANNEL_QUERY, values, column_data)
+        await self.query_and_show(ctx, server, CHANNEL_QUERY, values, column_data)
 
     @exlog.command()
     async def userchannel(self, ctx, user: discord.User, channel: discord.TextChannel, count=10):
@@ -347,7 +347,7 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.query_and_print(ctx, server, USER_CHANNEL_QUERY, values, column_data)
+        await self.query_and_show(ctx, server, USER_CHANNEL_QUERY, values, column_data)
 
     @exlog.command()
     async def query(self, ctx, query, count=10):
@@ -378,9 +378,9 @@ class SqlActivityLogger(commands.Cog):
             ('clean_content', 'Message'),
         ]
 
-        await self.query_and_print(ctx, server, CONTENT_QUERY, values, column_data)
+        await self.query_and_show(ctx, server, CONTENT_QUERY, values, column_data)
 
-    async def query_and_print(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
+    async def query_and_show(self, ctx, server, query, values, column_data, max_rows=MAX_LOGS * 2, verbose=True):
         result_text = await self.query_and_save(ctx, server, query, values, column_data, max_rows, verbose)
         for p in pagify(result_text):
             await ctx.send(box(p))
