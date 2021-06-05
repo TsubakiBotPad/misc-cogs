@@ -153,8 +153,6 @@ class MenuListener(commands.Cog):
         failsafe = 0
 
         while menu_1_ims.get('child_message_id'):
-            # before this loop can actually work as a loop, the type of menu_2 can't be hard-coded as IdMenu anymore,
-            # and we have to update menu_1_class to be menu_2_class during the loop.
             if failsafe == 10:
                 break
             failsafe += 1
