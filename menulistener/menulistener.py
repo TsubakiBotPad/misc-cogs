@@ -151,19 +151,13 @@ class MenuListener(commands.Cog):
 
     async def listener_respond_with_child(self, menu_1_ims, message_1, emoji_clicked, member):
         failsafe = 0
-        pdicog = self.bot.get_cog("PadInfo")  # TODO: Oh god don't do this please support multiple menus eventually
-        if pdicog is None:
-            return
 
         while menu_1_ims.get('child_message_id'):
-            # before this loop can actually work as a loop, the type of menu_2 can't be hard-coded as IdMenu anymore,
-            # and we have to update menu_1_class to be menu_2_class during the loop.
             if failsafe == 10:
                 break
             failsafe += 1
-            menu_2 = pdicog.id_menu.menu()
-            panes_class = self.menu_map[menu_1_ims['menu_type']][2]
-            child_data_func = panes_class.get_child_data_func(emoji_clicked)
+            _, _, panes_class_1 = self.get_menu_attributes(menu_1_ims)
+            child_data_func = panes_class_1.get_child_data_func(emoji_clicked)
             try:
                 data = await self.get_menu_default_data(menu_1_ims)
             except CogNotLoaded:
@@ -177,6 +171,7 @@ class MenuListener(commands.Cog):
                     message_2 = await fctx.fetch_message(int(menu_1_ims['child_message_id']))
                     menu_2_ims = message_2.embeds and IntraMessageState.extract_data(message_2.embeds[0])
                     menu_2_ims.update(extra_ims)
+                    _, menu_2, _ = self.get_menu_attributes(menu_2_ims)
                     await menu_2.transition(message_2, menu_2_ims, emoji_simulated_clicked_2, member, **data)
                 except discord.errors.NotFound:
                     break
