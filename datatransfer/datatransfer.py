@@ -8,7 +8,7 @@ import re
 from redbot.core import checks, commands, data_manager
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
-R_MESSAGE_LINK = r"https://discordapp.com/channels/(\d+)/(\d+)/(\d+)"
+R_MESSAGE_LINK = r"https://discord.com/channels/(\d+)/(\d+)/(\d+)"
 R_ATTATCH_LINK = r"https://cdn.discordapp.com/attachments/\d+/\d+/.+"
 
 
