@@ -537,7 +537,7 @@ class Trigger(commands.Cog):
                         await channel.send(resp)
                     elif resp_type == "file":
                         await channel.send(file=resp)
-                except discord.Forbidden:
+                except (discord.Forbidden, discord.HTTPException):
                     pass
 
     async def save_stats(self):
