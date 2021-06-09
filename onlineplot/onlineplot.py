@@ -185,11 +185,10 @@ class OnlinePlot(commands.Cog):
 
         o = []
         for row in rows:
-            mins = (10 * row[0] + curtz._utcoffset.total_seconds() / 600) % (24 * 60)
+            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 600) % (24 * 60))
             o.append((time(mins // 60, mins % 60), row[1], row[2], row[3], row[4]))
 
         return o
-
 
     async def insert_guild(self, guild: discord.Guild) -> None:
         stmt = '''INSERT INTO onlineplot(record_date, record_time_index, guild_id, online, idle, dnd, offline)
