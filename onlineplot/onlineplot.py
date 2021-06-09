@@ -181,11 +181,14 @@ class OnlinePlot(commands.Cog):
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(GET_AVERAGES, (guild.id, tzstr, tzstr))
-                rows = await cur.fetchall()
+                rows = [[int(v) for v in row] for row in await cur.fetchall()]
+
+        o = []
         for row in rows:
             mins = (10 * row[0] + curtz._utcoffset.total_seconds() / 600) % (24 * 60)
-            row[0] = time(mins // 60, mins % 60)
-        return rows
+            o.append((time(mins // 60, mins % 60), row[1], row[2], row[3], row[4]))
+
+        return o
 
 
     async def insert_guild(self, guild: discord.Guild) -> None:
