@@ -103,10 +103,6 @@ class OnlinePlot(commands.Cog):
 
     async def init(self):
         logger.info('OnlinePlot: init')
-        if not self.lock.is_set():
-            logger.info('OnlinePlot: bailing on unlock')
-            return
-
         if os.name != 'nt' and sys.platform != 'win32':
             dsn = 'Driver=SQLite3;Database=' + self.db_path
         else:
