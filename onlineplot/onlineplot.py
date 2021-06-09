@@ -218,7 +218,7 @@ class OnlinePlot(commands.Cog):
         record_time_index = (record_date.time().hour * 60 + record_date.time().minute) // 10
         guild_id = guild.id
         online, idle, dnd, offline = self.get_onilne_stats(guild)
-        values = (record_date, record_time_index, guild_id, online, idle, dnd, offline)
+        values = (record_time_index, guild_id, online, idle, dnd, offline)
 
         print(values)
         print(0)
@@ -279,6 +279,6 @@ class OnlinePlot(commands.Cog):
                 await self.delete_old()
                 await asyncio.sleep(10 * 60)
         except asyncio.CancelledError as e:
-            print(e)
             logger.info("Task Cancelled.")
-            pass
+        except Exception as e:
+            logger.exception("Task failed.")
