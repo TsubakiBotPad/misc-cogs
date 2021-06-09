@@ -1,8 +1,9 @@
 import asyncio
 import os
+import re
+
 import sys
-from collections import deque
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 from io import BytesIO
 import logging
 from typing import Tuple, Sequence, List, Optional
@@ -10,6 +11,8 @@ from typing import Tuple, Sequence, List, Optional
 import aioodbc
 import discord
 from aioodbc import Pool
+from pytz import BaseTzInfo
+from pytz.tzinfo import DstTzInfo
 from redbot.core import commands, Config, data_manager
 import matplotlib.pyplot as plt
 
@@ -46,14 +49,15 @@ ON onlineplot(record_time_index, guild_id)
 '''
 
 GET_AVERAGES = '''
-SELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
+ELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
 FROM onlineplot
-WHERE guild_id = ? AND DATENAME(wd, DATETIME(record_date || ?)) = DATENAME(wd, DATETIME(now || ?))
+WHERE guild_id = ?
+  AND strftime('%w', DATETIME(record_date || ?)) = strftime('%w', DATETIME(datetime('now') || ?))
 GROUP BY record_time_index
 '''
 
 DELETE_OLD = '''
-DELETE FROM onlineplot WHERE DATEADD(day, 57, record_date) < getdate()
+DELETE FROM onlineplot WHERE DATEADD(day, 57, record_date) < DATETIME('now')
 '''
 
 
@@ -169,12 +173,24 @@ class OnlinePlot(commands.Cog):
 
         return discord.File(buf, "image.png")
 
-    async def fetch_guild_data(self, guild: discord.Guild) -> List[Tuple[time, int, int, int, int]]:
-        pass
+    async def fetch_guild_data(self, guild: discord.Guild, tz: DstTzInfo) -> List[Tuple[time, int, int, int, int]]:
+        # SQLite has a shitty TZ format
+        curtz: DstTzInfo = datetime.now(tz).tzinfo  # noqa
+        tzstr = re.sub(r'^(-?\d{2})', r'\1:', datetime.now(curtz).strftime("%z"))
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(GET_AVERAGES, (guild.id, tzstr, tzstr))
+                rows = await cur.fetchall()
+        for row in rows:
+            mins = (10 * row[0] + curtz._utcoffset.total_seconds() / 600) % (24 * 60)
+            row[0] = time(mins // 60, mins % 60)
+        return rows
+
 
     async def insert_guild(self, guild: discord.Guild) -> None:
         stmt = '''INSERT INTO onlineplot(record_date, record_time_index, guild_id, online, idle, dnd, offline)
-                  VALUES(?, ?, ?, ?, ?, ?, ?)'''
+                  VALUES(DATETIME('now'), ?, ?, ?, ?, ?, ?)'''
         record_date = datetime.utcnow()
         record_time_index = (record_date.time().hour * 60 + record_date.time().minute) // 10
         guild_id = guild.id
@@ -188,6 +204,11 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 print(.5)
                 print(await cur.execute(stmt, values))
+
+    async def delete_old(self):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(DELETE_OLD, ())
 
     @staticmethod
     def get_onilne_stats(guild: discord.Guild) -> Tuple[int, int, int, int]:
@@ -232,7 +253,9 @@ class OnlinePlot(commands.Cog):
                     print(guild)
                     if await self.config.guild(guild).opted_in():
                         await self.insert_guild(guild)
+                await self.delete_old()
                 await asyncio.sleep(10 * 60)
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as e:
+            print(e)
             logger.info("Task Cancelled.")
             pass
