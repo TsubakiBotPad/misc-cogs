@@ -147,6 +147,7 @@ class OnlinePlot(commands.Cog):
                 await ctx.send("Invalid weekday.  Must be one of: " + ', '.join(WEEKDAYS))
                 return
             day = WEEKDAYS[day_of_week.lower()]
+        print("day:", day)
 
         tz = await self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
         if tz is None:
@@ -155,7 +156,7 @@ class OnlinePlot(commands.Cog):
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
 
-        print(data)
+        print("data:", data)
 
         times = [row[0] for row in data]
         online = [row[1] for row in data]
@@ -198,7 +199,6 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 await cur.execute(GET_AVERAGES, (guild.id, tzstr, weekday))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
-                print(cur.query)
 
         o = []
         for row in rows:
