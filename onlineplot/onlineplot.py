@@ -126,14 +126,19 @@ class OnlinePlot(commands.Cog):
 
     @onlineplot.command()
     async def optin(self, ctx, enable: bool = True):
+        """Opt in to onlineplot tracking"""
         await self.config.guild(ctx.guild).opted_in.set(enable)
+        await ctx.tick()
 
     @onlineplot.command()
     async def optout(self, ctx, disable: bool = True):
+        """Opt out of onlineplot tracking"""
         await self.config.guild(ctx.guild).opted_in.set(not disable)
+        await ctx.tick()
 
     @onlineplot.command()
     async def plot(self, ctx, day_of_week: str = None):
+        """Generate a graph of online presence in this server."""
         if day_of_week is None:
             day = datetime.now().isoweekday()
         else:
@@ -142,7 +147,7 @@ class OnlinePlot(commands.Cog):
                 return
             day = WEEKDAYS[day_of_week.lower()]
 
-        await ctx.send(file=self.make_graph([1], [2], [3], colors=['r', 'w']))
+        await ctx.send(file=self.make_graph([1, 2], [2, 4], [3, 5], colors=['r', 'w']))
 
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
