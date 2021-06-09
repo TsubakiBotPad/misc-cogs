@@ -190,10 +190,11 @@ class OnlinePlot(commands.Cog):
         return discord.File(buf, "image.png")
 
     async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: DstTzInfo) -> List[
-        Tuple[time, int, int, int, int]]:
+        Tuple[datetime, int, int, int, int]]:
         # SQLite has a shitty TZ format
-        curtz: DstTzInfo = datetime.now(tz).tzinfo  # noqa
-        tzstr = re.sub(r'^(-?\d{2})', r'\1:', datetime.now(curtz).strftime("%z"))
+        now = datetime.now(tz)
+        curtz: DstTzInfo = now.tzinfo  # noqa
+        tzstr = re.sub(r'^(-?\d{2})', r'\1:', now.strftime("%z"))
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
@@ -204,8 +205,8 @@ class OnlinePlot(commands.Cog):
         o = []
         for row in rows:
             mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 600) % (24 * 60))
-            o.append((time(mins // 60, mins % 60), row[1], row[2], row[3], row[4]))
-
+            dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
+            o.append((dt, row[1], row[2], row[3], row[4]))
         return o
 
     async def insert_guild(self, guild: discord.Guild) -> None:
