@@ -47,7 +47,7 @@ ON onlineplot(record_time_index, guild_id)
 GET_AVERAGES = '''
 SELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
 FROM onlineplot
-WHERE guild_id = ?
+WHERE guild_id = ? AND DATENAME(wd, DATETIME(record_date || ?)) = DATENAME(wd, DATETIME(now || ?))
 GROUP BY record_time_index
 '''
 
@@ -185,6 +185,8 @@ class OnlinePlot(commands.Cog):
         online, idle, dnd, offline = self.get_onilne_stats(guild)
         values = (record_date, record_time_index, guild_id, online, idle, dnd, offline)
 
+        print(values)
+        
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(stmt, values)
