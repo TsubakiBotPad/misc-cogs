@@ -49,7 +49,7 @@ ON onlineplot(record_time_index, guild_id)
 '''
 
 GET_AVERAGES = '''
-ELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
+SELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
 FROM onlineplot
 WHERE guild_id = ?
   AND strftime('%w', DATETIME(record_date || ?)) = strftime('%w', DATETIME(datetime('now') || ?))
