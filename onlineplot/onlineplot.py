@@ -29,12 +29,12 @@ WEEKDAYS = {
 CREATE_TABLE = '''
 CREATE TABLE IF NOT EXISTS onlineplot(
   record_date DATETIME NOT NULL,
-  record_time_index tinyint(3) UNSIGNED NOT NULL,
-  guild_id bigint(18) UNSIGNED NOT NULL,
-  online int(11) UNSIGNED NOT NULL,
-  idle int(11) UNSIGNED NOT NULL,
-  dnd int(11) UNSIGNED NOT NULL,
-  offline int(11) UNSIGNED NOT NULL,
+  record_time_index UNSIGNED TINYINT(3) NOT NULL,
+  guild_id UNSIGNED BIGINT(18) NOT NULL,
+  online UNSIGNED INT(11) NOT NULL,
+  idle UNSIGNED INT(11) NOT NULL,
+  dnd UNSIGNED INT(11) NOT NULL,
+  offline UNSIGNED INT(11) NOT NULL,
   PRIMARY KEY (record_date, server_id)
 )
 '''
