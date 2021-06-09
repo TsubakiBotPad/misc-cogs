@@ -222,9 +222,9 @@ class SqlActivityLogger(commands.Cog):
         logger.debug('Seniority: unloading complete')
 
     async def init(self):
-        logger.debug('Seniority: init')
+        logger.debug('SQLActivityLog: init')
         if not self.lock:
-            logger.info('Seniority: bailing on unlock')
+            logger.info('SQLActivityLog: bailing on unlock')
             return
 
         if os.name != 'nt' and sys.platform != 'win32':
@@ -242,7 +242,7 @@ class SqlActivityLogger(commands.Cog):
         await self.purge()
         self.lock = False
 
-        logger.debug('Seniority: init complete')
+        logger.debug('SQLActivityLog: init complete')
 
     @commands.command()
     @checks.is_owner()
