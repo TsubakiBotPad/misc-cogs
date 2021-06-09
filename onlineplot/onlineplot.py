@@ -165,8 +165,8 @@ class OnlinePlot(commands.Cog):
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
         sp = fig.add_subplot()
-        sp.set_xlabel('X-axis ')
-        sp.set_ylabel('Y-axis ')
+        sp.set_xlabel('Time')
+        sp.set_ylabel('# of users')
         sp.set_facecolor("#190432")
         sp.xaxis.label.set_color('#DFCDF6')
         sp.yaxis.label.set_color('#DFCDF6')
@@ -178,7 +178,7 @@ class OnlinePlot(commands.Cog):
         sp.spines['right'].set_color('#DFCDF6')
         plt.stackplot(x_vals, *y_vals, **kwargs)
         fig.autofmt_xdate()
-        plt.title("Online plot (Averaged over 8 weeks)", color="#DFCDF6")
+        plt.title("Users Online", color="#DFCDF6")
 
         buf = BytesIO()
         plt.savefig(buf, format='png')
