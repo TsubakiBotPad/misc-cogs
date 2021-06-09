@@ -92,7 +92,7 @@ class OnlinePlot(commands.Cog):
     def cog_unload(self):
         logger.info('OnlinePlot: unloading')
         self._loop.cancel()
-        self.lock.set()
+        self.lock.clear()
         if self.pool:
             self.pool.close()
             self.bot.loop.create_task(self.pool.wait_closed())
@@ -112,9 +112,9 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 await cur.execute(CREATE_TABLE)
                 await cur.execute(CREATE_INDEX)
-        self.lock.clear()
+        self.lock.set()
 
-        logger.info('Seniority: init complete')
+        logger.info('OnlinePlot: init complete')
 
     @commands.group()
     async def onlineplot(self, ctx):
