@@ -198,7 +198,7 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 await cur.execute(GET_AVERAGES, (guild.id, tzstr, weekday))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
-                print(cur._executed)
+                print(cur.query)
 
         o = []
         for row in rows:
