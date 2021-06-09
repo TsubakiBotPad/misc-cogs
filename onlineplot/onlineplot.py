@@ -69,7 +69,7 @@ class OnlinePlot(commands.Cog):
         self.bot = bot
 
         self.db_path = _data_file('log.db')
-        self.lock = True
+        self.lock = asyncio.Event()
         self.pool: Optional[Pool] = None
 
         self.config = Config.get_conf(self, identifier=771739707)
@@ -92,7 +92,7 @@ class OnlinePlot(commands.Cog):
     def cog_unload(self):
         logger.info('OnlinePlot: unloading')
         self._loop.cancel()
-        self.lock = True
+        self.lock.set()
         if self.pool:
             self.pool.close()
             self.bot.loop.create_task(self.pool.wait_closed())
@@ -103,7 +103,7 @@ class OnlinePlot(commands.Cog):
 
     async def init(self):
         logger.info('OnlinePlot: init')
-        if not self.lock:
+        if not self.lock.is_set():
             logger.info('OnlinePlot: bailing on unlock')
             return
 
@@ -116,7 +116,7 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 await cur.execute(CREATE_TABLE)
                 await cur.execute(CREATE_INDEX)
-        self.lock = False
+        self.lock.clear()
 
         logger.info('Seniority: init complete')
 
@@ -232,10 +232,12 @@ class OnlinePlot(commands.Cog):
     async def do_loop(self):
         try:
             await self.bot.wait_until_ready()
-            for guild in self.bot.guilds:
-                if await self.config.guild(guild).opted_in():
-                    await self.insert_guild(guild)
-            await asyncio.sleep(10 * 60)
+            await self.lock.wait()
+            while True:
+                for guild in self.bot.guilds:
+                    if await self.config.guild(guild).opted_in():
+                        await self.insert_guild(guild)
+                await asyncio.sleep(10 * 60)
         except asyncio.CancelledError:
             logger.info("Task Cancelled.")
             pass
