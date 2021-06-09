@@ -35,13 +35,13 @@ CREATE TABLE IF NOT EXISTS onlineplot(
   idle UNSIGNED INT(11) NOT NULL,
   dnd UNSIGNED INT(11) NOT NULL,
   offline UNSIGNED INT(11) NOT NULL,
-  PRIMARY KEY (record_date, server_id)
+  PRIMARY KEY (record_date, guild_id)
 )
 '''
 
 CREATE_INDEX = '''
-CREATE INDEX IF NOT EXISTS idx_record_time_index_server_id
-ON onlineplot(record_time_index, server_id)
+CREATE INDEX IF NOT EXISTS idx_record_time_index_guild_id
+ON onlineplot(record_time_index, guild_id)
 '''
 
 GET_AVERAGES = '''
@@ -176,9 +176,9 @@ class OnlinePlot(commands.Cog):
                   VALUES(?, ?, ?, ?, ?, ?, ?)'''
         record_date = datetime.utcnow()
         record_time_index = (record_date.time().hour * 60 + record_date.time().minute) // 10
-        server_id = guild.id
+        guild_id = guild.id
         online, idle, dnd, offline = self.get_onilne_stats(guild)
-        values = (record_date, record_time_index, server_id, online, idle, dnd, offline)
+        values = (record_date, record_time_index, guild_id, online, idle, dnd, offline)
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
