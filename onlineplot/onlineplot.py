@@ -149,9 +149,12 @@ class OnlinePlot(commands.Cog):
         tz = await self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
         if tz is None:
             await ctx.send(f"Please set your timzeone with {ctx.prefix}settimezone")
+            return
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
 
+        print(data)
+        
         times = [row[0] for row in data]
         online = [row[1] for row in data]
         idle = [row[2] for row in data]
