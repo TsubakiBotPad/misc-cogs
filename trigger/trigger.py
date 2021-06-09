@@ -2,9 +2,11 @@ import asyncio
 import datetime
 import discord
 import os
+
+from io import BytesIO
 from random import choice
 from redbot.core import Config, checks, commands
-from redbot.core.utils.chat_formatting import box, escape, pagify
+from redbot.core.utils.chat_formatting import box, pagify, escape
 
 try:
     import re2 as re
@@ -13,6 +15,7 @@ except ImportError:
         import regex as re
     except ImportError:
         import re
+
 
 class TriggerError(Exception):
     pass
@@ -33,7 +36,8 @@ class AlreadyExists(TriggerError):
 class Trigger(commands.Cog):
     """Custom triggers"""
 
-    def __init__(self, bot):
+    def __init__(self, bot, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.bot = bot
         self.config = Config.get_conf(self, identifier=7173306)
         self.config.register_global(triggers=[])
@@ -58,7 +62,7 @@ class Trigger(commands.Cog):
                 trigger.owner = None
 
     def cog_unload(self):
-         self._stats_loop.cancel()
+        self._stats_loop.cancel()
 
     @commands.group()
     @commands.guild_only()
@@ -130,7 +134,7 @@ class Trigger(commands.Cog):
         if trigger is None:
             await ctx.send("That trigger doesn't exist.")
             return
-        if trigger.responses == []:
+        if not trigger.responses:
             await ctx.send("That trigger has no responses to delete.")
             return
         if not trigger.can_edit(ctx.author):
@@ -160,7 +164,7 @@ class Trigger(commands.Cog):
             try:
                 i = int(msg.content)
                 del trigger.responses[i]
-            except:
+            except Exception:
                 pass
             past_messages.append(msg)
 
@@ -174,7 +178,7 @@ class Trigger(commands.Cog):
         try:
             for message in messages:
                 await message.delete()
-        except:
+        except Exception:
             pass
 
     @trigger.command()
@@ -196,17 +200,17 @@ class Trigger(commands.Cog):
             msg += "Regex: {}\n".format(regex)
             msg += "Channels: (In this server)\n"
             if trigger.server not in (None, ctx.guild.id):
-                msg+="  None (Not enabled in server)\n"
+                msg += "  None (Not enabled in server)\n"
             elif not trigger.channels.get(str(ctx.guild.id)):
-                msg+="  All\n"
+                msg += "  All\n"
             else:
                 for channel in trigger.channels[str(ctx.guild.id)]:
                     try:
-                        c=self.bot.get_channel(channel)
+                        c = self.bot.get_channel(channel)
                         if c.guild.id == ctx.guild.id:
-                            msg+="  #{}\n".format(c.name)
+                            msg += "  #{}\n".format(c.name)
                     except Exception as e:
-                        msg+="  {} (unknown)\n".format(channel)
+                        msg += "  {} (unknown)\n".format(channel)
             msg += "Cooldown: {} seconds\n".format(trigger.cooldown)
             msg += "Triggered By: \"{}\"\n".format(trigger.triggered_by.replace("`", "\\`"))
             msg += "Payload: {} responses\n".format(len(trigger.responses))
@@ -395,7 +399,7 @@ class Trigger(commands.Cog):
         await self.save_triggers()
         await ctx.send("Trigger active: {}.".format(true_or_false))
 
-    async def settings_check(ctx, self, trigger, author):
+    async def settings_check(self, ctx, trigger, author):
         if not trigger:
             await ctx.send("That trigger doesn't exist.")
             return False
@@ -448,10 +452,10 @@ class Trigger(commands.Cog):
         else:
             raise NotFound()
 
-    def elaborate_payload(self, payload, truncate=50, escape=True):
+    def elaborate_payload(self, payload, truncate=50, escape_text=True):
         shortened = []
         for p in payload:
-            if escape:
+            if escape_text:
                 p = escape(p)
             if len(p) < truncate:
                 shortened.append(p)
