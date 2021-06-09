@@ -90,7 +90,7 @@ class OnlinePlot(commands.Cog):
         return
 
     def cog_unload(self):
-        logger.debug('OnlinePlot: unloading')
+        logger.info('OnlinePlot: unloading')
         self._loop.cancel()
         self.lock = True
         if self.pool:
@@ -99,10 +99,10 @@ class OnlinePlot(commands.Cog):
             self.pool = None
         else:
             logger.error('unexpected error: pool was None')
-        logger.debug('OnlinePlot: unloading complete')
+        logger.info('OnlinePlot: unloading complete')
 
     async def init(self):
-        logger.debug('OnlinePlot: init')
+        logger.info('OnlinePlot: init')
         if not self.lock:
             logger.info('OnlinePlot: bailing on unlock')
             return
@@ -118,7 +118,7 @@ class OnlinePlot(commands.Cog):
                 await cur.execute(CREATE_INDEX)
         self.lock = False
 
-        logger.debug('Seniority: init complete')
+        logger.info('Seniority: init complete')
 
     @commands.group()
     async def onlineplot(self, ctx):
@@ -186,7 +186,7 @@ class OnlinePlot(commands.Cog):
         values = (record_date, record_time_index, guild_id, online, idle, dnd, offline)
 
         print(values)
-        
+
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(stmt, values)
@@ -230,4 +230,5 @@ class OnlinePlot(commands.Cog):
                     await self.insert_guild(guild)
             await asyncio.sleep(10 * 60)
         except asyncio.CancelledError:
+            logger.info("Task Cancelled.")
             pass
