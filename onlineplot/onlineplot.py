@@ -227,7 +227,9 @@ class OnlinePlot(commands.Cog):
 
     async def do_loop(self):
         try:
+            print(10)
             await self.bot.wait_until_ready()
+            print(11)
             await self.lock.wait()
             print(12)
             while True:
