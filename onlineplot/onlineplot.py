@@ -64,8 +64,6 @@ def _data_file(file_name: str) -> str:
     return os.path.join(str(data_manager.cog_data_path(raw_name='OnlinePlot')), file_name)
 
 
-print = lambda *x: logger.info(" ".join(str(v) for v in x))
-
 class OnlinePlot(commands.Cog):
     """Get online analytics"""
 
@@ -149,7 +147,6 @@ class OnlinePlot(commands.Cog):
                 await ctx.send("Invalid weekday.  Must be one of: " + ', '.join(WEEKDAYS))
                 return
             day = WEEKDAYS[day_of_week.lower()]
-        print("day:", day)
 
         tz = await self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
         if tz is None:
@@ -157,8 +154,6 @@ class OnlinePlot(commands.Cog):
             return
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
-
-        print("data:", data)
 
         times = [row[0] for row in data]
         online = [row[1] for row in data]
@@ -200,7 +195,6 @@ class OnlinePlot(commands.Cog):
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                print("args:", (guild.id, tzstr, weekday))
                 await cur.execute(GET_AVERAGES, (guild.id, tzstr, str(weekday)))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
 
@@ -220,13 +214,9 @@ class OnlinePlot(commands.Cog):
         online, idle, dnd, offline = self.get_onilne_stats(guild)
         values = (record_time_index, guild_id, online, idle, dnd, offline)
 
-        print(values)
-        print(0)
         async with self.pool.acquire() as conn:
-            print(.2)
             async with conn.cursor() as cur:
-                print(.5)
-                print(await cur.execute(stmt, values))
+                await cur.execute(stmt, values)
 
     async def delete_old(self):
         async with self.pool.acquire() as conn:
@@ -266,14 +256,10 @@ class OnlinePlot(commands.Cog):
 
     async def do_loop(self):
         try:
-            print(10)
             await self.bot.wait_until_ready()
-            print(11)
             await self.lock.wait()
-            print(12)
             while True:
                 for guild in self.bot.guilds:
-                    print(guild)
                     if await self.config.guild(guild).opted_in():
                         await self.insert_guild(guild)
                 await self.delete_old()
