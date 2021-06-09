@@ -229,8 +229,10 @@ class OnlinePlot(commands.Cog):
         try:
             await self.bot.wait_until_ready()
             await self.lock.wait()
+            print(12)
             while True:
                 for guild in self.bot.guilds:
+                    print(guild)
                     if await self.config.guild(guild).opted_in():
                         await self.insert_guild(guild)
                 await asyncio.sleep(10 * 60)
