@@ -187,12 +187,7 @@ class OnlinePlot(commands.Cog):
             print(.2)
             async with conn.cursor() as cur:
                 print(.5)
-                await cur.execute(stmt, values)
-                print(1)
-                rows = await cur.fetchall()
-                print(2)
-                print(rows)
-                print(3)
+                print(await cur.execute(stmt, values))
 
     @staticmethod
     def get_onilne_stats(guild: discord.Guild) -> Tuple[int, int, int, int]:
