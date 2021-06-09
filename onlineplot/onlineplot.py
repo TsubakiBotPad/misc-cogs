@@ -64,7 +64,7 @@ def _data_file(file_name: str) -> str:
     return os.path.join(str(data_manager.cog_data_path(raw_name='OnlinePlot')), file_name)
 
 
-print = logger.info
+print = lambda *x: logger.info(" ".join(str(v) for v in x))
 
 class OnlinePlot(commands.Cog):
     """Get online analytics"""
