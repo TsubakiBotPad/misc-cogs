@@ -56,7 +56,7 @@ GROUP BY record_time_index
 '''
 
 DELETE_OLD = '''
-DELETE FROM onlineplot WHERE DATEADD(day, 57, record_date) < DATETIME('now')
+DELETE FROM onlineplot WHERE DATE(record_date, "+57 days") < DATE('now')
 '''
 
 
