@@ -139,7 +139,7 @@ class OnlinePlot(commands.Cog):
     async def plot(self, ctx, day_of_week: str = None):
         """Generate a graph of online presence in this server."""
         await self.lock.wait()
-        
+
         if day_of_week is None:
             day = datetime.now().isoweekday()
         else:
@@ -198,6 +198,7 @@ class OnlinePlot(commands.Cog):
             async with conn.cursor() as cur:
                 await cur.execute(GET_AVERAGES, (guild.id, tzstr, weekday))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
+                print(cur._executed)
 
         o = []
         for row in rows:
