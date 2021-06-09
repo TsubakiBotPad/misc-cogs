@@ -138,6 +138,8 @@ class OnlinePlot(commands.Cog):
     @onlineplot.command()
     async def plot(self, ctx, day_of_week: str = None):
         """Generate a graph of online presence in this server."""
+        await self.lock.wait()
+        
         if day_of_week is None:
             day = datetime.now().isoweekday()
         else:
@@ -154,7 +156,7 @@ class OnlinePlot(commands.Cog):
         data = await self.fetch_guild_data(ctx.guild, day, tz)
 
         print(data)
-        
+
         times = [row[0] for row in data]
         online = [row[1] for row in data]
         idle = [row[2] for row in data]
