@@ -3,7 +3,7 @@ import os
 import re
 
 import sys
-from datetime import datetime, time, timezone
+from datetime import datetime, time
 from io import BytesIO
 import logging
 from typing import Tuple, Sequence, List, Optional
@@ -11,7 +11,6 @@ from typing import Tuple, Sequence, List, Optional
 import aioodbc
 import discord
 from aioodbc import Pool
-from pytz import BaseTzInfo
 from pytz.tzinfo import DstTzInfo
 from redbot.core import commands, Config, data_manager
 import matplotlib.pyplot as plt
@@ -52,7 +51,7 @@ GET_AVERAGES = '''
 SELECT record_time_index, AVG(online), AVG(idle), AVG(dnd), AVG(offline)
 FROM onlineplot
 WHERE guild_id = ?
-  AND strftime('%w', DATETIME(record_date || ?)) = strftime('%w', DATETIME(datetime('now') || ?))
+  AND strftime('%w', DATETIME(record_date || ?)) = ?
 GROUP BY record_time_index
 '''
 
@@ -147,7 +146,18 @@ class OnlinePlot(commands.Cog):
                 return
             day = WEEKDAYS[day_of_week.lower()]
 
-        await ctx.send(file=self.make_graph([1, 2], [2, 4], [3, 5], colors=['r', 'w']))
+        tz = self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
+        if tz is None:
+            await ctx.send(f"Please set your timzeone with {ctx.prefix}settimezone")
+
+        data = await self.fetch_guild_data(ctx.guild, day, tz)
+
+        times = [row[0] for row in data]
+        online = [row[1] for row in data]
+        idle = [row[2] for row in data]
+        dnd = [row[3] for row in data]
+
+        await ctx.send(file=self.make_graph(times, online, idle, dnd, colors=['g', 'y', 'r']))
 
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
@@ -173,14 +183,15 @@ class OnlinePlot(commands.Cog):
 
         return discord.File(buf, "image.png")
 
-    async def fetch_guild_data(self, guild: discord.Guild, tz: DstTzInfo) -> List[Tuple[time, int, int, int, int]]:
+    async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: DstTzInfo) -> List[
+        Tuple[time, int, int, int, int]]:
         # SQLite has a shitty TZ format
         curtz: DstTzInfo = datetime.now(tz).tzinfo  # noqa
         tzstr = re.sub(r'^(-?\d{2})', r'\1:', datetime.now(curtz).strftime("%z"))
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(GET_AVERAGES, (guild.id, tzstr, tzstr))
+                await cur.execute(GET_AVERAGES, (guild.id, tzstr, weekday))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
 
         o = []

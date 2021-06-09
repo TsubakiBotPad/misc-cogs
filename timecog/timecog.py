@@ -1,8 +1,10 @@
 import asyncio
 import logging
 import re
+from typing import Optional
+
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from io import BytesIO
 
 import discord
@@ -634,6 +636,10 @@ class TimeCog(commands.Cog):
 
         return rmtime
 
+    async def get_user_timezone(self, user: discord.User) -> Optional[tzinfo]:
+        user_tz_str = await self.config.user(user).tz()
+        if user_tz_str:
+            return tzstr_to_tz(user_tz_str)
 
 def timestr_to_time(timestr):
     timestr = timestr.replace(" ", "")
