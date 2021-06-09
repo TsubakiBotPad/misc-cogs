@@ -186,12 +186,17 @@ class OnlinePlot(commands.Cog):
         values = (record_date, record_time_index, guild_id, online, idle, dnd, offline)
 
         print(values)
-
+        print(0)
         async with self.pool.acquire() as conn:
+            print(.2)
             async with conn.cursor() as cur:
+                print(.5)
                 await cur.execute(stmt, values)
+                print(1)
                 rows = await cur.fetchall()
+                print(2)
                 print(rows)
+                print(3)
 
     @staticmethod
     def get_onilne_stats(guild: discord.Guild) -> Tuple[int, int, int, int]:
