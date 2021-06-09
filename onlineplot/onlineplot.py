@@ -5,10 +5,11 @@ from collections import deque
 from datetime import datetime, time
 from io import BytesIO
 import logging
-from typing import Tuple, Sequence, List
+from typing import Tuple, Sequence, List, Optional
 
 import aioodbc
 import discord
+from aioodbc import Pool
 from redbot.core import commands, Config, data_manager
 import matplotlib.pyplot as plt
 
@@ -69,8 +70,7 @@ class OnlinePlot(commands.Cog):
 
         self.db_path = _data_file('log.db')
         self.lock = True
-        self.pool = None
-        self.insert_timing = deque(maxlen=1000)
+        self.pool: Optional[Pool] = None
 
         self.config = Config.get_conf(self, identifier=771739707)
         self.config.register_guild(opted_in=False)
@@ -190,6 +190,8 @@ class OnlinePlot(commands.Cog):
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(stmt, values)
+                rows = await cur.fetchall()
+                print(rows)
 
     @staticmethod
     def get_onilne_stats(guild: discord.Guild) -> Tuple[int, int, int, int]:
