@@ -157,7 +157,7 @@ class OnlinePlot(commands.Cog):
 
         if not data:
             await ctx.send(f"There's no data associated with this guild."
-                           f" Please opt in with {ctx.prefix}onlineplot optin."
+                           f" Please opt in with `{ctx.prefix}onlineplot optin`."
                            f" If you've already opted in, allow around 30 minutes"
                            f" to collect the first points of data.")
 
