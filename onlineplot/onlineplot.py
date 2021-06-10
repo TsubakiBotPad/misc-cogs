@@ -142,7 +142,7 @@ class OnlinePlot(commands.Cog):
 
     @onlineplot.command()
     @checks.admin_or_permissions(administrator=True)
-    async def optout(self, ctx, disable: bool = True):
+    async def optout(self, ctx):
         """Opt out of onlineplot tracking"""
         m = await ctx.send("Are you sure you want to opt out of onlineplot and delete all"
                            " data associated with this guild? Type 'Delete all my data'"
