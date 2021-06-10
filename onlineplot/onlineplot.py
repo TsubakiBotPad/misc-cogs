@@ -154,7 +154,7 @@ class OnlinePlot(commands.Cog):
             return
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
-        print(data)
+
         times = [row[0] for row in data]
         online = [row[1] for row in data]
         idle = [row[2] for row in data]
@@ -206,7 +206,7 @@ class OnlinePlot(commands.Cog):
         for row in rows:
             mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 60) % (24 * 60))
             dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
-            o.append((dt, row[1], row[2], row[3], row[4], row[0]))
+            o.append((dt, row[1], row[2], row[3], row[4]))
         return sorted(o, key=lambda x: x[0])
 
     async def insert_guild(self, guild: discord.Guild) -> None:
