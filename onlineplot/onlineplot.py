@@ -163,7 +163,6 @@ class OnlinePlot(commands.Cog):
             except discord.Forbidden:
                 pass
 
-
     @onlineplot.command()
     async def plot(self, ctx, day_of_week: str = None):
         """Generate a graph of online presence in this server."""
