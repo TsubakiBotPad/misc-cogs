@@ -11,8 +11,7 @@ from typing import Tuple, Sequence, List, Optional
 import aioodbc
 import discord
 from aioodbc import Pool
-from pytz.tzinfo import DstTzInfo
-from redbot.core import commands, Config, data_manager
+from redbot.core import checks, commands, Config, data_manager
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger('red.misc-cogs.onlineplot')
@@ -128,6 +127,7 @@ class OnlinePlot(commands.Cog):
         logger.info('OnlinePlot: init complete')
 
     @commands.group()
+    @checks.mod_or_permissions(manage_messages=True)
     async def onlineplot(self, ctx):
         """Online plot"""
 
@@ -138,6 +138,7 @@ class OnlinePlot(commands.Cog):
         await ctx.tick()
 
     @onlineplot.command()
+    @checks.admin_or_permissions(administrator=True)
     async def optout(self, ctx, disable: bool = True):
         """Opt out of onlineplot tracking"""
         await self.config.guild(ctx.guild).opted_in.set(not disable)
@@ -209,7 +210,7 @@ class OnlinePlot(commands.Cog):
 
         return discord.File(buf, "image.png")
 
-    async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: DstTzInfo) \
+    async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: tzinfo) \
             -> List[Tuple[datetime, int, int, int, int]]:
         # SQLite has a shitty TZ format
         now = datetime.now(tz)
