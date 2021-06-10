@@ -192,7 +192,7 @@ class OnlinePlot(commands.Cog):
         sp.spines['left'].set_color(FG_COLOR)
         sp.spines['bottom'].set_color(FG_COLOR)
         sp.spines['right'].set_color(FG_COLOR)
-        sp.set_title(kwargs.get("title"), color=FG_COLOR)
+        sp.set_title(title, color=FG_COLOR)
         plt.stackplot(x_vals, *y_vals, **kwargs)
 
         buf = BytesIO()
@@ -259,7 +259,7 @@ class OnlinePlot(commands.Cog):
 
     @staticmethod
     def get_tz_str(tz: tzinfo) -> str:
-        """Convert a tz object to an SQL tz string whtch matches /[-+]\d\d:\d\d/"""
+        r"""Convert a tz object to an SQL tz string whtch matches /[-+]\d\d:\d\d/"""
         # This is so awful.  I'm so sorry.
         return re.sub(r'^([-+]\d\d)', r'\1:', "{:+05}".format(-int(datetime.now(tz).strftime("%z"))))
 
