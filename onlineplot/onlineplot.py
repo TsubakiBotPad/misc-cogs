@@ -169,7 +169,7 @@ class OnlinePlot(commands.Cog):
         dnd = [row[3] for row in data]
         offline = [row[4] for row in data]
 
-        weekcount = await self.execute_query(GET_WEEKS, (self.get_tz_str(tz), ctx.guild.id))
+        weekcount = await self.execute_query(GET_WEEKS, (self.get_tz_str(tz), ctx.guild.id))[0][0]
 
         await ctx.send(file=await self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r'),
                                                   title=f"Users Online (Averaged over {weekcount} weeks)"))
