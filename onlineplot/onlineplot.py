@@ -152,11 +152,16 @@ class OnlinePlot(commands.Cog):
                                           check=lambda m: m.channel == ctx.channel
                                                           and m.content == "Delete all my data")
         except asyncio.TimeoutError:
-            await ctx.react_quietly("\N{CROSS MARK}")
-            return
-        await self.execute_query(DELETE_GUILD, (ctx.guild.id,))
-        await self.config.guild(ctx.guild).opted_in.set(False)
-        await ctx.tick()
+            await ctx.send("Opt-out cancelled.  Your data was not deleted.")
+        else:
+            await self.execute_query(DELETE_GUILD, (ctx.guild.id,))
+            await self.config.guild(ctx.guild).opted_in.set(False)
+            await ctx.send("Data deleted successfully.")
+        finally:
+            try:
+                await msg.delete()
+            except discord.Forbidden:
+                pass
 
     @onlineplot.command()
     async def plot(self, ctx, day_of_week: str = None):
