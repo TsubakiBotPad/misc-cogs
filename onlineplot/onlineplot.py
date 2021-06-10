@@ -3,7 +3,7 @@ import os
 import re
 
 import sys
-from datetime import datetime, time
+from datetime import datetime, time, tzinfo
 from io import BytesIO
 import logging
 from typing import Tuple, Sequence, List, Optional
@@ -53,6 +53,12 @@ FROM onlineplot
 WHERE guild_id = ?
   AND strftime('%w', DATETIME(record_date || ?)) = ?
 GROUP BY record_time_index
+'''
+
+GET_WEEKS = '''
+SELECT COUNT(DISTINCT strftime('%W', DATETIME(record_date || ?))) 
+FROM onlineplot 
+WHERE guild_id = ?
 '''
 
 DELETE_OLD = '''
@@ -161,25 +167,31 @@ class OnlinePlot(commands.Cog):
         dnd = [row[3] for row in data]
         offline = [row[4] for row in data]
 
-        await ctx.send(file=self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r')))
+        weekcount = await self.execute_query(GET_WEEKS, (self.get_tz_str(tz), ctx.guild.id))
 
-    def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
-        fig = plt.figure(facecolor="#190432")
+        await ctx.send(file=await self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r'),
+                                                  title=f"Users Online (Averaged over {weekcount} weeks)"))
+
+    async def make_graph(self, x_vals: Sequence[datetime], *y_vals: Sequence[int], **kwargs) -> discord.File:
+        BG_COLOR = "#190432"
+        FG_COLOR = "#dfcdf6"
+
+        fig = plt.figure(facecolor=BG_COLOR)
+        fig.autofmt_xdate()
         sp = fig.add_subplot()
         sp.set_xlabel('Time')
         sp.set_ylabel('# of users')
-        sp.set_facecolor("#190432")
-        sp.xaxis.label.set_color('#DFCDF6')
-        sp.yaxis.label.set_color('#DFCDF6')
-        sp.tick_params(axis='x', colors='#DFCDF6')
-        sp.tick_params(axis='y', colors='#DFCDF6')
-        sp.spines['top'].set_color('#DFCDF6')
-        sp.spines['left'].set_color('#DFCDF6')
-        sp.spines['bottom'].set_color('#DFCDF6')
-        sp.spines['right'].set_color('#DFCDF6')
+        sp.set_facecolor(BG_COLOR)
+        sp.xaxis.label.set_color(FG_COLOR)
+        sp.yaxis.label.set_color(FG_COLOR)
+        sp.tick_params(axis='x', colors=FG_COLOR)
+        sp.tick_params(axis='y', colors=FG_COLOR)
+        sp.spines['top'].set_color(FG_COLOR)
+        sp.spines['left'].set_color(FG_COLOR)
+        sp.spines['bottom'].set_color(FG_COLOR)
+        sp.spines['right'].set_color(FG_COLOR)
+        sp.set_title(kwargs.get("title"), color=FG_COLOR)
         plt.stackplot(x_vals, *y_vals, **kwargs)
-        plt.title("Users Online", color="#DFCDF6")
-        fig.autofmt_xdate()
 
         buf = BytesIO()
         plt.savefig(buf, format='png')
@@ -191,15 +203,11 @@ class OnlinePlot(commands.Cog):
             -> List[Tuple[datetime, int, int, int, int]]:
         # SQLite has a shitty TZ format
         now = datetime.now(tz)
-        curtz = now.tzinfo  # noqa
-
-        # Convert a tz object to an SQL tz string.  This is so awful.  I'm so sorry.
-        # A SQL tz string matches /[-+]\d\d:\d\d/
-        tzstr = re.sub(r'^([-+]\d\d)', r'\1:', "{:+05}".format(-int(datetime.now(tz).strftime("%z"))))
+        curtz = now.tzinfo
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(GET_AVERAGES, (guild.id, tzstr, str(weekday)))
+                await cur.execute(GET_AVERAGES, (guild.id, self.get_tz_str(tz), str(weekday)))
                 rows = [[int(v) for v in row] for row in await cur.fetchall()]
 
         o = []
@@ -218,14 +226,16 @@ class OnlinePlot(commands.Cog):
         online, idle, dnd, offline = self.get_onilne_stats(guild)
         values = (record_time_index, guild_id, online, idle, dnd, offline)
 
-        async with self.pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(stmt, values)
+        await self.execute_query(stmt, values)
 
-    async def delete_old(self):
+    async def execute_query(self, query, params=()) -> Optional[List[Tuple]]:
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(DELETE_OLD, ())
+                await cur.execute(query, params)
+                try:
+                    return await cur.fetchall()
+                except Exception as e:
+                    pass
 
     @staticmethod
     def get_onilne_stats(guild: discord.Guild) -> Tuple[int, int, int, int]:
@@ -244,6 +254,13 @@ class OnlinePlot(commands.Cog):
                 raise ValueError(f"Unknown status: {member.status}")
 
         return online, idle, dnd, offline
+
+    @staticmethod
+    def get_tz_str(tz: tzinfo) -> str:
+        """Convert a tz object to an SQL tz string whtch matches /[-+]\d\d:\d\d/"""
+        # This is so awful.  I'm so sorry.
+        return re.sub(r'^([-+]\d\d)', r'\1:', "{:+05}".format(-int(datetime.now(tz).strftime("%z"))))
+
 
     async def restart_loop(self):
         while True:
@@ -266,7 +283,7 @@ class OnlinePlot(commands.Cog):
                 for guild in self.bot.guilds:
                     if await self.config.guild(guild).opted_in():
                         await self.insert_guild(guild)
-                await self.delete_old()
+                await self.execute_query(DELETE_OLD)
                 await asyncio.sleep(10 * 60)
         except asyncio.CancelledError as e:
             logger.info("Task Cancelled.")
