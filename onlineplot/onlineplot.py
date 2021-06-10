@@ -64,6 +64,9 @@ DELETE_OLD = '''
 DELETE FROM onlineplot WHERE DATE(record_date, "+57 days") < DATE('now')
 '''
 
+DELETE_GUILD = '''
+DELETE FROM onlineplot WHERE guild_id = ?
+'''
 
 def _data_file(file_name: str) -> str:
     return os.path.join(str(data_manager.cog_data_path(raw_name='OnlinePlot')), file_name)
@@ -132,16 +135,27 @@ class OnlinePlot(commands.Cog):
         """Online plot"""
 
     @onlineplot.command()
-    async def optin(self, ctx, enable: bool = True):
+    async def optin(self, ctx):
         """Opt in to onlineplot tracking"""
-        await self.config.guild(ctx.guild).opted_in.set(enable)
+        await self.config.guild(ctx.guild).opted_in.set(True)
         await ctx.tick()
 
     @onlineplot.command()
     @checks.admin_or_permissions(administrator=True)
-    async def optout(self, ctx, disable: bool = True):
+    async def optout(self, ctx):
         """Opt out of onlineplot tracking"""
-        await self.config.guild(ctx.guild).opted_in.set(not disable)
+        m = await ctx.send("Are you sure you want to opt out of onlineplot and delete all"
+                           " data associated with this guild? Type 'Delete all my data'"
+                           " to continue.")
+        try:
+            msg = await self.bot.wait_for('message', timeout=10.0,
+                                          check=lambda m: m.channel == ctx.channel
+                                                          and m.content == "Delete all my data")
+        except asyncio.TimeoutError:
+            await ctx.react_quietly("\N{CROSS MARK}")
+            return
+        await self.execute_query(DELETE_GUILD, (ctx.guild.id,))
+        await self.config.guild(ctx.guild).opted_in.set(False)
         await ctx.tick()
 
     @onlineplot.command()
