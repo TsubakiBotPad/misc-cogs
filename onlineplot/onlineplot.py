@@ -155,6 +155,12 @@ class OnlinePlot(commands.Cog):
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
 
+        if not data:
+            await ctx.send(f"There's no data associated with this guild."
+                           f" Please opt in with {ctx.prefix}onlineplot optin."
+                           f" If you've already opted in, allow around 30 minutes"
+                           f" to collect the first points of data.")
+
         times = [row[0] for row in data]
         online = [row[1] for row in data]
         idle = [row[2] for row in data]
