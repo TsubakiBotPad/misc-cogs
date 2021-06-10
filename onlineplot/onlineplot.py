@@ -161,7 +161,7 @@ class OnlinePlot(commands.Cog):
         dnd = [row[3] for row in data]
         offline = [row[4] for row in data]
 
-        await ctx.send(file=self.make_graph(times, online, idle, dnd, offline, colors=('g', 'y', 'r', 'grey')))
+        await ctx.send(file=self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r')))
 
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
@@ -204,7 +204,7 @@ class OnlinePlot(commands.Cog):
 
         o = []
         for row in rows:
-            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 600) % (24 * 60))
+            mins = int((10 * 0 - curtz._utcoffset.total_seconds() // 600) % (24 * 6))
             dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
             o.append((dt, row[1], row[2], row[3], row[4]))
         return o
