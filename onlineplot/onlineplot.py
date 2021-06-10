@@ -174,7 +174,7 @@ class OnlinePlot(commands.Cog):
         await ctx.send(file=await self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r'),
                                                   title=f"Users Online (Averaged over {weekcount} weeks)"))
 
-    async def make_graph(self, x_vals: Sequence[datetime], *y_vals: Sequence[int], **kwargs) -> discord.File:
+    async def make_graph(self, x_vals: Sequence[datetime], *y_vals: Sequence[int], title: str, **kwargs) -> discord.File:
         BG_COLOR = "#190432"
         FG_COLOR = "#dfcdf6"
 
