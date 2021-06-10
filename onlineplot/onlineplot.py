@@ -85,6 +85,7 @@ class OnlinePlot(commands.Cog):
         self.config.register_guild(opted_in=False)
 
         self._loop = bot.loop.create_task(self.do_loop())
+        self._refresh_loop = bot.loop.create_task(self.restart_loop())
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -101,6 +102,7 @@ class OnlinePlot(commands.Cog):
     def cog_unload(self):
         logger.info('OnlinePlot: unloading')
         self._loop.cancel()
+        self._refresh_loop.cancel()
         self.lock.clear()
         if self.pool:
             self.pool.close()
@@ -272,20 +274,23 @@ class OnlinePlot(commands.Cog):
                     if e:
                         logger.error("Exception in OnlinePlot loop: {!r}".format(e))
                     self._loop = self.bot.loop.create_task(self.do_loop())
+            except asyncio.CancelledError:
+                break
             except Exception:
                 pass
 
     async def do_loop(self):
-        try:
-            await self.bot.wait_until_ready()
-            await self.lock.wait()
-            while True:
+        await self.bot.wait_until_ready()
+        await self.lock.wait()
+        while True:
+            try:
                 for guild in self.bot.guilds:
                     if await self.config.guild(guild).opted_in():
                         await self.insert_guild(guild)
                 await self.execute_query(DELETE_OLD)
-                await asyncio.sleep(10 * 60)
-        except asyncio.CancelledError as e:
-            logger.info("Task Cancelled.")
-        except Exception as e:
-            logger.exception("Task failed.")
+            except asyncio.CancelledError as e:
+                logger.info("Task Cancelled.")
+                break
+            except Exception as e:
+                logger.exception("Task failed.")
+            await asyncio.sleep(10 * 60)
