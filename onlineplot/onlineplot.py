@@ -159,8 +159,9 @@ class OnlinePlot(commands.Cog):
         online = [row[1] for row in data]
         idle = [row[2] for row in data]
         dnd = [row[3] for row in data]
+        offline = [row[4] for row in data]
 
-        await ctx.send(file=self.make_graph(times, online, idle, colors=['g', 'y']))
+        await ctx.send(file=self.make_graph(times, online, idle, dnd, offline, colors=('g', 'y', 'r', 'grey')))
 
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
@@ -190,7 +191,7 @@ class OnlinePlot(commands.Cog):
             -> List[Tuple[datetime, int, int, int, int]]:
         # SQLite has a shitty TZ format
         now = datetime.now(tz)
-        curtz: DstTzInfo = now.tzinfo  # noqa
+        curtz = now.tzinfo  # noqa
 
         # Convert a tz object to an SQL tz string.  This is so awful.  I'm so sorry.
         # A SQL tz string matches /[-+]\d\d:\d\d/
