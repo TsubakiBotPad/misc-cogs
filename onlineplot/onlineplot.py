@@ -168,6 +168,7 @@ class OnlinePlot(commands.Cog):
                            f" Please opt in with `{ctx.prefix}onlineplot optin`."
                            f" If you've already opted in, allow around 30 minutes"
                            f" to collect the first points of data.")
+            return
 
         times = [row[0] for row in data]
         online = [row[1] for row in data]
