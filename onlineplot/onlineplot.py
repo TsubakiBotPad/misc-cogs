@@ -136,7 +136,7 @@ class OnlinePlot(commands.Cog):
     async def optout(self, ctx):
         """Opt out of onlineplot tracking"""
         m = await ctx.send("Are you sure you want to opt out of onlineplot and delete all"
-                           " data associated with this guild?  Type 'Delete all my data'"
+                           " data associated with this guild? Type 'Delete all my data'"
                            " to continue.")
         try:
             msg = await self.bot.wait_for('message', timeout=10.0,
