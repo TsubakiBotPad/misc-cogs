@@ -191,7 +191,10 @@ class OnlinePlot(commands.Cog):
         # SQLite has a shitty TZ format
         now = datetime.now(tz)
         curtz: DstTzInfo = now.tzinfo  # noqa
-        tzstr = re.sub(r'^(-?\d{2})', r'\1:', now.strftime("%z"))
+
+        # Convert a tz object to an SQL tz string.  This is so awful.  I'm so sorry.
+        # A SQL tz string matches /[-+]\d\d:\d\d/
+        tzstr = re.sub(r'^([-+]\d\d)', r'\1:', "{:+05}".format(-int(datetime.now(tz).strftime("%z"))))
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
