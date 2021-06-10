@@ -160,7 +160,7 @@ class OnlinePlot(commands.Cog):
         idle = [row[2] for row in data]
         dnd = [row[3] for row in data]
 
-        await ctx.send(file=self.make_graph(times, online, idle, dnd, colors=['g', 'y', 'r']))
+        await ctx.send(file=self.make_graph(times, online, idle, colors=['g', 'y']))
 
     def make_graph(self, x_vals: Sequence, *y_vals: Sequence, **kwargs) -> discord.File:
         fig = plt.figure(facecolor="#190432")
@@ -177,8 +177,8 @@ class OnlinePlot(commands.Cog):
         sp.spines['bottom'].set_color('#DFCDF6')
         sp.spines['right'].set_color('#DFCDF6')
         plt.stackplot(x_vals, *y_vals, **kwargs)
-        fig.autofmt_xdate()
         plt.title("Users Online", color="#DFCDF6")
+        fig.autofmt_xdate()
 
         buf = BytesIO()
         plt.savefig(buf, format='png')
@@ -186,8 +186,8 @@ class OnlinePlot(commands.Cog):
 
         return discord.File(buf, "image.png")
 
-    async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: DstTzInfo) -> List[
-        Tuple[datetime, int, int, int, int]]:
+    async def fetch_guild_data(self, guild: discord.Guild, weekday: int, tz: DstTzInfo) \
+            -> List[Tuple[datetime, int, int, int, int]]:
         # SQLite has a shitty TZ format
         now = datetime.now(tz)
         curtz: DstTzInfo = now.tzinfo  # noqa
@@ -200,7 +200,7 @@ class OnlinePlot(commands.Cog):
 
         o = []
         for row in rows:
-            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 600) % (24 * 60))
+            mins = int((10 * row[0] - curtz._utcoffset.total_seconds() // 600) % (24 * 60))
             dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
             o.append((dt, row[1], row[2], row[3], row[4]))
         return o
