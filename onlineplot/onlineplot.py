@@ -204,7 +204,7 @@ class OnlinePlot(commands.Cog):
 
         o = []
         for row in rows:
-            mins = int((10 * row[0] - curtz._utcoffset.total_seconds() // 60) % (24 * 60))
+            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 60) % (24 * 60))
             dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
             o.append((dt, row[1], row[2], row[3], row[4], row[0]))
         return sorted(o, key=lambda x: x[0])
