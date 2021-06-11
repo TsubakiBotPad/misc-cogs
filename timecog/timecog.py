@@ -632,7 +632,7 @@ class TimeCog(commands.Cog):
                 rmtime += tin2tdelta(tinstrs)
             except OverflowError:
                 raise commands.UserFeedbackCheckFailure(
-                    inline("That's way too far in the future!  Please keep it in your lifespan!"))
+                    inline("That's way too far in the future! Please keep it in your lifespan!"))
 
         return rmtime
 
