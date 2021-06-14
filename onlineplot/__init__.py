@@ -7,4 +7,3 @@ def setup(bot):
     cog = OnlinePlot(bot)
     bot.add_cog(cog)
     bot.loop.create_task(cog.init())
-    bot.loop.create_task(cog.restart_loop())
