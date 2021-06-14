@@ -293,6 +293,7 @@ class OnlinePlot(commands.Cog):
 
 
     async def restart_loop(self):
+        """Restarts the event loop every hour"""
         while True:
             try:
                 await asyncio.sleep(60 * 60)
