@@ -106,6 +106,9 @@ class MenuListener(commands.Cog):
         message = discord.utils.get(self.bot.cached_messages, id=payload.message_id)
         if message is None:
             message = await channel.fetch_message(payload.message_id)
+        if message.author != self.bot.user:
+            return
+        
         reaction = discord.utils.find((lambda r:
                                        r.emoji == payload.emoji.name
                                        if payload.emoji.is_unicode_emoji()
