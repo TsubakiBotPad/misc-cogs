@@ -21,7 +21,7 @@ except ImportError:
     except ImportError:
         import re
 
-logger = logging.getLogger('red.misc-cogs."')
+logger = logging.getLogger('red.misc-cogs.automod')
 
 LOGS_PER_CHANNEL_USER = 5
 
