@@ -93,7 +93,7 @@ class AutoMod(commands.Cog):
 
         self.config = Config.get_conf(self, identifier=4770700)
         self.config.register_guild(patterns={}, watchdog_phrases={}, watched_users={}, watchdog_channel_id=None)
-        self.config.register_channel(whitelist=[], blacklist=[], image_limit=None, autoemoji=[])
+        self.config.register_channel(whitelist=[], blacklist=[], image_limit=0, autoemoji=[])
         self.config.register_role(image_immune=False)
 
         self.settings = AutoMod2Settings("automod2", bot)
@@ -165,7 +165,7 @@ class AutoMod(commands.Cog):
         for page in pagify(AUTOMOD_HELP.format(ctx.prefix)):
             await ctx.author.send(box(page))
 
-    @commands.group(aliases=['am2', 'automod2'])
+    @commands.group(aliases=['automod2'])
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def automod(self, ctx):
@@ -344,7 +344,7 @@ class AutoMod(commands.Cog):
 
     @commands.Cog.listener('on_message')
     async def mod_message_images(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.abc.PrivateChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.DMChannel):
             return
         elif message.channel.permissions_for(message.author).manage_messages:
             return
