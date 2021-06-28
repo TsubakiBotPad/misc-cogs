@@ -106,6 +106,7 @@ class MenuListener(commands.Cog):
         message = discord.utils.get(self.bot.cached_messages, id=payload.message_id)
         if message is None:
             message = await channel.fetch_message(payload.message_id)
+        # TODO: This is unfaithful to discord-message, as other people's menus are still valid within the module.
         if message.author != self.bot.user:
             return
         
