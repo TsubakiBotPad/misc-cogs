@@ -21,7 +21,7 @@ except ImportError:
     except ImportError:
         import re
 
-logger = logging.getLogger('red.misc-cogs.automod2')
+logger = logging.getLogger('red.misc-cogs.automod')
 
 LOGS_PER_CHANNEL_USER = 5
 
@@ -31,7 +31,7 @@ specific channels as either whitelist or blacklist rules. This allows you
 to customize what text can be typed in a channel. Text from moderators is
 always ignored by this cog.
 
-Check out {0.prefix}automod2 patterns to see the current server-specific list of patterns.
+Check out {0.prefix}automod patterns to see the current server-specific list of patterns.
 
 Each pattern has an 'include' component and an 'exclude' component. If text
 matches the include, then the rule matches. If it subsequently matches the
@@ -50,22 +50,22 @@ However, if the pattern contains 'test', it won't match:
   12345678 foo fiz test bar baz
 
 To add the pattern, you'd use the following command:
-[p]automod2 addpattern "messages must start with a room code" "^\d{4}\s?\d{4}.*" ".*test.*"
+[p]automod addpattern "messages must start with a room code" "^\d{4}\s?\d{4}.*" ".*test.*"
 
 Remember that to bundle multiple words together you need to surround the
 argument with quotes, as above.
 
 Once you've added a pattern, you need to enable it in a channel using one
 of {0.prefix}addwhitelist or {0.prefix}addblacklist, e.g.:
-  {0.prefix}automod2 addwhitelist "messages must start with a room code"
+  {0.prefix}automod addwhitelist "messages must start with a room code"
 
 If a channel has any whitelists, then text typed in the channel must match
 AT LEAST one whitelist, or it will be deleted. If ANY blacklist is matched
 the text will be deleted.
 
-You can see the configuration for the server using {0.prefix}automod2 list
+You can see the configuration for the server using {0.prefix}automod list
 
-You can also prevent users from spamming images using {0.prefix}automod2 imagelimit
+You can also prevent users from spamming images using {0.prefix}automod imagelimit
 """
 
 EMOJIS = {
@@ -84,7 +84,7 @@ def linked_img_count(message):
     return len(message.embeds) + len(message.attachments)
 
 
-class AutoMod2(commands.Cog):
+class AutoMod(commands.Cog):
     """Uses regex pattern matching to filter message content and set limits on users"""
 
     def __init__(self, bot, *args, **kwargs):
@@ -165,11 +165,11 @@ class AutoMod2(commands.Cog):
         for page in pagify(AUTOMOD_HELP.format(ctx.prefix)):
             await ctx.author.send(box(page))
 
-    @commands.group(aliases=['am2'])
+    @commands.group(aliases=['am2', 'automod'])
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
-    async def automod2(self, ctx):
-        """AutoMod2 tools.
+    async def automod(self, ctx):
+        """AutoMod tools.
 
         This cog works by creating named global patterns, and then applying them in
         specific channels as either whitelist or blacklist rules.
@@ -177,7 +177,7 @@ class AutoMod2(commands.Cog):
         For more information, use [p]automodhelp
         """
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def addpattern(self, ctx, name, include_pattern, exclude_pattern='', error=None):
@@ -195,7 +195,7 @@ class AutoMod2(commands.Cog):
             patterns[name] = {'include_pattern': include_pattern, 'exclude_pattern': exclude_pattern, 'uses': 0}
         await ctx.tick()
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def rmpattern(self, ctx, *, name):
@@ -210,7 +210,7 @@ class AutoMod2(commands.Cog):
             del patterns[name]
         await ctx.tick()
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def addwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
@@ -227,7 +227,7 @@ class AutoMod2(commands.Cog):
                     patterns[name]['uses'] += 1
         await ctx.tick()
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def rmwhitelist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
@@ -244,7 +244,7 @@ class AutoMod2(commands.Cog):
                 patterns[name]['uses'] -= 1
         await ctx.tick()
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def addblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
@@ -261,7 +261,7 @@ class AutoMod2(commands.Cog):
                     patterns[name]['uses'] += 1
         await ctx.tick()
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def rmblacklist(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
@@ -278,7 +278,7 @@ class AutoMod2(commands.Cog):
                 patterns[name]['uses'] -= 1
         await ctx.tick()
 
-    @automod2.command(name="list")
+    @automod.command(name="list")
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def am2_list(self, ctx):
@@ -305,7 +305,7 @@ class AutoMod2(commands.Cog):
         for page in pagify(output):
             await ctx.send(box(page))
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def patterns(self, ctx):
@@ -316,7 +316,7 @@ class AutoMod2(commands.Cog):
         for page in pagify(output):
             await ctx.send(box(page))
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def imagelimit(self, ctx, channel: Optional[discord.TextChannel] = None, limit: int = None):
@@ -428,7 +428,7 @@ class AutoMod2(commands.Cog):
                                                     f' the following policy: {",".join(failed_whitelists)}'
                                                     f'\nMessage content: {msg_content}'))
 
-    @automod2.command()
+    @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def autoemojis(self, ctx, *emoji):
