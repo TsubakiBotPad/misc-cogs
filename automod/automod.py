@@ -346,7 +346,9 @@ class AutoMod(commands.Cog):
     async def mod_message_images(self, message):
         if message.author.id == self.bot.user.id or isinstance(message.channel, discord.DMChannel):
             return
-        elif message.channel.permissions_for(message.author).manage_messages:
+        if not isinstance(message.author, discord.Member):
+            return
+        if message.channel.permissions_for(message.author).manage_messages:
             return
         image_limit = await self.config.channel(message.channel).image_limit()
         if image_limit == 0:
