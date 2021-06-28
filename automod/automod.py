@@ -92,7 +92,7 @@ class AutoMod(commands.Cog):
         self.bot = bot
 
         self.config = Config.get_conf(self, identifier=4770700)
-        self.config.register_guild(patterns={}, watchdog_phrases={}, watched_users={}, watchdog_channel_id=None)
+        self.config.register_guild(patterns={}, phrases={}, watched_users={}, watchdog_channel_id=None)
         self.config.register_channel(whitelist=[], blacklist=[], image_limit=0, autoemoji=[])
         self.config.register_role(image_immune=False)
 
@@ -143,7 +143,7 @@ class AutoMod(commands.Cog):
         Discord itself.  If this is an issue, please contact a bot owner.
         """
         for gid in await self.config.all_guilds():
-            async with self.config.guild_from_id(gid).watchdog_phrases() as phrases:
+            async with self.config.guild_from_id(gid).phrases() as phrases:
                 for phrase in phrases:
                     if phrases[phrase]['request_user_id'] == user_id:
                         phrases[phrase]['request_user_id'] = -1
