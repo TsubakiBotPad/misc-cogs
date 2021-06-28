@@ -165,7 +165,7 @@ class AutoMod(commands.Cog):
         for page in pagify(AUTOMOD_HELP.format(ctx.prefix)):
             await ctx.author.send(box(page))
 
-    @commands.group(aliases=['am2', 'automod'])
+    @commands.group(aliases=['am2', 'automod2'])
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
     async def automod(self, ctx):
