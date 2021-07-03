@@ -270,7 +270,7 @@ class TimeCog(commands.Cog):
             o.append(str(c + 1) + ": " + ftime)
         await ctx.send(box('\n'.join(o)))
 
-    @remindme.command(name="remove")
+    @remindme.command(name="remove", aliases=["rm", "delete", "del"])
     async def remindme_remove(self, ctx, no: int):
         """Remove a specific pending reminder"""
         rlist = sorted(await self.config.user(ctx.author).reminders(), key=lambda x: x[0])
