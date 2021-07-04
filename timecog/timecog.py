@@ -52,7 +52,7 @@ class TimeCog(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = Config.get_conf(self, identifier=7173306)
-        self.config.register_user(reminders=[], tz='')
+        self.config.register_user(reminders=[], tz='', show_tz=True)
         self.config.register_guild(schedules={})
 
         """
@@ -192,11 +192,12 @@ class TimeCog(commands.Cog):
         rmtime, input = await self.remindme_parse(ctx, time)
         user_tz_str = await self.config.user(ctx.author).tz()
         user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_show_tz = await self.config.user(ctx.author).show_tz()
 
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), input, -1, 0))
 
-        response = "I will tell you " + format_rm_time(rmtime, input, user_timezone)
+        response = "I will tell you " + format_rm_time(rmtime, input, user_timezone, user_show_tz)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -208,11 +209,12 @@ class TimeCog(commands.Cog):
         rmtime, input = await self.remindme_parse(ctx, time)
         user_tz_str = await self.config.user(ctx.author).tz()
         user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_show_tz = await self.config.user(ctx.author).show_tz()
 
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), input, -1, ctx.channel.id))
 
-        response = "In this channel, I will tell you " + format_rm_time(rmtime, input, user_timezone)
+        response = "In this channel, I will tell you " + format_rm_time(rmtime, input, user_timezone, user_show_tz)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -243,11 +245,13 @@ class TimeCog(commands.Cog):
         start = (datetime.utcnow() + tin2tdelta(tinstart)).timestamp()
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((start, input, tin2tdelta(tinstrs).seconds, 0))
+        user_show_tz = await self.config.user(ctx.author).show_tz()
         m = await ctx.send("I will tell you {} and every {} seconds after that."
                            "".format(format_rm_time(
             datetime.utcnow() + tin2tdelta(tinstart),
             input,
-            tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC')),
+            tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC'),
+            user_show_tz),
             tin2tdelta(tinstrs).seconds))
 
     @remindme.command(aliases=["list"])
@@ -258,11 +262,12 @@ class TimeCog(commands.Cog):
             await ctx.send(inline("You have no pending reminders!"))
             return
         tz = tzstr_to_tz(await self.config.user(ctx.author).tz())
+        user_show_tz = await self.config.user(ctx.author).show_tz()
         o = []
         for c, rm in enumerate(rlist):
             timestamp = rm[0]
             input = rm[1]
-            ftime = format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz)
+            ftime = format_rm_time(datetime.fromtimestamp(float(timestamp)), input, tz, user_show_tz)
             if len(rm) > 2 and rm[2] != -1:
                 ftime += f" (every {rm[2]} seconds)"
             if len(rm) > 3 and rm[3] != 0:
@@ -286,6 +291,18 @@ class TimeCog(commands.Cog):
         """Delete all pending reminders."""
         await self.config.user(ctx.author).reminders.set([])
         await ctx.tick()
+
+    @remindme.command()
+    async def toggletzprivate(self, ctx):
+        """Hide/show your time zone in reminders"""
+        if await self.config.user(ctx.author).show_tz():
+            await self.config.user(ctx.author).show_tz.set(False)
+            await ctx.send("Ok, your time zone is now set to **private**. I will **hide** your time zone when I confirm or list your reminders.")
+            return
+        else:
+            await self.config.user(ctx.author).show_tz.set(True)
+            await ctx.send("Ok, your time zone is now set to **public**. I will **show** your time zone when I confirm or list your reminders.")
+            return
 
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
@@ -748,14 +765,18 @@ def ydhm(seconds):
     return " ".join(ydhm) or "<1 minute"
 
 
-def format_rm_time(rmtime, input, D_TZ):
+def format_rm_time(rmtime, input, D_TZ, show_tz):
+    if not show_tz:
+        return "'{}' ({} from now)".format(
+            input,
+            ydhm((rmtime - datetime.utcnow()).total_seconds() + 2)
+        )
     return "'{}' on {} {} ({} from now)".format(
         input,
         D_TZ.fromutc(rmtime).strftime(DT_FORMAT),
         get_tz_name(D_TZ, rmtime),
         ydhm((rmtime - datetime.utcnow()).total_seconds() + 2)
     )
-
 
 def get_tz_name(tz, dt=None):
     if dt is None:
