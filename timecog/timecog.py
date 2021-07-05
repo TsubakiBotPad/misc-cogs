@@ -197,7 +197,7 @@ class TimeCog(commands.Cog):
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), input, -1, 0))
 
-        response = "I will tell you " + format_rm_time(ctx, rmtime, input, user_timezone, user_show_tz)
+        response = "I will tell you " + format_rm_time(ctx.channel, rmtime, input, user_timezone, user_show_tz)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -214,7 +214,7 @@ class TimeCog(commands.Cog):
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), input, -1, ctx.channel.id))
 
-        response = "In this channel, I will tell you " + format_rm_time(ctx, rmtime, input, user_timezone, user_show_tz)
+        response = "In this channel, I will tell you " + format_rm_time(ctx.channel, rmtime, input, user_timezone, user_show_tz)
         if not user_tz_str:
             response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
                 ctx)
@@ -248,7 +248,7 @@ class TimeCog(commands.Cog):
         user_show_tz = await self.config.user(ctx.author).show_tz()
         m = await ctx.send("I will tell you {} and every {} seconds after that."
                            "".format(format_rm_time(
-            ctx,
+            ctx.channel,
             datetime.utcnow() + tin2tdelta(tinstart),
             input,
             tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC'),
@@ -268,7 +268,7 @@ class TimeCog(commands.Cog):
         for c, rm in enumerate(rlist):
             timestamp = rm[0]
             input = rm[1]
-            ftime = format_rm_time(ctx, datetime.fromtimestamp(float(timestamp)), input, tz, user_show_tz)
+            ftime = format_rm_time(ctx.channel, datetime.fromtimestamp(float(timestamp)), input, tz, user_show_tz)
             if len(rm) > 2 and rm[2] != -1:
                 ftime += f" (every {rm[2]} seconds)"
             if len(rm) > 3 and rm[3] != 0:
@@ -776,8 +776,8 @@ def ydhm(seconds):
     return " ".join(ydhm) or "<1 minute"
 
 
-def format_rm_time(ctx, rmtime, input, D_TZ, show_tz):
-    if not isinstance(ctx.channel, discord.DMChannel) and not show_tz:
+def format_rm_time(ctx_channel, rmtime, input, D_TZ, show_tz):
+    if not isinstance(ctx_channel, discord.DMChannel) and not show_tz:
         return "'{}' ({} from now)".format(
             input,
             ydhm((rmtime - datetime.utcnow()).total_seconds() + 2)
