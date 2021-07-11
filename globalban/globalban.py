@@ -6,7 +6,7 @@ import discord
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, pagify, box
-from tsutils import confirm_message
+from tsutils import get_user_confirmation
 
 logger = logging.getLogger('red.misc-cogs.globalban')
 
@@ -43,7 +43,7 @@ class GlobalBan(commands.Cog):
             if ctx.guild.id in opted:
                 await ctx.send("This guild is already opted in.")
                 return
-            if not await confirm_message(ctx, "This will ban all users on the global"
+            if not await get_user_confirmation(ctx, "This will ban all users on the global"
                                               " ban list. Are you sure you want to opt in?"):
                 return
             opted.append(ctx.guild.id)
@@ -60,7 +60,7 @@ class GlobalBan(commands.Cog):
             if ctx.guild.id not in opted:
                 await ctx.send("This guild is already opted out.")
                 return
-            if not await confirm_message(ctx, "This will remove all bans that intersect"
+            if not await get_user_confirmation(ctx, "This will remove all bans that intersect"
                                               " with the global ban list. Are you sure"
                                               " you want to opt out?"):
                 return
@@ -88,7 +88,7 @@ class GlobalBan(commands.Cog):
             if str(user_id) not in banned:
                 await ctx.send("This user is not banned.")
                 return
-            if reason == "" and not await confirm_message(ctx, "Are you sure you want to remove the reason?"):
+            if reason == "" and not await get_user_confirmation(ctx, "Are you sure you want to remove the reason?"):
                 return
             banned[str(user_id)] = reason
         await ctx.tick()

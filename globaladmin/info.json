@@ -17,7 +17,7 @@
   "disabled": false,
   "required_cogs": {},
   "requirements": [
-    "tsutils"
+    "tsutils>=4.0.0"
   ],
   "tags": [
     "authentication",

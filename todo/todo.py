@@ -4,7 +4,7 @@ import re
 from io import BytesIO
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import confirm_message
+from tsutils import get_user_confirmation
 
 
 class Todo(commands.Cog):
@@ -72,7 +72,7 @@ class Todo(commands.Cog):
     async def purge(self, ctx):
         """Remove the nth item from your todo list."""
         focus = await self.config.user(ctx.author).focus()
-        if not await confirm_message(ctx, "Are you sure you want to clear the todo list '{}'?".format(focus)):
+        if not await get_user_confirmation(ctx, "Are you sure you want to clear the todo list '{}'?".format(focus)):
             return
         async with self.config.user(ctx.author).todos() as todos:
             todos[focus] = []
