@@ -122,7 +122,7 @@ class MenuListener(commands.Cog):
         if not ims:
             return
         cog_name, menu, panes = self.get_menu_attributes(ims)
-        if not (await menu.should_respond(message, reaction, await self.get_reaction_filters(ims), member)):
+        if not (await menu.should_respond(message, reaction, await self.get_user_reaction_filters(ims), member)):
             return
 
         try:
@@ -182,7 +182,7 @@ class MenuListener(commands.Cog):
                 menu_1_ims = menu_2_ims
                 message_1 = message_2
 
-    async def get_reaction_filters(self, ims):
+    async def get_user_reaction_filters(self, ims):
         original_author_id = ims['original_author_id']
         friend_cog = self.bot.get_cog("Friend")
         friend_ids = (await friend_cog.get_friends(original_author_id)) if friend_cog else []
