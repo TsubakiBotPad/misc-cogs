@@ -80,7 +80,7 @@ class GrantRole(commands.Cog):
         try:
             emoji = await commands.EmojiConverter().convert(ctx, emoji)
         except commands.BadArgument:
-            if emoji not in emoji_module.UNICODE_EMOJI:
+            if emoji not in emoji_module.UNICODE_EMOJI['en']:
                 await ctx.send("I do not have access to emoji `{}`".format(emoji))
                 return
 
@@ -99,7 +99,7 @@ class GrantRole(commands.Cog):
         try:
             emoji = await commands.EmojiConverter().convert(ctx, emoji)
         except commands.BadArgument:
-            if emoji not in emoji_module.UNICODE_EMOJI:
+            if emoji not in emoji_module.UNICODE_EMOJI['en']:
                 await ctx.send("I do not have access to emoji `{}`".format(emoji))
                 return
 
