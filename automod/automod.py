@@ -536,7 +536,7 @@ class AutoMod(commands.Cog):
                         'cooldown': cooldown,
                         'reason': reason,
                     }
-                    await ctx.send('Watchdog set on {user.name} with cooldown of {cooldown} seconds')
+                    await ctx.send(f'Watchdog set on {user.name} with cooldown of {cooldown} seconds')
 
     @watchdog.command()
     @commands.guild_only()
