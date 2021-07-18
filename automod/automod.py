@@ -328,7 +328,7 @@ class AutoMod(commands.Cog):
     async def imagelimit(self, ctx):
         """Prevents users from spamming images in a channel."""
 
-    @imagelimit.command(name="max")
+    @imagelimit.command(name='max')
     async def il_max(self, ctx, channel: Optional[discord.TextChannel], limit: int):
         """Set the max number of images that can be sent per interval
 
@@ -338,7 +338,7 @@ class AutoMod(commands.Cog):
         await self.config.channel(channel or ctx.channel).image_limit.set(limit)
         await ctx.tick()
 
-    @imagelimit.command(name="messages")
+    @imagelimit.command(name='messages')
     async def il_messages(self, ctx, channel: Optional[discord.TextChannel], count: int):
         """Sets the interval of messages that the maximage acts under. (Max 10)
 
