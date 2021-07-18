@@ -328,9 +328,9 @@ class AutoMod(commands.Cog):
     async def imagelimit(self, ctx):
         """Prevents users from spamming images in a channel."""
 
-    @imagelimit.command()
-    async def maximages(self, ctx, channel: Optional[discord.TextChannel], limit: int):
-        """Set the max number of messages that can be sent per interval
+    @imagelimit.command(name="max")
+    async def il_max(self, ctx, channel: Optional[discord.TextChannel], limit: int):
+        """Set the max number of images that can be sent per interval
 
         If a user attempts to link/attach more than <limit> images in the active channel
         within the the lookback window, all those messages are deleted.
@@ -338,8 +338,8 @@ class AutoMod(commands.Cog):
         await self.config.channel(channel or ctx.channel).image_limit.set(limit)
         await ctx.tick()
 
-    @imagelimit.command()
-    async def resetmessagecount(self, ctx, channel: Optional[discord.TextChannel], count: int):
+    @imagelimit.command(name="messages")
+    async def il_messages(self, ctx, channel: Optional[discord.TextChannel], count: int):
         """Sets the interval of messages that the maximage acts under. (Max 10)
 
         If a user attempts to link/attach more than the limit images in the active channel
@@ -351,8 +351,8 @@ class AutoMod(commands.Cog):
         await self.config.channel(channel or ctx.channel).reset_message_count.set(count)
         await ctx.tick()
 
-    @imagelimit.command()
-    async def imageresetminutes(self, ctx, channel: Optional[discord.TextChannel], minutes: int):
+    @imagelimit.command(name='minutes')
+    async def il_minutes(self, ctx, channel: Optional[discord.TextChannel], minutes: int):
         """Sets the interval of minutes that the maximage acts under.
 
         If set to 0 or a negative value, the time limiter is disabled.
@@ -365,7 +365,7 @@ class AutoMod(commands.Cog):
         else:
             await ctx.send(f"The time interval for this channel has been set to {minutes} minutes.")
 
-    @imagelimit.command(name="enable")
+    @imagelimit.command(name='enable')
     async def il_enable(self, ctx, channel: Optional[discord.TextChannel], enabled: bool = True):
         """Enable or disable imagelimit"""
         await self.config.channel(channel or ctx.channel).imagelimit_enabled.set(enabled)
