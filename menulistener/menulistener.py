@@ -109,7 +109,7 @@ class MenuListener(commands.Cog):
         # TODO: This is unfaithful to discord-message, as other people's menus are still valid within the module.
         if message.author != self.bot.user:
             return
-        
+
         reaction = discord.utils.find((lambda r:
                                        r.emoji == payload.emoji.name
                                        if payload.emoji.is_unicode_emoji()
@@ -149,7 +149,7 @@ class MenuListener(commands.Cog):
         if emoji_clicked in EmbedMenuEmojiConfig().to_list():
             return emoji_clicked
         for menu_type, classes in self.menu_map.items():
-            if emoji_clicked in classes[2].emoji_names():
+            if emoji_clicked in classes[2].all_emoji_names():
                 return emoji_clicked
         return None
 
@@ -187,7 +187,7 @@ class MenuListener(commands.Cog):
         friend_cog = self.bot.get_cog("Friend")
         friend_ids = (await friend_cog.get_friends(original_author_id)) if friend_cog else []
         reaction_filters = [
-            ValidEmojiReactionFilter(self.get_menu_attributes(ims)[2].emoji_names()),
+            ValidEmojiReactionFilter(self.get_menu_attributes(ims)[2].all_emoji_names()),
             NotPosterEmojiReactionFilter(),
             BotAuthoredMessageReactionFilter(self.bot.user.id),
             MessageOwnerReactionFilter(original_author_id, FriendReactionFilter(original_author_id, friend_ids))
