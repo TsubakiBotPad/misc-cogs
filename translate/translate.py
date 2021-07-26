@@ -8,7 +8,7 @@ from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
-from translate.common.errors import BadTranslation, NoAPIKeyException
+from translate.common.errors import UserTranslationError, NoAPIKeyException, TranslationError
 from translate.translators.azure_translate import AzureTranslate
 from translate.translators.papago import Papago
 from translate.translators.translator import Translator
@@ -108,10 +108,10 @@ class Translate(commands.Cog):
 
         try:
             translation = await self.translate(source, target, text)
-        except BadTranslation as e:
+        except UserTranslationError as e:
             await ctx.send("Translation failed. " + e.message)
             return
-        except Exception as e:
+        except TranslationError as e:
             logger.exception("Translation failed.")
             await ctx.send("Translation failed. Please alert the bot owner.")
             return

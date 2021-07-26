@@ -2,7 +2,7 @@ from typing import Dict
 
 import aiohttp
 
-from translate.common.errors import NoAPIKeyException, BadTranslation
+from translate.common.errors import NoAPIKeyException, UserTranslationError, TranslationError
 from translate.translators.translator import Translator
 
 
@@ -33,7 +33,7 @@ class Papago(Translator):
                 status = resp.status
 
         if status == 400:
-            raise BadTranslation(content['errorMessage'])
+            raise UserTranslationError(content['errorMessage'])
         if status != 200:
-            raise IOError(f'{status}: request aborted\n\n{content}')
+            raise TranslationError(f'{status}: request aborted\n\n{content}')
         return content['message']['result']['translatedText']

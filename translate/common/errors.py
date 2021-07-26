@@ -4,7 +4,11 @@ class NoAPIKeyException(KeyError):
         self.fix_command = fix_command
 
 
-class BadTranslation(Exception):
+class TranslationError(Exception):
     def __init__(self, message, *args):
         super().__init__(message, *args)
         self.message = message
+
+
+class UserTranslationError(TranslationError):
+    pass
