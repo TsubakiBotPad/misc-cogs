@@ -4,7 +4,6 @@ import sys
 from io import BytesIO
 
 from redbot.core import checks, commands
-from redbot.core.utils.chat_formatting import inline
 
 
 class DevUtils(commands.Cog):
@@ -28,11 +27,11 @@ class DevUtils(commands.Cog):
 
     @commands.command(aliases=['freload', 'creload'])
     @checks.is_owner()
-    async def rlthen(self, ctx, cmd, *, args=""):
+    async def rlthen(self, ctx, command, *, arguments=""):
         """Run a command after reloading its base cog."""
-        full_cmd = "{}{} {}".format(ctx.prefix, cmd, args)
-        cmd = self.bot.get_command(cmd)
-        if cmd is None:
+        full_cmd = "{}{} {}".format(ctx.prefix, command, arguments)
+        command = self.bot.get_command(command)
+        if command is None:
             await ctx.send("Invalid Command: {}".format(full_cmd))
             return
         _send = ctx.send
@@ -43,7 +42,7 @@ class DevUtils(commands.Cog):
             await _send(text, *args, **kwargs)
 
         ctx.send = fakesend
-        await self.bot.get_cog("Core").reload(ctx, cmd.cog.__module__.split('.')[0])
+        await self.bot.get_cog("Core").reload(ctx, command.cog.__module__.split('.')[0])
 
         ctx.send = _send
         ctx.message.content = full_cmd
@@ -95,7 +94,7 @@ class DevUtils(commands.Cog):
 
     @commands.command(aliases=["pipupgrade"])
     @checks.is_owner()
-    async def pipupdate(self, ctx, module, updatepip=True):
+    async def pipupdate(self, ctx, module, updatepip: bool = True):
         async with ctx.typing():
             process = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "pip", "install", "-U", module,
@@ -113,8 +112,7 @@ class DevUtils(commands.Cog):
             stderr = ""
 
         if stderr:
-            await ctx.author.send("Error updating:\n" + stderr)
-            await ctx.send(inline("Error (sent via DM)"))
+            await ctx.send("Error updating:\n" + stderr)
         else:
             await ctx.tick()
 
