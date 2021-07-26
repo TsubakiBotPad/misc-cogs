@@ -99,7 +99,8 @@ class Translate(commands.Cog):
             await ctx.send(inline('Set up an API key first!'))
             return
 
-        translation = await self.a_translate_lang(source, target, query)
+        if self.aservice:
+            translation = await self.a_translate_lang(source, target, query)
         await ctx.send(
             embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
 
