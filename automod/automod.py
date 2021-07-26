@@ -96,8 +96,8 @@ class AutoMod(commands.Cog):
         self.config.register_guild(patterns={}, phrases={}, watched_users={}, watchdog_channel_id=None)
         self.config.register_channel(whitelist=[], blacklist=[], autoemoji=[], image_only=False,
                                      image_limit=1, reset_message_count=LOGS_PER_CHANNEL_USER, image_reset_minutes=5,
+                                     immune_role_ids=[],
                                      imagelimit_enabled=False)
-        self.config.register_role(image_immune=False)
 
         self.settings = AutoMod2Settings('automod2', bot)
         self.channel_user_logs = defaultdict(lambda: deque(maxlen=LOGS_PER_CHANNEL_USER))
@@ -316,7 +316,7 @@ class AutoMod(commands.Cog):
     @checks.mod_or_permissions(manage_guild=True)
     async def patterns(self, ctx):
         """List the registered patterns."""
-        patterns = await ctx.config.guild(ctx.guild).patterns()
+        patterns = await self.config.guild(ctx.guild).patterns()
         output = "AutoMod patterns for this server\n\n"
         output += self.patternsToTableText(patterns.values())
         for page in pagify(output):
@@ -371,6 +371,35 @@ class AutoMod(commands.Cog):
         await self.config.channel(channel or ctx.channel).imagelimit_enabled.set(enabled)
         await ctx.tick()
 
+    @imagelimit.group(name='immunerole')
+    async def immunerole(self, ctx):
+        """Add or remove roles that are immune to imagelimit"""
+
+    @immunerole.command(name='add')
+    async def il_ir_add(self, ctx, channel: Optional[discord.TextChannel], *roles: discord.Role):
+        """Add a role to the list of immune roles for the specified channel"""
+        for role in roles:
+            async with self.config.channel(channel or ctx.channel).immune_role_ids() as old_roles:
+                if role.id not in old_roles:
+                    old_roles.append(role.id)
+        await ctx.tick()
+
+    @immunerole.command(name='remove', aliases=["rm", "delete", "del"])
+    async def il_ir_rm(self, ctx, channel: Optional[discord.TextChannel], *roles: discord.Role):
+        """Remove a role from the list of immune roles for the specified channel"""
+        for role in roles:
+            async with self.config.channel(channel or ctx.channel).immune_role_ids() as old_roles:
+                if role.id in old_roles:
+                    old_roles.remove(role.id)
+        await ctx.tick()
+
+    @immunerole.command(name='list')
+    async def il_ir_list(self, ctx, channel: Optional[discord.TextChannel]):
+        """List the immune roles for the specified channel"""
+        roles = await self.config.channel(channel or ctx.channel).immune_role_ids()
+        await ctx.send('\n'.join(role.mention for rid in roles if (role := ctx.guild.get_role(rid))),
+                       allowed_mentions=discord.AllowedMentions(roles=False))
+
     @automod.command()
     @commands.guild_only()
     @checks.mod_or_permissions(manage_guild=True)
@@ -387,6 +416,9 @@ class AutoMod(commands.Cog):
         if not isinstance(message.author, discord.Member):
             return
         if message.channel.permissions_for(message.author).manage_messages:
+            return
+        immune_rids = await self.config.channel(message.channel).immune_role_ids()
+        if any(role.id in immune_rids for role in message.author.roles):
             return
         if not await self.config.channel(message.channel).imagelimit_enabled():
             return
