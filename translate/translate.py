@@ -1,28 +1,36 @@
-import json
 import logging
-import uuid
 from io import BytesIO
+from typing import Dict, Type, Optional
 
-import aiohttp
 import discord
 import romkan
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
 
+from translate.common.errors import BadTranslation, NoAPIKeyException
+from translate.translators.azure_translate import AzureTranslate
+from translate.translators.papago import Papago
+from translate.translators.translator import Translator
+
 logger = logging.getLogger('red.misc-cogs.translate')
+
+SERVICE_TO_TRANSLATOR: Dict[str, Type[Translator]] = {
+    'azure': AzureTranslate,
+    'papago': Papago,
+}
 
 
 class Translate(commands.Cog):
     """Translation utilities."""
 
-    def __init__(self, bot: Red, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=724757473)
-        self.config.register_global(a_api_key=None)
+        self.config.register_global(service=None)
 
-        self.aservice = None
+        self.translator = None
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -36,81 +44,84 @@ class Translate(commands.Cog):
         """
         return
 
-    @commands.group()
-    @checks.is_owner()
-    async def translation(self, context):
-        """Translation utilities."""
-
-    async def build_service(self):
-        self.aservice = await self.config.a_api_key()
-
-    @commands.command(aliases=['jaus', 'jpen', 'jpus'])
-    @checks.bot_has_permissions(embed_links=True)
-    async def jaen(self, ctx, *, query):
-        """Translates from Japanese to English"""
-        await self.translate_to_embed(ctx, "ja", "en", query)
-
-    @commands.command(aliases=['zhus'])
-    @checks.bot_has_permissions(embed_links=True)
-    async def zhen(self, ctx, *, query):
-        """Translates from Chinese to English"""
-        await self.translate_to_embed(ctx, "zh", "en", query)
-
-    @commands.command()
-    @checks.bot_has_permissions(embed_links=True)
-    async def translate(self, ctx, from_language, to_language, *, query):
-        """Translates from one langauge to another"""
-        try:
-            await self.translate_to_embed(ctx, from_language, to_language, query)
-        except KeyError:
-            await ctx.send("Invalid query.")
-
     @commands.command()
     async def kanrom(self, ctx, *, query):
-        """Transliterates Kanji to Romanji"""
+        """Transliterates Kanji to Romaji"""
         await ctx.send(romkan.to_roma(query))
 
-    async def a_translate_lang(self, source, target, query):
-        endpoint = "https://api.cognitive.microsofttranslator.com"
+    async def build_service(self, service: Optional[str] = None):
+        if service is None:
+            service = await self.config.service()
 
-        path = '/translate'
-        constructed_url = endpoint + path
-
-        params = {
-            'api-version': '3.0',
-            'from': source,
-            'to': target,
-        }
-        headers = {
-            'Ocp-Apim-Subscription-Key': self.aservice,
-            'Content-type': 'application/json',
-            'X-ClientTraceId': str(uuid.uuid4())
-        }
-        body = [{'text': query}]
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(constructed_url, params=params, headers=headers, json=body) as resp:
-                res = json.loads(await resp.read())
-
-        return res[0]['translations'][0]['text']
-
-    async def translate_to_embed(self, ctx, source, target, query):
-        if not self.aservice:
-            await ctx.send(inline('Set up an API key first!'))
+        if service is None:
             return
 
-        if self.aservice:
-            translation = await self.a_translate_lang(source, target, query)
-        await ctx.send(
-            embed=discord.Embed(description='**Original**\n`{}`\n\n**Translation**\n`{}`'.format(query, translation)))
+        translator_class = SERVICE_TO_TRANSLATOR[service]
+        self.translator = await translator_class.build(await self.bot.get_shared_api_tokens(service))
 
-    @translation.command()
-    async def setakey(self, ctx, api_key):
-        """Sets the azure api key."""
-        await self.config.a_api_key.set(api_key)
-        await ctx.tick()
+    @commands.group(name="translate", aliases=['translation'], invoke_without_command=True)
+    async def translate_command(self, ctx, from_language, to_language, *, text):
+        """Translates from one langauge to another
 
-    @translation.command()
-    async def getakey(self, ctx):
-        """Gets the azure api key."""
-        await ctx.author.send(await self.config.a_api_key())
+        Not all languages are supported on all services.
+
+        Examples:
+        [p]translate fr en Je ne peux parler français
+        [p]translate cz en neumím česky
+        """
+
+        await self.send_translation(ctx, from_language, to_language, text)
+
+    @translate_command.command()
+    @checks.is_owner()
+    async def setservice(self, ctx, service):
+        if service not in SERVICE_TO_TRANSLATOR:
+            await ctx.send(f"`{service}` is not a valid service."
+                           f" It must be one of {', '.join(map(inline, SERVICE_TO_TRANSLATOR))}")
+            return
+
+        try:
+            await self.build_service(service)
+        except NoAPIKeyException as e:
+            await ctx.send(f"You need to set API keys before setting this service."
+                           f" You can set them with `{ctx.prefix}{e.fix_command}`.")
+            return
+
+        await self.config.service.set(service)
+        await ctx.send(f"The current translation service has been set to `{service}`")
+
+    @commands.command(aliases=['jaus', 'jpen', 'jpus'])
+    async def jaen(self, ctx, *, query):
+        """Translates from Japanese to English"""
+        await self.send_translation(ctx, "ja", "en", query)
+
+    @commands.command(aliases=['zhus'])
+    async def zhen(self, ctx, *, query):
+        """Translates from Chinese to English"""
+        await self.send_translation(ctx, "zh", "en", query)
+
+    async def send_translation(self, ctx, source, target, text):
+        if self.translator is None:
+            await ctx.send(f"Set up a translator via `{ctx.prefix}translate setservice` first!"
+                           f" Avaliable services are: {', '.join(map(inline, SERVICE_TO_TRANSLATOR))}")
+            return
+
+        try:
+            translation = await self.translate(source, target, text)
+        except BadTranslation as e:
+            await ctx.send("Translation failed. " + e.message)
+            return
+        except Exception as e:
+            logger.exception("Translation failed.")
+            await ctx.send("Translation failed. Please alert the bot owner.")
+            return
+
+        text = f"**Original**\n`{text}`\n\n**Translation**\n`{translation}`"
+        if await self.bot.embed_requested(ctx.channel, ctx.author) \
+                and ctx.me.permissions_in(ctx.channel).embed_links:
+            await ctx.send(embed=discord.Embed(description=text))
+        else:
+            await ctx.send(text)
+
+    async def translate(self, source: str, target: str, text: str) -> str:
+        return await self.translator.translate(source, target, text)
