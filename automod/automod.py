@@ -387,7 +387,7 @@ class AutoMod(commands.Cog):
 
     @immunerole.command(name='remove', aliases=["rm", "delete", "del"])
     async def il_ir_rm(self, ctx, *roles: discord.Role):
-        """Remove a role from the list of immune roles for the specified channel"""
+        """Remove a role from the list of immune roles"""
         for role in roles:
             async with self.config.guild(ctx.guild).immune_role_ids() as old_roles:
                 if role.id in old_roles:
@@ -396,7 +396,7 @@ class AutoMod(commands.Cog):
 
     @immunerole.command(name='list')
     async def il_ir_list(self, ctx):
-        """List the immune roles for the specified channel"""
+        """List the immune roles"""
         roles = await self.config.guild(ctx.guild).immune_role_ids()
         await ctx.send('\n'.join(role.mention for rid in roles if (role := ctx.guild.get_role(rid))),
                        allowed_mentions=discord.AllowedMentions(roles=False))
