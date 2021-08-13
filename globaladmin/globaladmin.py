@@ -1,6 +1,10 @@
+from typing import Union
+
 import discord
 import logging
 from io import BytesIO
+
+from discord import Object, User
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils import CogSettings
@@ -95,6 +99,9 @@ class GlobalAdmin(commands.Cog):
             await ctx.send(inline("No users have this perm."))
         for page in pagify("\n".join(us)):
             await ctx.send(box(page))
+            
+    def auth_check(self, user: Union[Object, User], perm_name: str, default: bool = False) -> bool:
+        return self.settings.get_perm(user.id, perm_name, default=default)
 
 
 class GlobalAdminSettings(CogSettings):
