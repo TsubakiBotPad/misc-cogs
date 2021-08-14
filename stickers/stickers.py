@@ -1,20 +1,15 @@
-import discord
 import re
-from io import BytesIO
 from collections import defaultdict
-from redbot.core import checks
-from redbot.core import commands
+from io import BytesIO
+from typing import Any
+
+from discord import Forbidden
+from discordmenu.embed.components import EmbedBodyImage, EmbedFooter, EmbedMain
+from discordmenu.embed.view import EmbedView
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
-from tsutils import CogSettings
-
-
-async def is_sticker_admin_check(ctx):
-    return ctx.bot.get_cog("Stickers").settings.check_admin(ctx.author.id) or await ctx.bot.is_owner(ctx.author)
-
-
-def is_sticker_admin():
-    return commands.check(is_sticker_admin_check)
+from tsutils import CogSettings, auth_check
 
 
 class Stickers(commands.Cog):
@@ -23,7 +18,15 @@ class Stickers(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
+
         self.settings = StickersSettings("stickers")
+
+        self.config = Config.get_conf(self, identifier=57137325)
+        self.config.register_global(stickers={})
+
+        GADMIN_COG: Any = self.bot.get_cog("GlobalAdmin")
+        if GADMIN_COG:
+            GADMIN_COG.register_perm("stickeradmin")
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -38,119 +41,96 @@ class Stickers(commands.Cog):
         return
 
     @commands.group()
-    @is_sticker_admin()
+    @auth_check("stickeradmin")
     async def sticker(self, context):
         """Global stickers."""
 
-    @sticker.command()
-    @is_sticker_admin()
-    async def add(self, ctx, command: str, *, text):
+    @sticker.command(usage="<command> [subcommand] <link>")
+    async def add(self, ctx, command, subcommand, link=None):
         """Adds a sticker
 
         Example:
         !stickers add "whale happy" link_to_happy_whale
         """
-        command = command.lower()
-        if command in self.bot.all_commands.keys():
-            await ctx.send("That is already a standard command.")
-            return
+        if link is None:
+            link = subcommand
+        else:
+            command = f"{command} {subcommand}"
+        if command.count(" ") > 1:
+            return await ctx.send("You can't have more than one space.")
 
-        self.settings.update_sticker(command, text)
-        await ctx.send("Sticker successfully added.")
+        command = command.lower()
+        if command.split(" ")[0] in self.bot.all_commands.keys():
+            return await ctx.send("That is already a standard command.")
+
+        async with self.config.stickers() as stickers:
+            stickers[command] = link
+        await ctx.tick()
 
     @sticker.command()
-    @is_sticker_admin()
-    async def delete(self, ctx, command: str):
+    async def delete(self, ctx, *, command):
         """Deletes a sticker
 
         Example:
         !stickers delete "whale happy" """
-        command = command.lower()
-        if command in self.settings.get_stickers():
-            self.settings.rm_sticker(command)
-            await ctx.send("Sticker successfully deleted.")
-        else:
-            await ctx.send("Sticker doesn't exist.")
+        command = command.lower().strip()
+        async with self.config.stickers() as stickers:
+            if command not in stickers:
+                return await ctx.send("That sticker doesn't exist")
+            del stickers[command]
+        await ctx.tick()
 
     @commands.command()
     async def stickers(self, ctx):
         """Shows all stickers"""
-        if not self.settings.get_stickers():
-            await ctx.send("There are no stickers yet")
-            return
+        stickers = await self.config.stickers()
 
-        stickers = list(self.settings.get_stickers())
+        if not stickers:
+            return await ctx.send("There are no stickers yet")
 
         prefixes_list = defaultdict(list)
         other_list = list()
 
-        for c in stickers:
-            m = re.match(r'^(.+)[ ](.+)$', c)
-            if m:
-                grp = m.group(1)
-                prefixes_list[grp].append(m.group(2))
+        for sticker in stickers:
+            if (match := re.fullmatch(r'(.+) (.+)', sticker)):
+                grp = match.group(1)
+                prefixes_list[grp].append(match.group(2))
             else:
-                other_list.append(c)
+                other_list.append(sticker)
 
         msg = "Stickers:\n"
         for cmd in sorted(other_list):
-            msg += " {}{}\n".format(ctx.prefix, cmd)
+            msg += f" {ctx.prefix}{cmd}\n"
 
         msg += "\nSticker Packs:\n"
-
         for prefix in sorted(prefixes_list):
-            msg += " {}{} [...]\n  ".format(ctx.prefix, prefix)
+            msg += f" {ctx.prefix}{prefix} [...]\n  "
 
             for suffix in sorted(prefixes_list[prefix]):
-                msg += " {}".format(suffix)
+                msg += f" {suffix}"
             msg += "\n\n"
 
         for page in pagify(msg):
-            await msg.author.send(box(page))
-
-    @sticker.command()
-    @checks.is_owner()
-    async def addadmin(self, ctx, user: discord.Member):
-        """Adds a user to the stickers admin"""
-        self.settings.add_admin(user.id)
-        await ctx.tick()
-
-    @sticker.command()
-    @checks.is_owner()
-    async def rmadmin(self, ctx, user):
-        """Removes a user from the stickers admin"""
-        try:
-            u = await commands.MemberConverter().convert(ctx, user)
-            self.settings.rmAdmin(u.id)
-        except commands.BadArgument as e:
-            try:
-                u = int(user)
-                self.settings.rmAdmin(u)
-            except ValueError:
-                await ctx.send(inline("Invalid user id."))
-                return
-        await ctx.tick()
+            await ctx.author.send(box(page))
 
     @commands.Cog.listener("on_message")
     async def check_for_sticker_request(self, message):
-        if len(message.content) < 2:
+        prefix = (await self.bot.get_prefix(message))[0]
+        if not message.content.startswith(prefix):
             return
 
-        prefix = (await self.bot.get_prefix(message))[0]
-
-        cmdlist = self.settings.get_stickers()
-        image_url = None
-        cmd = message.content[len(prefix):]
-        if cmd in cmdlist.keys():
-            image_url = cmdlist[cmd]
-        elif cmd.lower() in cmdlist.keys():
-            image_url = cmdlist[cmd.lower()]
-
-        if image_url:
-            footer_text = message.content + ' posted by ' + message.author.name
-            embed = discord.Embed().set_image(url=image_url).set_footer(text=footer_text)
-            await message.channel.send(embed=embed)
-            await message.delete()
+        cmdlist = await self.config.stickers()
+        cmd = message.content[len(prefix):].strip()
+        if cmd.lower() in cmdlist.keys():
+            await message.channel.send(embed=EmbedView(
+                embed_main=EmbedMain(),
+                embed_body_image=EmbedBodyImage(cmdlist[cmd.lower()]),
+                embed_footer=EmbedFooter(message.content + ' posted by ' + message.author.name),
+            ).to_embed())
+            try:
+                await message.delete()
+            except Forbidden:
+                pass
 
 
 class StickersSettings(CogSettings):
@@ -160,33 +140,3 @@ class StickersSettings(CogSettings):
             'c_commands': {}
         }
         return config
-
-    def admins(self):
-        return self.bot_settings['admins']
-
-    def check_admin(self, user_id):
-        admins = self.admins()
-        return user_id in admins
-
-    def add_admin(self, user_id):
-        admins = self.admins()
-        if user_id not in admins:
-            admins.append(user_id)
-            self.save_settings()
-
-    def rm_admin(self, user_id):
-        admins = self.admins()
-        if user_id in admins:
-            admins.remove(user_id)
-            self.save_settings()
-
-    def get_stickers(self):
-        return self.bot_settings['c_commands']
-
-    def update_sticker(self, key, value):
-        self.bot_settings['c_commands'][key] = value
-        self.save_settings()
-
-    def rm_sticker(self, key):
-        self.bot_settings['c_commands'].pop(key, None)
-        self.save_settings()
