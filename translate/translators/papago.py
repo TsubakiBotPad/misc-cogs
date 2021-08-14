@@ -18,7 +18,6 @@ class Papago(Translator):
         except KeyError:
             raise NoAPIKeyException("set api papago client_id <CLIENT_ID> client_secret <CLIENT_SECRET>")
 
-
     async def translate(self, source: str, target: str, text: str) -> str:
         url = 'https://openapi.naver.com/v1/papago/n2mt'
         headers = {
