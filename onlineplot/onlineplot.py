@@ -1,31 +1,30 @@
 import asyncio
+import logging
 import os
 import re
-
-import sys
 from datetime import datetime, time, tzinfo
 from io import BytesIO
-import logging
-from typing import Tuple, Sequence, List, Optional
+from typing import List, Optional, Sequence, Tuple
 
 import aioodbc
 import discord
-from aioodbc import Pool
-from redbot.core import checks, commands, Config, data_manager
 import matplotlib.pyplot as plt
+import sys
+from aioodbc import Pool
+from redbot.core import Config, checks, commands, data_manager
 
 logger = logging.getLogger('red.misc-cogs.onlineplot')
 
 plt.interactive(False)
 
 WEEKDAYS = {
+    "sunday": 0,
     "monday": 1,
     "tuesday": 2,
     "wednesday": 3,
     "thursday": 4,
     "friday": 5,
     "saturday": 6,
-    "sunday": 7,
 }
 
 CREATE_TABLE = '''
@@ -67,6 +66,7 @@ DELETE FROM onlineplot WHERE DATE(record_date, "+57 days") < DATE('now')
 DELETE_GUILD = '''
 DELETE FROM onlineplot WHERE guild_id = ?
 '''
+
 
 def _data_file(file_name: str) -> str:
     return os.path.join(str(data_manager.cog_data_path(raw_name='OnlinePlot')), file_name)
@@ -144,24 +144,27 @@ class OnlinePlot(commands.Cog):
     @checks.admin_or_permissions(administrator=True)
     async def optout(self, ctx):
         """Opt out of onlineplot tracking"""
-        m = await ctx.send("Are you sure you want to opt out of onlineplot and delete all"
-                           " data associated with this guild? Type 'Delete all my data'"
-                           " to continue.")
+        instructions = await ctx.send("Are you sure you want to opt out of onlineplot and delete all"
+                                      " data associated with this guild? Type 'Delete all my data'"
+                                      " to continue.")
+        msg = None
         try:
             msg = await self.bot.wait_for('message', timeout=10.0,
-                                          check=lambda m: m.channel == ctx.channel
-                                                          and m.content == "Delete all my data")
+                                          check=lambda m: (m.channel == ctx.channel
+                                                           and m.content == "Delete all my data"))
         except asyncio.TimeoutError:
-            await ctx.send("Opt-out cancelled.  Your data was not deleted.")
+            return await ctx.send("Opt-out cancelled.  Your data was not deleted.")
         else:
             await self.execute_query(DELETE_GUILD, (ctx.guild.id,))
             await self.config.guild(ctx.guild).opted_in.set(False)
             await ctx.send("Data deleted successfully.")
         finally:
-            try:
-                await msg.delete()
-            except discord.Forbidden:
-                pass
+            await instructions.delete()
+            if msg is not None:
+                try:
+                    await msg.delete()
+                except discord.Forbidden:
+                    pass
 
     @onlineplot.command()
     async def plot(self, ctx, day_of_week: str = None):
@@ -169,26 +172,23 @@ class OnlinePlot(commands.Cog):
         await self.lock.wait()
 
         if day_of_week is None:
-            day = datetime.now().isoweekday()
+            day = datetime.now().isoweekday() % 7
         else:
             if day_of_week.lower() not in WEEKDAYS:
-                await ctx.send("Invalid weekday.  Must be one of: " + ', '.join(WEEKDAYS))
-                return
+                return await ctx.send("Invalid weekday.  Must be one of: " + ', '.join(WEEKDAYS))
             day = WEEKDAYS[day_of_week.lower()]
 
         tz = await self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
         if tz is None:
-            await ctx.send(f"Please set your timzeone with {ctx.prefix}settimezone")
-            return
+            return await ctx.send(f"Please set your timzeone with {ctx.prefix}settimezone")
 
         data = await self.fetch_guild_data(ctx.guild, day, tz)
 
         if not data:
-            await ctx.send(f"There's no data associated with this guild."
-                           f" Please opt in with `{ctx.prefix}onlineplot optin`."
-                           f" If you've already opted in, allow around 30 minutes"
-                           f" to collect the first points of data.")
-            return
+            return await ctx.send(f"There's no data associated with this guild."
+                                  f" Please opt in with `{ctx.prefix}onlineplot optin`."
+                                  f" If you've already opted in, allow around 30 minutes"
+                                  f" to collect the first points of data.")
 
         times = [row[0] for row in data]
         online = [row[1] for row in data]
@@ -198,11 +198,11 @@ class OnlinePlot(commands.Cog):
 
         weekcount = (await self.execute_query(GET_WEEKS, (self.get_tz_str(tz), ctx.guild.id)))[0][0]
 
-
         await ctx.send(file=await self.make_graph(times, online, idle, dnd, colors=('g', 'y', 'r'),
                                                   title=f"Users Online (Averaged over {weekcount} week(s))"))
 
-    async def make_graph(self, x_vals: Sequence[datetime], *y_vals: Sequence[int], title: str, **kwargs) -> discord.File:
+    async def make_graph(self, x_vals: Sequence[datetime], *y_vals: Sequence[int], title: str, **kwargs) \
+            -> discord.File:
         BG_COLOR = "#190432"
         FG_COLOR = "#dfcdf6"
 
@@ -242,7 +242,7 @@ class OnlinePlot(commands.Cog):
 
         o = []
         for row in rows:
-            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 60) % (24 * 60))
+            mins = int((10 * row[0] + curtz._utcoffset.total_seconds() // 60) % (24 * 60))  # noqa
             dt = datetime.combine(now.date(), time(mins // 60, mins % 60))
             o.append((dt, row[1], row[2], row[3], row[4]))
         return sorted(o, key=lambda x: x[0])
@@ -290,7 +290,6 @@ class OnlinePlot(commands.Cog):
         r"""Convert a tz object to an SQL tz string whtch matches /[-+]\d\d:\d\d/"""
         # This is so awful.  I'm so sorry.
         return re.sub(r'^([-+]\d\d)', r'\1:', "{:+05}".format(-int(datetime.now(tz).strftime("%z"))))
-
 
     async def restart_loop(self):
         """Restarts the event loop every hour"""
