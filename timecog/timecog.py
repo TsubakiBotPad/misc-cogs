@@ -1,15 +1,16 @@
 import asyncio
 import logging
 import re
-import time
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
-from typing import Optional
+from typing import Any, Optional, Tuple
 
 import discord
 import pytz
+import time
 import tsutils
 from dateutil.relativedelta import relativedelta
+from discord import User
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
@@ -121,8 +122,7 @@ class TimeCog(commands.Cog):
         [p]remindme 04-13 Do something!
         """
 
-        user_tz_str = await self.config.user(ctx.author).tz()
-        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_timezone, set_tz = await self.get_timezone(ctx.author)
 
         for ar in time_at_regeces:
             match = re.search(ar, timestr, re.IGNORECASE)
@@ -130,9 +130,9 @@ class TimeCog(commands.Cog):
                 continue
             match = match.groupdict()
 
-            if not user_tz_str:
+            if not set_tz:
                 await ctx.send(
-                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(ctx))
+                    "Please configure your personal timezone with `{0.prefix}pref timezone` first.".format(ctx))
                 return
 
             now = datetime.now(tz=user_timezone)
@@ -189,16 +189,15 @@ class TimeCog(commands.Cog):
     @commands.group(aliases=['remindmeat', 'remindmein'], invoke_without_command=True)
     async def remindme(self, ctx, *, timestr):
         rmtime, text = await self.remindme_parse(ctx, timestr)
-        user_tz_str = await self.config.user(ctx.author).tz()
-        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_timezone, set_tz = await self.get_timezone(ctx.author)
         user_show_tz = await self.config.user(ctx.author).show_tz()
 
         async with self.config.user(ctx.author).reminders() as rms:
             rms.append((rmtime.timestamp(), text, -1, 0))
 
         response = "I will tell you " + format_rm_time(ctx.channel, rmtime, text, user_timezone, user_show_tz)
-        if not user_tz_str:
-            response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
+        if not set_tz:
+            response += '. Configure your personal timezone with `{0.prefix}pref timezone` for accurate times.'.format(
                 ctx)
         await ctx.send(response)
 
@@ -206,8 +205,7 @@ class TimeCog(commands.Cog):
     @checks.mod_or_permissions(manage_messages=True)
     async def remindmehere(self, ctx, *, timestr):
         rmtime, text = await self.remindme_parse(ctx, timestr)
-        user_tz_str = await self.config.user(ctx.author).tz()
-        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_timezone, set_tz = await self.get_timezone(ctx.author)
         user_show_tz = await self.config.user(ctx.author).show_tz()
 
         async with self.config.user(ctx.author).reminders() as rms:
@@ -215,8 +213,8 @@ class TimeCog(commands.Cog):
 
         response = "In this channel, I will tell you " + format_rm_time(ctx.channel, rmtime, text, user_timezone,
                                                                         user_show_tz)
-        if not user_tz_str:
-            response += '. Configure your personal timezone with `{0.clean_prefix}settimezone` for accurate times.'.format(
+        if not set_tz:
+            response += '. Configure your personal timezone with `{0.prefix}pref timezone` for accurate times.'.format(
                 ctx)
         await ctx.send(response)
 
@@ -251,7 +249,7 @@ class TimeCog(commands.Cog):
             ctx.channel,
             datetime.utcnow() + tin2tdelta(tinstart),
             reminder,
-            tzstr_to_tz(await self.config.user(ctx.author).tz() or 'UTC'),
+            (await self.get_timezone(ctx.author))[0],
             user_show_tz),
             tin2tdelta(tinstrs).seconds))
 
@@ -262,7 +260,7 @@ class TimeCog(commands.Cog):
         if not rlist:
             await ctx.send(inline("You have no pending reminders!"))
             return
-        tz = tzstr_to_tz(await self.config.user(ctx.author).tz())
+        tz, _ = await self.get_timezone(ctx.author)
         user_show_tz = await self.config.user(ctx.author).show_tz()
         o = []
         for c, rm in enumerate(rlist):
@@ -294,21 +292,17 @@ class TimeCog(commands.Cog):
         await ctx.tick()
 
     @remindme.command()
-    async def toggletzprivate(self, ctx):
+    async def toggletzprivate(self, ctx, private: bool = True):
         """Hide/show your time zone in reminders"""
-        await self._toggletzprivate(ctx)
-
-    async def _toggletzprivate(self, ctx):
-        if await self.config.user(ctx.author).show_tz():
-            await self.config.user(ctx.author).show_tz.set(False)
-            await ctx.send(
-                "Ok, your time zone is now set to **private**. I will **hide** your time zone when I confirm or list your reminders in a server.")
-            return
+        await self.config.user(ctx.author).show_tz.set(not private)
+        if private:
+            await ctx.send("Ok, your time zone is now set to **private**."
+                           " I will **hide** your time zone when I confirm"
+                           " or list your reminders in a server.")
         else:
-            await self.config.user(ctx.author).show_tz.set(True)
-            await ctx.send(
-                "Ok, your time zone is now set to **public**. I will **show** your time zone when I confirm or list your reminders in a server.")
-            return
+            await ctx.send("Ok, your time zone is now set to **public**."
+                           " I will **show** your time zone when I confirm"
+                           " or list your reminders in a server.")
 
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
@@ -501,21 +495,6 @@ class TimeCog(commands.Cog):
         for page in pagify(o):
             await ctx.send(box(page))
 
-    @commands.group(aliases=['settz'], invoke_without_command=True)
-    async def settimezone(self, ctx, tzstr):
-        """Set your timezone."""
-        try:
-            v = tzstr_to_tz(tzstr)
-            await self.config.user(ctx.author).tz.set(tzstr)
-            await ctx.send(inline("Set personal timezone to {} ({})".format(str(v), get_tz_name(v))))
-        except IOError as e:
-            await ctx.send(inline("Invalid tzstr: " + tzstr))
-
-    @settimezone.command()
-    async def toggleprivate(self, ctx):
-        """Hide/show your time zone in reminders"""
-        await self._toggletzprivate(ctx)
-
     async def reminderloop(self):
         try:
             await self.bot.wait_until_ready()
@@ -603,8 +582,7 @@ class TimeCog(commands.Cog):
         await ctx.send(inline(msg))
 
     async def exact_tartintodt(self, ctx, timestr, allowtat=True):
-        user_tz_str = await self.config.user(ctx.author).tz()
-        user_timezone = tzstr_to_tz(user_tz_str or 'UTC')
+        user_timezone, set_tz = await self.get_timezone(ctx.author)
 
         for ar in exact_tats:
             if not allowtat:
@@ -614,9 +592,9 @@ class TimeCog(commands.Cog):
                 continue
             match = match.groupdict()
 
-            if not user_tz_str:
+            if not set_tz:
                 await ctx.send(
-                    "Please configure your personal timezone with `{0.clean_prefix}settimezone` first.".format(ctx))
+                    "Please configure your personal timezone with `{0.prefix}pref timezone` first.".format(ctx))
                 return
 
             now = datetime.now(tz=user_timezone)
@@ -664,10 +642,14 @@ class TimeCog(commands.Cog):
 
         return rmtime
 
-    async def get_user_timezone(self, user: discord.User) -> Optional[tzinfo]:
-        user_tz_str = await self.config.user(user).tz()
-        if user_tz_str:
-            return tzstr_to_tz(user_tz_str)
+    async def get_timezone(self, user: User) -> Tuple[Optional[Any], bool]:
+        cog: Any = self.bot.get_cog("UserPreferences")
+        if cog is None:
+            logger.info("UserPreferences cog not loaded.")
+            return pytz.UTC, True
+        if (tz := await cog.get_user_timezone(user)) is None:
+            return pytz.UTC, False
+        return tz, True
 
 
 def timestr_to_time(timestr):
@@ -697,38 +679,31 @@ def fmt_time_short(dt):
     return dt.strftime("%I:%M %p")
 
 
-def tzstr_to_tz(tz: str) -> pytz.timezone:
-    tz = tz.lower().strip()
-    if tz in ('edt', 'est', 'et'):
-        tz = 'America/New_York'
-    elif tz in ('mdt', 'mst', 'mt'):
-        tz = 'America/North_Dakota/Center'
-    elif tz in ('pdt', 'pst', 'pt'):
-        tz = 'America/Los_Angeles'
-    elif tz in ('cdt', 'cst', 'ct'):
-        tz = 'America/Chicago'
-    elif tz in ('jp', 'jt', 'jst'):
-        return tz_lookup['JST']
-    elif tz.upper() in tz_lookup:
-        return tz_lookup[tz.upper()]
-    elif (match := re.match(r"^utc([-+]\d+)$", tz)):
-        tz = pytz.timezone(f"Etc/GMT{int(match.group(1)):+}")
-        tz._tzname = f"UTC{int(match.group(1)):+}"
-        return tz
-    else:
-        for tzo in pytz.all_timezones:
-            if tz.lower() in tzo.lower().split("/"):
-                tz = tzo
-                break
-        else:
-            for tzo in pytz.all_timezones:
-                if tz.lower() in tzo:
-                    tz = tzo
-                    break
-    try:
-        return pytz.timezone(tz)
-    except Exception as e:
-        raise commands.UserFeedbackCheckFailure("Invalid timezone: " + tz)
+def tzstr_to_tz(tzstr: str):
+    tzstr = tzstr.upper().strip()
+    if tzstr in ('EST', 'EDT', 'ET'):
+        return pytz.timezone('America/New_York')
+    if tzstr in ('MST', 'MDT', 'MT'):
+        return pytz.timezone('America/North_Dakota/Center')
+    if tzstr in ('PST', 'PDT', 'PT'):
+        return pytz.timezone('America/Los_Angeles')
+    if tzstr in ('CST', 'CDT', 'CT'):
+        return pytz.timezone('America/Chicago')
+    if tzstr in ('JP', 'JST', 'JT'):
+        return pytz.timezone('Japan')
+    if tzstr in ('NA', 'US'):
+        return timezone(timedelta(hours=-9))
+    if tzstr in tz_lookup:
+        return tz_lookup[tzstr]
+    if (match := re.match(r"^UTC([-+]\d+)$", tzstr)):
+        return timezone(timedelta(hours=int(match.group(1))))
+    for tz in pytz.all_timezones:
+        if tzstr in tz.upper().split("/"):
+            return pytz.timezone(tz)
+    for tz in pytz.all_timezones:
+        if tzstr in tz.upper():
+            return pytz.timezone(tz)
+    raise commands.UserFeedbackCheckFailure("Invalid timezone: " + tzstr)
 
 
 def tin2tdelta(tinstr):
