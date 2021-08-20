@@ -178,7 +178,7 @@ class OnlinePlot(commands.Cog):
                 return await ctx.send("Invalid weekday.  Must be one of: " + ', '.join(WEEKDAYS))
             day = WEEKDAYS[day_of_week.lower()]
 
-        tz = await self.bot.get_cog("TimeCog").get_user_timezone(ctx.author)
+        tz = await self.bot.get_cog("UserPreferences").get_user_timezone(ctx.author)
         if tz is None:
             return await ctx.send(f"Please set your timzeone with {ctx.prefix}settimezone")
 
