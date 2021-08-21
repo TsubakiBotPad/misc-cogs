@@ -692,7 +692,7 @@ def tzstr_to_tz(tzstr: str):
     if tzstr in ('JP', 'JST', 'JT'):
         return pytz.timezone('Japan')
     if tzstr in ('NA', 'US'):
-        return timezone(timedelta(hours=-9))
+        return timezone(timedelta(hours=-8))
     if tzstr in tz_lookup:
         return tz_lookup[tzstr]
     if (match := re.match(r"^UTC([-+]\d+)$", tzstr)):
