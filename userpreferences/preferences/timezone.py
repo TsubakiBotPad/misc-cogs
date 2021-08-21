@@ -51,7 +51,7 @@ class TimezonePreference(CogMixin):
         if tzstr in ('JP', 'JST', 'JT'):
             return pytz.timezone('Japan')
         if tzstr in ('NA', 'US'):
-            return timezone(timedelta(hours=-9))
+            return timezone(timedelta(hours=-8))
         tz_lookup = dict([(pytz.timezone(x).localize(datetime.now()).tzname(), pytz.timezone(x))
                           for x in pytz.all_timezones])
         if tzstr in tz_lookup:
