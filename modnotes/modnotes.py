@@ -1,14 +1,13 @@
 """
 Utilities for managing moderator notes about users.
 """
-import discord
-import re
 from io import BytesIO
-from redbot.core import checks
-from redbot.core import commands
+
+import discord
+from redbot.core import checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings
+from tsutils.cog_settings import CogSettings
 
 
 class ModNotes(commands.Cog):

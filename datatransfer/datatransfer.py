@@ -1,12 +1,12 @@
-import aiohttp
 import base64
-import discord
-from io import BytesIO
 import json
-import os
 import re
-from redbot.core import checks, commands, data_manager
-from redbot.core.utils.chat_formatting import box, inline, pagify
+from io import BytesIO
+
+import aiohttp
+import discord
+from redbot.core import checks, commands
+from redbot.core.utils.chat_formatting import inline
 
 R_MESSAGE_LINK = r"https://discord.com/channels/(\d+)/(\d+)/(\d+)"
 R_ATTATCH_LINK = r"https://cdn.discordapp.com/attachments/\d+/\d+/.+"

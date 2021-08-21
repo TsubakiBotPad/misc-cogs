@@ -1,11 +1,11 @@
-import base64
 import discord
-import os
 import re
 from io import BytesIO
-from redbot.core import checks, commands, data_manager, Config
-from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings
+
+import discord
+from redbot.core import Config, checks, commands
+from redbot.core.utils.chat_formatting import box, pagify
+from tsutils.cog_settings import CogSettings
 
 
 class Memes(commands.Cog):
@@ -148,7 +148,7 @@ class Memes(commands.Cog):
         return False
 
     def format_cc(self, command, message):
-        results = re.findall(r"\{([^}]+)\}", command)
+        results = re.findall(r"{([^}]+)}", command)
         for result in results:
             param = self.transform_parameter(result, message)
             command = command.replace("{" + result + "}", param)

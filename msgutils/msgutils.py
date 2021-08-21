@@ -1,12 +1,10 @@
-import asyncio
-import datetime
-import discord
 import re
 from io import BytesIO
-from redbot.core import checks, modlog
-from redbot.core import commands
+
+import discord
+from redbot.core import checks, commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import box, inline, pagify
+from redbot.core.utils.chat_formatting import box, inline
 
 
 class MsgUtils(commands.Cog):

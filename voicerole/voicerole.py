@@ -5,8 +5,7 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box
-
-from tsutils import CogSettings
+from tsutils.cog_settings import CogSettings
 
 logger = logging.getLogger('red.misc-cogs.voicerole')
 
@@ -53,7 +52,7 @@ class VoiceRole(commands.Cog):
             else:
                 await member.remove_roles(role)
         except Exception as ex:
-            logger.exception('voicerole failure {} {} {}'.format(guild_id, channel_id, role_id))
+            logger.exception('voicerole failure {} {} {}'.format(guild_id, channel_id, role.id))
 
     @commands.group()
     @commands.guild_only()

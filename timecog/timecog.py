@@ -8,12 +8,13 @@ from typing import Any, Optional, Tuple
 import discord
 import pytz
 import time
-import tsutils
+
 from dateutil.relativedelta import relativedelta
 from discord import User
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
+from tsutils.helper_functions import repeating_timer
 
 logger = logging.getLogger('red.misc-cogs.timecog')
 
@@ -498,7 +499,7 @@ class TimeCog(commands.Cog):
     async def reminderloop(self):
         try:
             await self.bot.wait_until_ready()
-            async for _ in tsutils.repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
+            async for _ in repeating_timer(10, lambda: self == self.bot.get_cog('TimeCog')):
                 urs = await self.config.all_users()
                 gds = await self.config.all_guilds()
                 now = datetime.utcnow()

@@ -10,7 +10,7 @@ from io import BytesIO
 from functools import reduce
 from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, humanize_number
-from tsutils import timeout_after
+from tsutils.helper_functions import timeout_after
 
 ACCEPTED_TOKENS = (r'[\[\]\-()*+/0-9=.,% |&<>~_^]|>=|<=|==|!=|factorial|randrange|isfinite|copysign'
                    r'|radians|isclose|degrees|randint|lgamma|choice|random|round|log1p|log10|ldexp'

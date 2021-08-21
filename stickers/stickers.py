@@ -9,7 +9,8 @@ from discordmenu.embed.view import EmbedView
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
-from tsutils import CogSettings, auth_check
+from tsutils.cog_settings import CogSettings
+from tsutils.cogs.globaladmin import auth_check
 
 
 class Stickers(commands.Cog):

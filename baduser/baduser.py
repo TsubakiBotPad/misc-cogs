@@ -13,8 +13,10 @@ from redbot.core import checks, Config
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings
+
 from io import BytesIO
+
+from tsutils.cog_settings import CogSettings
 
 logger = logging.getLogger('red.misc-cogs.baduser')
 

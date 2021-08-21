@@ -3,12 +3,9 @@ import re
 import unicodedata
 from io import BytesIO
 
-from redbot.core import checks
-from redbot.core import commands
+from redbot.core import checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
-
-import discord
 
 logger = logging.getLogger('red.misc-cogs.emoji')
 
