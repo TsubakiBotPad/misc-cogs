@@ -7,7 +7,8 @@ from redbot.core import checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, escape
-from tsutils import CogSettings, is_donor
+from tsutils.cog_settings import CogSettings
+from tsutils.cogs.donations import is_donor
 
 DONATE_MSG = """
 Patreon : <https://www.patreon.com/tsubaki_bot>

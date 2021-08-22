@@ -15,7 +15,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.commands import Context
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings, NA_TZ_OBJ
+from tsutils.cog_settings import CogSettings
+from tsutils.pad import NA_TZ_OBJ
 
 logger = logging.getLogger('red.misc-cogs.seniority')
 

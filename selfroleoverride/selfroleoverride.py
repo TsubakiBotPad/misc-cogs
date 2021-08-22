@@ -1,11 +1,8 @@
-import asyncio
-import discord.utils
-import json
-import re
 from io import BytesIO
-from redbot.core import Config, checks
+
+import discord.utils
 from redbot.core import commands
-from redbot.core.utils.chat_formatting import box, pagify
+from redbot.core.utils.chat_formatting import box
 
 
 class SelfRoleConverterOverride(commands.Converter):

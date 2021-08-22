@@ -4,14 +4,15 @@ from typing import Optional
 import discord
 import logging
 import prettytable
-import tsutils
+
 from collections import defaultdict
 from collections import deque
 from datetime import datetime
 from io import BytesIO
 from redbot.core import checks, commands, Config
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import CogSettings
+from tsutils.cog_settings import CogSettings
+from tsutils.formatting import strip_right_multiline
 
 try:
     import re2 as re
@@ -757,7 +758,7 @@ class AutoMod(commands.Cog):
         for value in patterns:
             tbl.add_row([value['name'], value['include_pattern'], value['exclude_pattern']])
 
-        return tsutils.strip_right_multiline(tbl.get_string())
+        return strip_right_multiline(tbl.get_string())
 
 
 def starts_with_code(txt):

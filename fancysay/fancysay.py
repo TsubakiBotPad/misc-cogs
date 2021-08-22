@@ -1,16 +1,13 @@
 import asyncio
-import discord
 import logging
 import re
 from io import BytesIO
-from redbot.core import checks
-from redbot.core import commands
+
+import discord
+from redbot.core import checks, commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import inline, box
-from typing import Optional
-from tsutils import char_to_emoji
-from tsutils import replace_emoji_names_with_code
-from tsutils import fix_emojis_for_server
+from redbot.core.utils.chat_formatting import box, inline
+from tsutils.emoji import char_to_emoji, fix_emojis_for_server, replace_emoji_names_with_code
 
 logger = logging.getLogger('red.misc-cogs.fancysay')
 

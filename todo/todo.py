@@ -1,10 +1,9 @@
-import asyncio
-import json
-import re
 from io import BytesIO
-from redbot.core import Config, checks, commands
+from io import BytesIO
+
+from redbot.core import Config, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
-from tsutils import get_user_confirmation
+from tsutils.user_interaction import get_user_confirmation
 
 
 class Todo(commands.Cog):

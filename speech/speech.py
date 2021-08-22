@@ -1,16 +1,16 @@
 import asyncio
-import os
 import ctypes.util
-import discord
 import logging
+import os
 from io import BytesIO
-from azure.cognitiveservices.speech import AudioDataStream, SpeechConfig, SpeechSynthesizer, SpeechSynthesisOutputFormat
-from azure.cognitiveservices.speech.audio import AudioOutputConfig
-from redbot.core import checks
-from redbot.core import commands
+
+import discord
+from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer
+from redbot.core import checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline
-from tsutils import CogSettings, corowrap
+from tsutils.cog_settings import CogSettings
+from tsutils.helper_functions import corowrap
 
 logger = logging.getLogger('red.misc-cogs.speech')
 

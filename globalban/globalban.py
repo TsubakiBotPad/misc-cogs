@@ -6,7 +6,7 @@ import discord
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, pagify, box
-from tsutils import get_user_confirmation
+from tsutils.user_interaction import get_user_confirmation
 
 logger = logging.getLogger('red.misc-cogs.globalban')
 
