@@ -306,13 +306,13 @@ class TimeCog(commands.Cog):
                            " I will **show** your time zone when I confirm"
                            " or list your reminders in a server.")
 
-    @remindme.command()
+    @remindme.command(aliases=['setmytz', 'settimezone', 'setmytimezone'])
     async def settz(self, ctx, *, tz):
-        upcog: Any = self.bot.get_cog("UserPreferences")
-        if upcog is None:
+        userprefs: Any = self.bot.get_cog("UserPreferences")
+        if userprefs is None:
             return await send_cancellation_message(ctx, "UserPreferences cog is not loaded."
                                                         " Please alert an administrator.")
-        await upcog.timezone(ctx, tzstr=tz)
+        await userprefs.timezone(ctx, tzstr=tz)
 
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
