@@ -15,6 +15,7 @@ from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils.helper_functions import repeating_timer
+from tsutils.user_interaction import send_cancellation_message
 
 logger = logging.getLogger('red.misc-cogs.timecog')
 
@@ -304,6 +305,14 @@ class TimeCog(commands.Cog):
             await ctx.send("Ok, your time zone is now set to **public**."
                            " I will **show** your time zone when I confirm"
                            " or list your reminders in a server.")
+
+    @remindme.command(aliases=['setmytz', 'settimezone', 'setmytimezone'])
+    async def settz(self, ctx, *, tz):
+        user_preferences_cog: Any = self.bot.get_cog("UserPreferences")
+        if user_preferences_cog is None:
+            return await send_cancellation_message(ctx, "UserPreferences cog is not loaded."
+                                                        " Please alert an administrator.")
+        await user_preferences_cog.timezone(ctx, tzstr=tz)
 
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
