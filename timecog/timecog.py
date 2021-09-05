@@ -308,11 +308,11 @@ class TimeCog(commands.Cog):
 
     @remindme.command(aliases=['setmytz', 'settimezone', 'setmytimezone'])
     async def settz(self, ctx, *, tz):
-        userprefs: Any = self.bot.get_cog("UserPreferences")
-        if userprefs is None:
+        user_preferences_cog: Any = self.bot.get_cog("UserPreferences")
+        if user_preferences_cog is None:
             return await send_cancellation_message(ctx, "UserPreferences cog is not loaded."
                                                         " Please alert an administrator.")
-        await userprefs.timezone(ctx, tzstr=tz)
+        await user_preferences_cog.timezone(ctx, tzstr=tz)
 
     @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
