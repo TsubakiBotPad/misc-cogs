@@ -1,11 +1,13 @@
 import datetime
 import logging
 from io import BytesIO
+from typing import Any
 
 import discord
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import inline, pagify, box
+from tsutils.cogs.globaladmin import auth_check
 from tsutils.user_interaction import get_user_confirmation
 
 logger = logging.getLogger('red.misc-cogs.globalban')
@@ -14,10 +16,15 @@ logger = logging.getLogger('red.misc-cogs.globalban')
 class GlobalBan(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.bot = bot
+
         self.config = Config.get_conf(self, identifier=1437847847)
         self.config.register_global(banned={}, opted=[])
         self.config.register_guild(banlist=[])
-        self.bot = bot
+
+        gadmin: Any = bot.get_cog("GlobalAdmin")
+        if gadmin:
+            gadmin.register_perm("globalban")
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -70,8 +77,7 @@ class GlobalBan(commands.Cog):
         await ctx.tick()
 
     @globalban.command()
-    @checks.is_owner()
-    @checks.bot_has_permissions(ban_members=True)
+    @auth_check('globalban')
     async def ban(self, ctx, user_id: int, *, reason=''):
         """Globally Ban a user across all opted-in servers."""
         async with self.config.banned() as banned:
@@ -81,7 +87,7 @@ class GlobalBan(commands.Cog):
         await ctx.tick()
 
     @globalban.command()
-    @checks.is_owner()
+    @auth_check('globalban')
     async def editreason(self, ctx, user_id: int, *, reason=""):
         """Edit a user's ban reason."""
         async with self.config.banned() as banned:
@@ -94,7 +100,7 @@ class GlobalBan(commands.Cog):
         await ctx.tick()
 
     @globalban.command()
-    @checks.is_owner()
+    @auth_check('globalban')
     @checks.bot_has_permissions(ban_members=True)
     async def unban(self, ctx, user_id: int):
         """Globally Unban a user across all opted-in servers."""
@@ -106,7 +112,7 @@ class GlobalBan(commands.Cog):
         await ctx.tick()
 
     @globalban.command(name="list")
-    @checks.is_owner()
+    @auth_check('globalban')
     async def _list(self, ctx):
         o = '\n'.join(k + '\t' + v for k, v in (await self.config.banned()).items())
         if not o:
