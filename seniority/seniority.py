@@ -16,7 +16,7 @@ from redbot.core.bot import Red
 from redbot.core.commands import Context
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils.cog_settings import CogSettings
-from tsutils.pad import NA_TZ_OBJ
+from tsutils.time import DISCORD_DEFAULT_TZ
 
 logger = logging.getLogger('red.misc-cogs.seniority')
 
@@ -403,7 +403,7 @@ class Seniority(commands.Cog):
         return grant_users, ignored_users
 
     async def get_lookback_points(self, server: discord.Guild, lookback_days: int):
-        lookback_date = datetime.now(NA_TZ_OBJ) - timedelta(days=lookback_days)
+        lookback_date = datetime.now(DISCORD_DEFAULT_TZ) - timedelta(days=lookback_days)
         lookback_date_str = lookback_date.date().isoformat()
 
         async with self.pool.acquire() as conn:
@@ -793,7 +793,7 @@ class Seniority(commands.Cog):
                     # Assign a UTC timezone to the datetime
                     raw_value = raw_value.replace(tzinfo=pytz.utc)
                     # Change the UTC timezone to PT
-                    raw_value = NA_TZ_OBJ.normalize(raw_value)
+                    raw_value = DISCORD_DEFAULT_TZ.normalize(raw_value)
                     value = raw_value.strftime("%F %X")
                 elif col == 'channel_id':
                     channel = server.get_channel(int(value)) if server else None
@@ -827,7 +827,7 @@ def ensure_map(item, key, default_value):
 
 
 def now_date():
-    return datetime.now(NA_TZ_OBJ).date().isoformat()
+    return datetime.now(DISCORD_DEFAULT_TZ).date().isoformat()
 
 
 class SenioritySettings(CogSettings):
