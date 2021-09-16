@@ -7,11 +7,12 @@ from redbot.core.bot import Red
 from redbot.core.commands import Context
 
 from userpreferences.preferences.timezone import TimezonePreference
+from userpreferences.preferences.tsutils import TSUtilsPreference
 
 logger = logging.getLogger('red.misc-cogs.userpreferences')
 
 
-class UserPreferences(TimezonePreference):
+class UserPreferences(TimezonePreference, TSUtilsPreference):
     """Stores user preferences for users."""
 
     def __init__(self, bot: Red, *args, **kwargs):
