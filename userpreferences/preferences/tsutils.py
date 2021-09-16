@@ -13,7 +13,7 @@ class TSUtilsPreference(CogMixin):
         return None
 
     async def red_delete_data_for_user(self, *, requester, user_id):
-        await self.config.user_from_id(user_id).clear()
+        await self.config.user_from_id(user_id).delete_confirmation.set(True)
 
     @mixin_command('preferences')
     async def deleteconfirmations(self, ctx, delete: bool):

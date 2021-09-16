@@ -22,7 +22,7 @@ class TimezonePreference(CogMixin):
             return f"Timezone: `{pickle.loads(tz)}`"
 
     async def red_delete_data_for_user(self, *, requester, user_id):
-        await self.config.user_from_id(user_id).clear()
+        await self.config.user_from_id(user_id).timezone.set(None)
 
     @mixin_group('preferences', aliases=['tz'], invoke_without_command=True)
     async def timezone(self, ctx, *, tzstr):
