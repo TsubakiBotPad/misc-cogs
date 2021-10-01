@@ -1,38 +1,8 @@
 from io import BytesIO
 
-import discord.utils
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import box
-
-
-class SelfRoleConverterOverride(commands.Converter):
-    async def convert(self, ctx: commands.Context, arg: str) -> discord.Role:
-        admin = ctx.command.cog.bot.get_cog("Admin")
-        if admin is None:
-            raise commands.BadArgument("The Admin cog is not loaded.")
-
-        selfroles = await admin.config.guild(ctx.guild).selfroles()
-        role_converter = commands.RoleConverter()
-
-        pool = []
-        for rid in selfroles:
-            role = ctx.guild.get_role(rid)
-            if role is None:
-                continue
-            if role.name.lower() == arg.lower():
-                pool.append(role)
-        if len(pool) == 0:
-            role = await role_converter.convert(ctx, arg)
-
-        else:
-            if len(pool) > 1:
-                await ctx.send("This selfrole has more than one capitalization"
-                               "possibilities.  Please inform a moderator.")
-            role = pool[0]
-
-        if role.id not in selfroles:
-            raise commands.BadArgument("The provided role is not a valid selfrole.")
-        return role
+from tsutils.converters import CaseInsensitiveRole
 
 
 class SelfRoleOverride(commands.Cog):
@@ -43,19 +13,11 @@ class SelfRoleOverride(commands.Cog):
         self.bot = bot
 
         self.old_cmds = []
-        for cmd in self.__cog_commands__:
-            old_cmd = bot.get_command(cmd.name)
+        for cmd in self.all_commands:
+            old_cmd = bot.get_command(cmd)
             if old_cmd:
                 bot.remove_command(old_cmd.name)
                 self.old_cmds.append(old_cmd)
-
-    def cog_unload(self):
-        for cmd in self.old_cmds:
-            try:
-                self.bot.remove_command(cmd.name)
-            except:
-                pass
-            self.bot.add_command(cmd)
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -69,6 +31,15 @@ class SelfRoleOverride(commands.Cog):
         """
         return
 
+    def cog_unload(self):
+        if self.bot.get_cog("Admin") is not None:
+            for cmd in self.old_cmds:
+                try:
+                    self.bot.remove_command(cmd.name)
+                except Exception:
+                    pass
+                self.bot.add_command(cmd)
+
     @commands.guild_only()
     @commands.group()
     async def selfrole(self, ctx: commands.Context):
@@ -76,36 +47,28 @@ class SelfRoleOverride(commands.Cog):
         pass
 
     @selfrole.command(name="add")
-    async def selfrole_add(self, ctx: commands.Context, *, selfrole: SelfRoleConverterOverride):
+    async def selfrole_add(self, ctx: commands.Context, *, selfrole: CaseInsensitiveRole):
         """
         Add a selfrole to yourself.
 
         Server admins must have configured the role as user settable.
         """
         a_cog = self.bot.get_cog("Admin")
-        if a_cog is None:
-            await ctx.send("Admin cog not loaded.")
-
         await a_cog._addrole(ctx, ctx.author, selfrole, check_user=False)
 
     @selfrole.command(name="remove")
-    async def selfrole_remove(self, ctx: commands.Context, *, selfrole: SelfRoleConverterOverride):
+    async def selfrole_remove(self, ctx: commands.Context, *, selfrole: CaseInsensitiveRole):
         """
         Remove a selfrole from yourself.
 
         Server admins must have configured the role as user settable.
         """
         a_cog = self.bot.get_cog("Admin")
-        if a_cog is None:
-            await ctx.send("Admin cog not loaded.")
-
         await a_cog._removerole(ctx, ctx.author, selfrole, check_user=False)
 
     @selfrole.command(name="list")
     async def selfrole_list(self, ctx: commands.Context):
-        """
-        Lists all available selfroles.
-        """
+        """Lists all available selfroles."""
         a_cog = self.bot.get_cog("Admin")
         if a_cog is None:
             await ctx.send("Admin cog not loaded.")
