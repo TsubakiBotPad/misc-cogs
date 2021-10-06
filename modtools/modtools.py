@@ -2,11 +2,12 @@ from io import BytesIO
 
 import discord
 from redbot.core import checks, commands
-from redbot.core.utils.chat_formatting import box, inline
+from redbot.core.utils.chat_formatting import box, inline, pagify
 
 
 class ModTools(commands.Cog):
     """Some chill commands for mods"""
+
     def __init__(self, bot, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
@@ -61,3 +62,18 @@ class ModTools(commands.Cog):
     async def servercount(self, ctx):
         """Check how many servers this bot is in"""
         await ctx.send("{} is in {} servers.".format(self.bot.user.name, len(self.bot.guilds)))
+
+    @commands.command(aliases=['usersearch'])
+    @checks.mod_or_permissions(manage_messages=True)
+    async def usernamesearch(self, ctx, search):
+        """Lists all users who have a specified string in their name"""
+        users = []
+        for member in ctx.guild.members:
+            if search.lower() in member.name.lower():
+                users.append("{} - {}".format(member.mention, member.id))
+        if users:
+            msg = "\n".join(users)
+            for page in pagify(msg):
+                await ctx.send(page)
+        else:
+            await ctx.send("No users found with string `{}`".format(search))
