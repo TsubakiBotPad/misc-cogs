@@ -32,6 +32,8 @@ class Translate(commands.Cog):
 
         self.translator = None
 
+        bot.loop.create_task(self.build_service())
+
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
         data = "No data is stored for user with ID {}.\n".format(user_id)
