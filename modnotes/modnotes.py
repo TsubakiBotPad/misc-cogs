@@ -1,6 +1,3 @@
-"""
-Utilities for managing moderator notes about users.
-"""
 from io import BytesIO
 
 import discord
@@ -12,6 +9,7 @@ from tsutils.cog_settings import CogSettings
 
 class ModNotes(commands.Cog):
     """Keep tabs on iffy users"""
+
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
