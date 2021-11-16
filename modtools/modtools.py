@@ -3,6 +3,7 @@ from io import BytesIO
 import discord
 from redbot.core import checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
+from tsutils.user_interaction import send_cancellation_message
 
 
 class ModTools(commands.Cog):
@@ -32,7 +33,8 @@ class ModTools(commands.Cog):
             await ctx.author.edit(nick=None)
             await ctx.tick()
         except discord.Forbidden:
-            await ctx.send("Your role is higher than mine!")
+            await send_cancellation_message(ctx,
+                                            "Sorry, I can't revert your nickname because you have a role that is higher than mine!")
 
     @commands.command()
     @commands.guild_only()
