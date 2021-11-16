@@ -28,8 +28,11 @@ class ModTools(commands.Cog):
     @checks.bot_has_permissions(manage_nicknames=True)
     async def revertname(self, ctx):
         """Unsets your nickname"""
-        await ctx.author.edit(nick=None)
-        await ctx.tick()
+        try:
+            await ctx.author.edit(nick=None)
+            await ctx.tick()
+        except Exception as ex:
+            await ctx.send("I don't have permission to change your nickname.")
 
     @commands.command()
     @commands.guild_only()
