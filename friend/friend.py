@@ -22,7 +22,7 @@ class Friend(commands.Cog):
         """Get a user's personal data."""
         udata = await self.config.user_from_id(user_id).friends()
 
-        data = "You {} friends stored with ids: {}.\n".format(len(udata), ', '.join(map(str, udata)))
+        data = "You have {} friends stored with IDs: {}.\n".format(len(udata), ', '.join(map(str, udata)))
 
         if not udata:
             data = "No data is stored for user with ID {}.\n".format(user_id)
