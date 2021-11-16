@@ -31,8 +31,8 @@ class ModTools(commands.Cog):
         try:
             await ctx.author.edit(nick=None)
             await ctx.tick()
-        except Exception as ex:
-            await ctx.send("I don't have permission to change your nickname.")
+        except discord.Forbidden:
+            await ctx.send("Your role is higher than mine!")
 
     @commands.command()
     @commands.guild_only()
