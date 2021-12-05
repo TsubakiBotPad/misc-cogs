@@ -222,7 +222,7 @@ class AutoMod(commands.Cog):
         name = name.strip('"')
         channel = channel or ctx.channel
         async with self.config.guild(channel.guild).patterns() as patterns:
-            if name in patterns:
+            if name not in patterns:
                 await ctx.send(f"Rule '{name}' is undefined.")
                 return
             async with self.config.channel(channel).whitelist() as whitelist:
@@ -256,7 +256,7 @@ class AutoMod(commands.Cog):
         name = name.strip('"')
         channel = channel or ctx.channel
         async with self.config.guild(channel.guild).patterns() as patterns:
-            if name in patterns:
+            if name not in patterns:
                 await ctx.send(f"Rule '{name}' is undefined.")
                 return
             async with self.config.channel(channel).blacklist() as blacklist:
@@ -320,7 +320,7 @@ class AutoMod(commands.Cog):
         """List the registered patterns."""
         patterns = await self.config.guild(ctx.guild).patterns()
         output = "AutoMod patterns for this server\n\n"
-        output += self.patternsToTableText(patterns.values())
+        output += self.patternsToTableText(patterns)
         for page in pagify(output):
             await ctx.send(box(page))
 
@@ -755,8 +755,8 @@ class AutoMod(commands.Cog):
         tbl.vrules = prettytable.NONE
         tbl.align = 'l'
 
-        for value in patterns:
-            tbl.add_row([value['name'], value['include_pattern'], value['exclude_pattern']])
+        for name in patterns:
+            tbl.add_row([name, patterns[name]['include_pattern'], patterns[name]['exclude_pattern']])
 
         return strip_right_multiline(tbl.get_string())
 
