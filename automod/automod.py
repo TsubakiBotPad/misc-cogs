@@ -459,9 +459,7 @@ class AutoMod(commands.Cog):
 
         self.channel_user_logs[key].clear()
         msg = f"{message.author.mention} Upload multiple images to an imgur gallery #endimagespam"
-        alert_msg = await message.channel.send(msg)
-        await asyncio.sleep(10)
-        await alert_msg.delete()
+        await message.channel.send(msg)
 
     @commands.Cog.listener('on_message_edit')
     async def mod_message_edit(self, before, after):
