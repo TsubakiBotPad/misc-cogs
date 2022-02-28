@@ -2,6 +2,7 @@ import logging
 import os
 import textwrap
 import timeit
+import warnings
 from collections import deque
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -9,14 +10,15 @@ from io import BytesIO
 import aioodbc
 import discord
 import prettytable
-import pyodbc
 import pytz
 import sys
-
 from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils.time import DISCORD_DEFAULT_TZ
+
+with warnings.catch_warnings():
+    import pyodbc
 
 logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
 
