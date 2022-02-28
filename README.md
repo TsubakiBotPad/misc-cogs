@@ -82,6 +82,7 @@ contain utility libraries.
 | ---            | ---                                                         |
 | baduser        | Tracks misbehaving users, other misc user tracking          |   
 | calculator     | Replacement for the calculator cog that doesnt suck         |
+| channelmirror | A better version of the built-in discord announcement channel   |
 | donations      | Tracks users who have donated for hosting fees              |
 | fancysay       | Make the bot say special things                             |
 | memes          | CustomCommands except role-limited                          |    
