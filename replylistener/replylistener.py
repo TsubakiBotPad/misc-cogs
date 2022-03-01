@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Optional
 
 import discord
-from discordmenu.embed.components import EmbedField, EmbedMain
+from discordmenu.embed.components import EmbedAuthor, EmbedField, EmbedFooter, EmbedMain, EmbedThumbnail
 from discordmenu.embed.view import EmbedView
 from redbot.core import commands
 
@@ -33,7 +33,7 @@ class ReplyListener(commands.Cog):
         return
 
     @commands.Cog.listener("on_message")
-    async def on_message(self, message: discord.Message):
+    async def on_link_only(self, message: discord.Message):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
@@ -41,6 +41,7 @@ class ReplyListener(commands.Cog):
                 or message.attachments or message.embeds:
             # Message is not just a link
             return
+
         cid, mid = map(int, match.groups())
 
         channel = self.bot.get_channel(cid)
@@ -51,21 +52,30 @@ class ReplyListener(commands.Cog):
         except (discord.NotFound, discord.Forbidden):
             return
 
-        if ref_message is None
-        if not (channel := self.bot.get_channel(cid)) \
-                or not (ref_message := await channel.fetch_message(mid)):
-            # Link does not point to a valid message
+        await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
+
+    @commands.Cog.listener("on_message")
+    async def on_reply(self, message: discord.Message):
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
+        if not message.reference:
+            # Message is not a reply
+            return
+
+        channel = self.bot.get_channel(message.reference.channel_id)
+        if channel is None:
+            return
+        try:
+            ref_message = await channel.fetch_message(message.reference.message_id)
+        except (discord.NotFound, discord.Forbidden):
+            return
+
+        await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
+
+    def message_to_embed(self, message: discord.Message, requester: discord.User) -> discord.Embed:
         return EmbedView(
-            EmbedMain(
-                title=ref_message.author.name,
-                description=get_description(props.score)
-            ),
-            embed_fields=[
-                EmbedField('Matched Name Tokens', Box(props.name_tokens)),
-                EmbedField('Matched Modifier Tokens', Box(props.modifier_tokens)),
-                EmbedField('Equally-scoring matches', Box(props.lower_priority_monsters)),
-            ],
-            embed_footer=embed_footer_with_state(state),
-        )
+            embed_main=EmbedMain(description=message.content),
+            embed_author=EmbedAuthor(message.author.name, '', message.author.avatar_url),
+            embed_footer=EmbedFooter(f"Quoted by {requester}", icon_url=requester.avatar_url),
+        ).to_embed()
