@@ -16,7 +16,7 @@
   "hidden": false,
   "disabled": false,
   "required_cogs": {
-    "userpreferences": "https://github.com/TsubakiBotPad/misc-cogs"
+    "userpreferences": "https://github.com/TsubakiBotPad/core-cogs"
   },
   "requirements": [
     "matplotlib",
