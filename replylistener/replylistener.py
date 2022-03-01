@@ -52,6 +52,9 @@ class ReplyListener(commands.Cog):
         except (discord.NotFound, discord.Forbidden):
             return
 
+        if not message.content:
+            return
+
         await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
 
     @commands.Cog.listener("on_message")
@@ -69,6 +72,9 @@ class ReplyListener(commands.Cog):
         try:
             ref_message = await channel.fetch_message(message.reference.message_id)
         except (discord.NotFound, discord.Forbidden):
+            return
+
+        if not message.content:
             return
 
         await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
