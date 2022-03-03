@@ -1,20 +1,19 @@
 import logging
 import re
 from io import BytesIO
-from typing import Optional
 
 import discord
 from contextlib2 import suppress
-from discordmenu.embed.components import EmbedAuthor, EmbedField, EmbedFooter, EmbedMain, EmbedThumbnail
+from discordmenu.embed.components import EmbedAuthor, EmbedFooter, EmbedMain
 from discordmenu.embed.view import EmbedView
 from redbot.core import commands
 
-logger = logging.getLogger('red.misc-cogs.replylistener')
+logger = logging.getLogger('red.misc-cogs.linklistener')
 
 LINK_REGEX = r'https?://discord.com/channels/(?:@me|\d+)/(\d+)/(\d+)'
 
 
-class ReplyListener(commands.Cog):
+class LinkListener(commands.Cog):
     """Turn message links into nice embeds"""
 
     def __init__(self, bot, *args, **kwargs):
@@ -38,9 +37,8 @@ class ReplyListener(commands.Cog):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
-        if (not (match := re.fullmatch(LINK_REGEX, message.content))) \
-                or message.attachments or message.embeds:
-            # Message is not just a link
+        if (not (match := re.search(LINK_REGEX, message.content))):
+            # message does not contain a link
             return
 
         cid, mid = map(int, match.groups())
