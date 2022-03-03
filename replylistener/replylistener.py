@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import Optional
 
 import discord
+from contextlib2 import suppress
 from discordmenu.embed.components import EmbedAuthor, EmbedField, EmbedFooter, EmbedMain, EmbedThumbnail
 from discordmenu.embed.view import EmbedView
 from redbot.core import commands
@@ -52,36 +53,19 @@ class ReplyListener(commands.Cog):
         except (discord.NotFound, discord.Forbidden):
             return
 
-        if not message.content:
+        if not ref_message.content:
             return
 
-        await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
+        with suppress(discord.Forbidden):
+            await message.delete()
 
-    @commands.Cog.listener("on_message")
-    async def on_reply(self, message: discord.Message):
-        if await self.bot.cog_disabled_in_guild(self, message.guild):
-            return
-
-        if not message.reference:
-            # Message is not a reply
-            return
-
-        channel = self.bot.get_channel(message.reference.channel_id)
-        if channel is None:
-            return
-        try:
-            ref_message = await channel.fetch_message(message.reference.message_id)
-        except (discord.NotFound, discord.Forbidden):
-            return
-
-        if not message.content:
-            return
-
-        await message.channel.send(embed=self.message_to_embed(ref_message, message.author))
+        await message.channel.send(embed=self.message_to_embed(ref_message, message.author),
+                                   reference=ref_message if ref_message.channel == message.channel else None,
+                                   mention_author=False)
 
     def message_to_embed(self, message: discord.Message, requester: discord.User) -> discord.Embed:
         return EmbedView(
             embed_main=EmbedMain(description=message.content),
-            embed_author=EmbedAuthor(message.author.name, '', message.author.avatar_url),
+            embed_author=EmbedAuthor(message.author.name, message.jump_url, message.author.avatar_url_as(format="png")),
             embed_footer=EmbedFooter(f"Quoted by {requester}", icon_url=requester.avatar_url),
         ).to_embed()
