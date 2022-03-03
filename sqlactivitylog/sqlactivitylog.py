@@ -16,10 +16,9 @@ from redbot.core import checks, commands, data_manager
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils.time import DISCORD_DEFAULT_TZ
+import pyodbc
 
-with warnings.catch_warnings():
-    import pyodbc
-
+warnings.filterwarnings("ignore")  # AIOODBC sucks
 logger = logging.getLogger('red.misc-cogs.sqlactivitylog')
 
 
