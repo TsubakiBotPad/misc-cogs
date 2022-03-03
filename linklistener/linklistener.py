@@ -37,11 +37,16 @@ class LinkListener(commands.Cog):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
-        if (not (match := re.search(LINK_REGEX, message.content))):
+        if re.fullmatch(LINK_REGEX, message.content) \
+                and not message.attachments and not message.embeds:
+            just_link = True
+        elif re.search(LINK_REGEX, message.content):
+            just_link = False
+        else:
             # message does not contain a link
             return
 
-        cid, mid = map(int, match.groups())
+        cid, mid = map(int, re.search(LINK_REGEX, message.content).groups())
 
         channel = self.bot.get_channel(cid)
         if channel is None:
@@ -54,8 +59,9 @@ class LinkListener(commands.Cog):
         if not ref_message.content:
             return
 
-        with suppress(discord.Forbidden):
-            await message.delete()
+        if just_link:
+            with suppress(discord.Forbidden):
+                await message.delete()
 
         await message.channel.send(embed=self.message_to_embed(ref_message, message.author),
                                    reference=ref_message if ref_message.channel == message.channel else None,
