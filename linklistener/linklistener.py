@@ -37,6 +37,9 @@ class LinkListener(commands.Cog):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
+        if message.author.bot:
+            return
+
         if re.fullmatch(LINK_REGEX, message.content) \
                 and not message.attachments and not message.embeds:
             just_link = True
