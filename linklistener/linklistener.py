@@ -57,6 +57,8 @@ class LinkListener(commands.Cog):
             return
 
         if not ref_message.content:
+            if ref_message.author == self.bot.me and ref_message.embeds:
+                return await message.channel.send(embeds=ref_message.embeds)
             return
 
         if just_link:
