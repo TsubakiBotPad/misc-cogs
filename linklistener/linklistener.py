@@ -40,13 +40,7 @@ class LinkListener(commands.Cog):
         if message.author.bot:
             return
 
-        if re.fullmatch(LINK_REGEX, message.content) \
-                and not message.attachments and not message.embeds:
-            just_link = True
-        elif re.search(LINK_REGEX, message.content):
-            just_link = False
-        else:
-            # message does not contain a link
+        if not re.search(LINK_REGEX, message.content):
             return
 
         cid, mid = map(int, re.search(LINK_REGEX, message.content).groups())
@@ -60,13 +54,9 @@ class LinkListener(commands.Cog):
             return
 
         if not ref_message.content:
-            if ref_message.author == self.bot.me and ref_message.embeds:
+            if ref_message.author == self.bot.user and ref_message.embeds:
                 return await message.channel.send(embeds=ref_message.embeds)
             return
-
-        if just_link:
-            with suppress(discord.Forbidden):
-                await message.delete()
 
         await message.channel.send(embed=self.message_to_embed(ref_message, message.author),
                                    reference=ref_message if ref_message.channel == message.channel else None,
