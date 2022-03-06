@@ -4,6 +4,7 @@ import sys
 from io import BytesIO
 
 from redbot.core import checks, commands
+from tsutils.user_interaction import send_confirmation_message
 
 
 class DevUtils(commands.Cog):
@@ -114,7 +115,7 @@ class DevUtils(commands.Cog):
         if stderr:
             await ctx.send("Error updating:\n" + stderr)
         else:
-            await ctx.tick()
+            await send_confirmation_message(ctx, stdout)
 
     @commands.command()
     async def relast(self, ctx):
