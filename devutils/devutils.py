@@ -4,7 +4,7 @@ import sys
 from io import BytesIO
 
 from redbot.core import checks, commands
-from tsutils.user_interaction import send_confirmation_message
+from tsutils.user_interaction import send_confirmation_message, send_cancellation_message
 
 
 class DevUtils(commands.Cog):
@@ -113,9 +113,14 @@ class DevUtils(commands.Cog):
             stderr = ""
 
         if stderr:
-            await ctx.send("Error updating:\n" + stderr)
+            await send_cancellation_message(ctx, "Error updating:\n" + stderr)
         else:
-            await send_confirmation_message(ctx, stdout)
+            lines = stdout.split('\n')
+            last_line = lines[-1]
+            if 'Successfully installed' in last_line:
+                return await send_confirmation_message(ctx, last_line)
+            else:
+                return await send_cancellation_message(ctx, lines[0])
 
     @commands.command()
     async def relast(self, ctx):
