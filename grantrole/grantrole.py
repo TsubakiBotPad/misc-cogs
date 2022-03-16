@@ -137,7 +137,7 @@ class GrantRole(commands.Cog):
                 for channel in ctx.guild.text_channels:
                     try:
                         message = await channel.fetch_message(int(mid))
-                    except discord.errors.NotFound:
+                    except (discord.NotFound, discord.Forbidden):
                         continue
                     emojis = roles[mid]
                     smsg = []
