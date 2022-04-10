@@ -54,7 +54,12 @@ class SelfRoleOverride(commands.Cog):
         Server admins must have configured the role as user settable.
         """
         a_cog = self.bot.get_cog("Admin")
-        await a_cog._addrole(ctx, ctx.author, selfrole, check_user=False)
+        selfroles = await a_cog._valid_selfroles(ctx.guild)
+        if selfrole in selfroles:
+            await a_cog._addrole(ctx, ctx.author, selfrole, check_user=False)
+        else:
+            await ctx.send(f"The role {selfrole.name} is not user settable. See `{ctx.prefix}selfrole list` for valid selfroles.")
+        
 
     @selfrole.command(name="remove")
     async def selfrole_remove(self, ctx: commands.Context, *, selfrole: CaseInsensitiveRole):
@@ -64,7 +69,11 @@ class SelfRoleOverride(commands.Cog):
         Server admins must have configured the role as user settable.
         """
         a_cog = self.bot.get_cog("Admin")
-        await a_cog._removerole(ctx, ctx.author, selfrole, check_user=False)
+        selfroles = await a_cog._valid_selfroles(ctx.guild)
+        if selfrole in selfroles:
+            await a_cog._removerole(ctx, ctx.author, selfrole, check_user=False)
+        else:
+            await ctx.send(f"The role {selfrole.name} is not user settable. See `{ctx.prefix}selfrole list` for valid selfroles.")
 
     @selfrole.command(name="list")
     async def selfrole_list(self, ctx: commands.Context):
