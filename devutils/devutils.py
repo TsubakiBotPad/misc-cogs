@@ -82,7 +82,8 @@ class DevUtils(commands.Cog):
 
         cmd = self.bot.get_command(" ".join(cname))
         if cmd is None:
-            await ctx.send(f"`{cname}` is not a valid command.\nNOTE: Aliases aren't valid with this command. Don't include the bot prefix.")
+            await ctx.send(f"`{cname}` is not a valid command.\n"
+                           f"NOTE: Aliases aren't valid with this command. Don't include the bot prefix.")
             return
         if not await cmd.can_run(ctx):
             await ctx.send("You do not have permission to run the command `{}`".format(" ".join(cname)))
