@@ -84,7 +84,7 @@ class DevUtils(commands.Cog):
 
         cmd = self.bot.get_command(resolved_command)
         if cmd is None:
-            resolved_command_message = '`{resolved_command}`' if resolved_command is not None else "the empty string"
+            resolved_command_message = f'`{resolved_command}`' if resolved_command is not None else "the empty string"
             await send_cancellation_message(ctx,
                                             f"`{command}` (resolved to {resolved_command_message}) is not a valid command.\n"
                                             f"Aliases aren't valid with this command. Bot prefix is optional. "
