@@ -74,19 +74,24 @@ class DevUtils(commands.Cog):
         if command.startswith(ctx.prefix):
             command = command[len(ctx.prefix):]
 
-        cname = []
-        for sc in command.split():
-            if self.bot.get_command(" ".join(cname) + " " + sc) is None:
+        cname_parts = []
+        for part in command.split():
+            if self.bot.get_command(" ".join(cname_parts) + " " + part) is None:
                 break
-            cname.append(sc)
+            cname_parts.append(part)
 
-        cmd = self.bot.get_command(" ".join(cname))
+        resolved_command = " ".join(cname_parts)
+
+        cmd = self.bot.get_command(resolved_command)
         if cmd is None:
-            await ctx.send(f"`{cname}` is not a valid command.\n"
-                           f"NOTE: Aliases aren't valid with this command. Don't include the bot prefix.")
+            resolved_command_message = f'`{resolved_command}`' if resolved_command is not None else "the empty string"
+            await send_cancellation_message(ctx,
+                                            f"`{command}` (resolved to {resolved_command_message}) is not a valid command.\n"
+                                            f"Aliases aren't valid with this command. Bot prefix is optional. "
+                                            f"Time must be given in seconds or minutes as a one-letter abbreviation, e.g. `5m`.")
             return
         if not await cmd.can_run(ctx):
-            await ctx.send("You do not have permission to run the command `{}`".format(" ".join(cname)))
+            await send_cancellation_message(ctx, f"You do not have permission to run the command `{resolved_command}`")
 
         await ctx.tick()
         await asyncio.sleep(time)
