@@ -86,7 +86,7 @@ class DevUtils(commands.Cog):
         if cmd is None:
             resolved_command_message = '`{resolved_command}`' if resolved_command is not None else "the empty string"
             await send_cancellation_message(ctx,
-                                            f"`{command}` (resolved to the empty string) is not a valid command.\n"
+                                            f"`{command}` (resolved to {resolved_command_message}) is not a valid command.\n"
                                             f"Aliases aren't valid with this command. Bot prefix is optional. "
                                             f"Time must be given in seconds or minutes as a one-letter abbreviation, e.g. `5m`.")
             return
