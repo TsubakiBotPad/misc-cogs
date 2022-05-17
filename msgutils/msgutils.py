@@ -2,7 +2,7 @@ import re
 from io import BytesIO
 
 import discord
-from redbot.core import checks, commands
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, inline
 
@@ -12,6 +12,9 @@ class MsgUtils(commands.Cog):
     def __init__(self, bot: Red, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot = bot
+
+        self.config = Config.get_conf(self, identifier=735549377175)
+        self.config.register_user(last_command="")
 
     async def red_get_data_for_user(self, *, user_id):
         """Get a user's personal data."""
@@ -97,3 +100,26 @@ class MsgUtils(commands.Cog):
         content = msg.content.strip()
         content = box(content.replace('`', u'\u200b`'))
         await ctx.send(content)
+
+    @commands.command(aliases=['%'])
+    async def repeatlast(self, ctx, *, rest=''):
+        """Repeat your most recent command"""
+        last_command = await self.config.user(ctx.author).last_command()
+        ctx.message.content = f"{ctx.prefix}{last_command} {rest}"
+        await self.bot.process_commands(ctx.message)
+
+    @commands.Cog.listener('on_message')
+    async def log_recent(self, message):
+        content = message.content
+        for prefix in await self.bot.get_valid_prefixes():
+            if content.startswith(prefix):
+                content = content[len(prefix):]
+                break
+        else:
+            return
+
+        if self.bot.get_command(content) == self.repeatlast:
+            args = content.split(" ", 1)[1]
+            content = (await self.config.user(message.author).last_command()) + " " + args
+
+        await self.config.user(message.author).last_command.set(content)
