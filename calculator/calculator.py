@@ -73,6 +73,7 @@ class Calculator(commands.Cog):
         unaccepted = re.sub(ACCEPTED_TOKENS, '', inp)
         for token in ALTERED_TOKENS:
             inp = inp.replace(token, ALTERED_TOKENS[token])
+        inp = re.sub(r'(?<=\d),(?=\d)', '', inp)
 
         if unaccepted:
             err_msg = 'Found unexpected symbols inside the input: {}'.format(", ".join(unaccepted))
