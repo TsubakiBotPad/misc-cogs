@@ -2,7 +2,7 @@
   "author": [
     "Aradia Megido#2552"
   ],
-  "description": "Makes [p]selfrole case insensitive.",
+  "description": "Make the bot shut up about ratelimits.",
   "end_user_data_statement": "No personal data is stored.",
   "install_msg": "Makes [p]selfrole case insensitive",
   "short": "Case-insensitive Selfrole",

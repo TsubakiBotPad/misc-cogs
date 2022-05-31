@@ -54,7 +54,7 @@ class GlobalBan(commands.Cog):
                                               " ban list. Are you sure you want to opt in?"):
                 return
             opted.append(ctx.guild.id)
-        await self.config.guild(ctx.guild).banlist.set([be.user.id for be in await ctx.guild.bans()])
+        await self.config.guild(ctx.guild).banlist.set([be.user.id async for be in ctx.guild.bans()])
         async with ctx.typing():
             await self.update_gbs()
         await ctx.tick()
@@ -128,7 +128,7 @@ class GlobalBan(commands.Cog):
                 continue
             for uid, reason in (await self.config.banned()).items():
                 try:
-                    if int(uid) in [b.user.id for b in await guild.bans()]:
+                    if int(uid) in [b.user.id async for b in guild.bans()]:
                         async with self.config.guild(guild).banlist() as banlist:
                             if int(uid) not in banlist:
                                 banlist.append(uid)
@@ -156,7 +156,7 @@ class GlobalBan(commands.Cog):
 
     async def remove_gbs_guild(self, gid):
         guild = self.bot.get_guild(int(gid))
-        for ban in await guild.bans():
+        async for ban in guild.bans():
             user = ban.user
             if str(user.id) not in await self.config.banned() or \
                     user.id in await self.config.guild(guild).banlist():
@@ -174,7 +174,7 @@ class GlobalBan(commands.Cog):
             if uid in await self.config.guild(guild).banlist():
                 continue
             try:
-                users = [b.user for b in await guild.bans() if b.user.id == int(uid)]
+                users = [b.user async for b in guild.bans() if b.user.id == int(uid)]
             except (AttributeError, discord.Forbidden):
                 logger.exception(f"Error with guild with id '{gid}'")
                 continue
