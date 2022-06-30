@@ -12,6 +12,7 @@ from collections import deque
 from redbot.core import checks, Config
 from redbot.core import commands
 from redbot.core.bot import Red
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
 from io import BytesIO
@@ -299,12 +300,12 @@ class BadUser(commands.Cog):
                 continue
 
             try:
-                ban_list = await server.bans()
+                ban_list = server.bans()
             except discord.Forbidden:
-                ban_list = list()
+                ban_list = AsyncIter([])
                 error_messages.append("Server '{}' refused access to ban list".format(server.name))
 
-            for banentry in ban_list:
+            async for banentry in ban_list:
                 user_id_to_ban_server[banentry.user.id].append(server.id)
 
             baduser_list = self.settings.get_bad_users(server.id)
