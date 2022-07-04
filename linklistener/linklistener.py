@@ -44,7 +44,6 @@ class LinkListener(commands.Cog):
             return
 
         cid, mid = map(int, re.search(LINK_REGEX, message.content).groups())
-
         channel = self.bot.get_channel(cid)
         if channel is None:
             return
@@ -65,6 +64,7 @@ class LinkListener(commands.Cog):
     def message_to_embed(self, message: discord.Message, requester: discord.User) -> discord.Embed:
         return EmbedView(
             embed_main=EmbedMain(description=message.content),
-            embed_author=EmbedAuthor(message.author.name, message.jump_url, message.author.avatar_url_as(format="png")),
-            embed_footer=EmbedFooter(f"Quoted by {requester}", icon_url=requester.avatar_url),
+            embed_author=EmbedAuthor(message.author.name, message.jump_url,
+                                     message.author.avatar.with_format("png").url),
+            embed_footer=EmbedFooter(f"Quoted by {requester}", icon_url=requester.avatar.url),
         ).to_embed()
