@@ -444,7 +444,7 @@ class AutoMod(commands.Cog):
         user_logs = list(self.channel_user_logs[key])[-message_count:]
         count = 0
         for m in user_logs:
-            if seconds == -60 or (datetime.utcnow(UTC) - m.created_at).total_seconds() < seconds:
+            if seconds == -60 or (datetime.now(UTC) - m.created_at).total_seconds() < seconds:
                 count += linked_img_count(m)
         if count == 0:
             self.channel_user_logs[key].clear()
@@ -452,7 +452,7 @@ class AutoMod(commands.Cog):
             return
 
         for m in user_logs:
-            if seconds == -60 or (datetime.utcnow(UTC) - m.created_at).total_seconds() < seconds:
+            if seconds == -60 or (datetime.now(UTC) - m.created_at).total_seconds() < seconds:
                 if linked_img_count(m) > 0:
                     try:
                         await m.delete()
