@@ -57,7 +57,7 @@ class EmojiCog(commands.Cog):
             for emoji in emojis:
                 if emoji.name in [e.name for e in ctx.guild.emojis]:
                     continue
-                await ctx.guild.create_custom_emoji(name=emoji.name, image=await emoji.url.read())
+                await ctx.guild.create_custom_emoji(name=emoji.name, image=await emoji.read())
         await ctx.tick()
 
     @commands.command()

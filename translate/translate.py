@@ -119,8 +119,7 @@ class Translate(commands.Cog):
             return
 
         text = f"**Original**\n`{text}`\n\n**Translation**\n`{translation}`"
-        if await self.bot.embed_requested(ctx.channel, ctx.author) \
-                and ctx.me.permissions_in(ctx.channel).embed_links:
+        if await self.bot.embed_requested(ctx, check_permissions=True):
             await ctx.send(embed=discord.Embed(description=text))
         else:
             await ctx.send(text)
