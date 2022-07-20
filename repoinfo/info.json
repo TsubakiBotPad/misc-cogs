@@ -1,0 +1,17 @@
+{
+  "author": ["Aradia Megido#2552"],
+  "description": "Get help for specific repos and cogs",
+  "end_user_data_statement": "No personal data is stored.",
+  "install_msg": "Use [p]repoinfo or [p]coginfo to get started",
+  "short": "Repo and Cog Help",
+  "min_bot_version": "3.4.0",
+  "max_bot_version": "0.0.0",
+  "min_python_version": [3, 8, 1],
+  "hidden": false,
+  "disabled": false,
+  "required_cogs": {},
+  "requirements": [],
+  "tags": [
+    "help"
+  ]
+}
