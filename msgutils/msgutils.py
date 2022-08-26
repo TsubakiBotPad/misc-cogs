@@ -42,14 +42,15 @@ class MsgUtils(commands.Cog):
         try:
             msg = await (channel or ctx.channel).fetch_message(msg_id)
         except discord.NotFound:
-            await ctx.send(inline('Cannot find that message, check the channel and message id'))
-            return
+            if channel:
+                return await ctx.send(inline('Cannot find that message, check the channel and message id'))
+            else:
+                return await ctx.send(inline('That message cannot be found in the current channel.'
+                                             ' Please specify a channel.'))
         except discord.Forbidden:
-            await ctx.send(inline('No permissions to do that'))
-            return
+            return await ctx.send(inline('No permissions to do that'))
         if msg.author.id != self.bot.user.id:
-            await ctx.send(inline('Can only edit messages I own'))
-            return
+            return await ctx.send(inline('Can only edit messages I own'))
 
         await msg.edit(content=new_msg)
         await ctx.tick()
@@ -80,7 +81,7 @@ class MsgUtils(commands.Cog):
             try:
                 msg = await channel.fetch_message(msg_id)
             except discord.NotFound:
-                await ctx.send("Invalid message id")
+                await ctx.send("Invalid message or channel id")
                 return
         else:
             msg_limit = 2 if channel == ctx.channel else 1
