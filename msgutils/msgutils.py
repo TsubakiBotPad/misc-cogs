@@ -1,6 +1,5 @@
 import re
 from io import BytesIO
-from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
@@ -31,40 +30,37 @@ class MsgUtils(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(manage_messages=True)
-    async def editmsg(self, ctx, channel: Optional[discord.TextChannel], msg_id: int, *, new_msg: str):
+    async def editmsg(self, ctx, channel: discord.TextChannel, msg_id: int, *, new_msg: str):
         """Given a channel and an ID for a message printed in that channel, replaces it.
-
-        Channel defaults to the current channel.
 
         To find a message ID, enable developer mode in Discord settings and
         click the ... on a message.
         """
         try:
-            msg = await (channel or ctx.channel).fetch_message(msg_id)
+            msg = await channel.fetch_message(msg_id)
         except discord.NotFound:
-            if channel:
-                return await ctx.send(inline('Cannot find that message, check the channel and message id'))
-            else:
-                return await ctx.send(inline('That message cannot be found in the current channel.'
-                                             ' Please specify a channel.'))
+            await ctx.send(inline('Cannot find that message, check the channel and message id'))
+            return
         except discord.Forbidden:
-            return await ctx.send(inline('No permissions to do that'))
+            await ctx.send(inline('No permissions to do that'))
+            return
         if msg.author.id != self.bot.user.id:
-            return await ctx.send(inline('Can only edit messages I own'))
+            await ctx.send(inline('Can only edit messages I own'))
+            return
 
         await msg.edit(content=new_msg)
         await ctx.tick()
 
     @commands.command()
     @checks.mod_or_permissions(manage_messages=True)
-    async def dumpchannel(self, ctx, channel: Optional[discord.TextChannel], msg_id: int = None):
+    async def dumpchannel(self, ctx, channel: discord.TextChannel, msg_id: int = None):
         """Given a channel and an ID for a message printed in that channel, dumps it
         boxed with formatting escaped and some issues cleaned up.
 
         To find a message ID, enable developer mode in Discord settings and
         click the ... on a message.
         """
-        await self._dump(ctx, channel or ctx.channel, msg_id)
+        await self._dump(ctx, channel, msg_id)
 
     @commands.command()
     async def dumpmsg(self, ctx, msg_id: int = None):
@@ -81,11 +77,10 @@ class MsgUtils(commands.Cog):
             try:
                 msg = await channel.fetch_message(msg_id)
             except discord.NotFound:
-                await ctx.send("Invalid message or channel id")
+                await ctx.send("Invalid message id")
                 return
         else:
             msg_limit = 2 if channel == ctx.channel else 1
-            msg = None
             async for message in channel.history(limit=msg_limit):
                 msg = message
         content = msg.content.strip()
