@@ -15,6 +15,8 @@ from redbot.core.bot import Red
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box, inline, pagify
 
+from baduser.baduser_helper import BadUserHelper
+
 from io import BytesIO
 
 from tsutils.cog_settings import CogSettings
@@ -453,19 +455,13 @@ class BadUser(commands.Cog):
         if message.guild.id not in self.settings.bu_enabled():
             return
 
-        author = message.author
-        content = message.clean_content
-        channel = message.channel
-        timestamp = str(message.created_at)[:-7]
-        log_msg = '[{}] {} ({}): {}/{}'.format(timestamp, author.name,
-                                               author.id, channel.name, content)
-        self.logs[author.id].append(log_msg)
+        self.logs[message.author.id].append(message)
 
     @commands.Cog.listener('on_member_ban')
     async def mod_ban(self, guild, user):
         if guild.id not in self.settings.bu_enabled():
             return
-        await self.record_bad_user(user, 'BANNED', guild=guild)
+        await self.record_bad_user(user, banned=True, guild=guild)
 
     @commands.Cog.listener('on_member_remove')
     async def mod_user_left(self, member):
@@ -518,26 +514,26 @@ class BadUser(commands.Cog):
 
         for role in new_roles:
             if role.id in bad_role_ids:
-                await self.record_bad_user(after, role.name)
+                await self.record_bad_user(after, role=role)
                 return
 
             if role.id in positive_role_ids:
-                await self.record_role_change(after, role.name, True)
+                await self.record_role_change(after, role, True)
                 return
 
             if role.id in neutral_role_ids:
-                await self.record_role_change(after, role.name, True, send_ping=False)
+                await self.record_role_change(after, role, True, send_ping=False)
                 return
 
         for role in removed_roles:
             if role.id in bad_role_ids:
-                await self.record_role_change(after, role.name, False, send_ping=False)
+                await self.record_role_change(after, role, False, send_ping=False)
                 return
             if role.id in positive_role_ids:
-                await self.record_role_change(after, role.name, False)
+                await self.record_role_change(after, role, False)
                 return
             if role.id in neutral_role_ids:
-                await self.record_role_change(after, role.name, False, send_ping=False)
+                await self.record_role_change(after, role, False, send_ping=False)
                 return
 
     @commands.Cog.listener('on_member_update')
@@ -559,60 +555,50 @@ class BadUser(commands.Cog):
             except discord.Forbidden:
                 pass
 
-    async def record_bad_user(self, member, role_name, guild=None):
+    @baduser.command(pass_context=True)
+    @checks.is_owner()
+    async def testban(self, ctx, user: discord.Member):
+        await self.record_bad_user(user, banned=True)
+
+    async def record_bad_user(self, member, role=None, banned=False, guild=None):
+        """Displays a record of information on new bad users. Timezones in PST."""
         if guild is None:
             guild = member.guild
-
-        latest_messages = self.logs.get(member.id, "")
-        msg = 'Name={} Nick={} ID={} Joined={} Role={}\n'.format(
-            member.name,
-            member.display_name,
-            member.id,
-            member.joined_at if isinstance(member, discord.Member) else 'N/A',
-            role_name)
-        msg += '\n'.join(latest_messages)
         strikes = self.settings.count_user_strikes(guild.id, member.id)
-
         update_channel = self.settings.get_channel(guild.id)
         if update_channel is not None:
+            latest_messages = self.logs.get(member.id, "")
+            embed1 = BadUserHelper.get_info_embed(member, title="Detected Bad User", role=role, banned=banned, strikes=strikes)
+            embed2 = BadUserHelper.get_latest_messages_embed(latest_messages, member)
+            
             channel_obj = guild.get_channel(update_channel)
-            await channel_obj.send(inline('Detected bad user'))
-            await channel_obj.send(box(msg))
+            await channel_obj.send(embed=embed1)
+            if embed2 is not None:
+                await channel_obj.send(embed=embed2)
             followup_msg = 'Hey @here please manually strike this user explaining why they are punished'
             await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
-            await channel_obj.send('This user has {} strikes'.format(strikes))
-
-            try:
-                dm_msg = (f'You were assigned the punishment role "{role_name}" in the server "{guild.name}".\n'
-                          f'The Mods will contact you shortly regarding this.\n'
-                          f'Attempting to clear this role yourself will result in punishment.')
-                await member.send(box(dm_msg))
-                await channel_obj.send('User successfully notified')
-            except Exception as e:
-                if role_name != "BANNED":
+            if not banned: 
+                try:
+                    await member.send(box(BadUserHelper.bad_role_text.format(role.name, guild.name)))
+                    await channel_obj.send('User successfully notified')
+                except Exception as e:
                     await channel_obj.send('Failed to notify the user! I might be blocked\n' + box(str(e)))
 
-    async def record_role_change(self, member, role_name, is_added, send_ping=True, guild=None):
+    async def record_role_change(self, member, role, is_added, send_ping=True, guild=None):
         if guild is None:
             guild = member.guild
-        msg = 'Detected role {} : Name={} Nick={} ID={} Joined={} Role={}'.format(
-            "Added" if is_added else "Removed",
-            member.name,
-            member.display_name,
-            member.id,
-            member.joined_at if isinstance(member, discord.Member) else 'N/A',
-            role_name)
+        embed = BadUserHelper.get_info_embed(member, title="Detected Role " + ("Added" if is_added else "Removed"), role=role)
 
         update_channel = self.settings.get_channel(guild.id)
         if update_channel is not None:
             channel_obj = guild.get_channel(update_channel)
             try:
-                await channel_obj.send(inline(msg))
+                await channel_obj.send(embed=embed)
                 if send_ping:
                     followup_msg = 'Hey @here please leave a note explaining why this role was modified'
                     await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
             except Exception:
-                logger.exception('Failed to notify in {} {}'.format(update_channel, msg))
+                logger.exception('Failed to notify in {} {}'.format(update_channel, embed.description))
 
     def get_member(self, user_id: int) -> Optional[discord.Member]:
         user = self.bot.get_user(user_id)
