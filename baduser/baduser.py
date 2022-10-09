@@ -241,6 +241,15 @@ class BadUser(commands.Cog):
         self.settings.update_bad_user(server_id, user.id, msg)
         strikes = self.settings.count_user_strikes(server_id, user.id)
         await ctx.send(box('Done. User {} now has {} strikes'.format(user.name, strikes)))
+        guild = ctx.guild
+        strikes = self.settings.count_user_strikes(guild.id, user.id)
+        update_channel = self.settings.get_channel(guild.id)
+        if update_channel is not None:
+            embed = BadUserHelper.get_info_embed(user, title="Strike Added", strikes=strikes)
+            channel_obj = guild.get_channel(update_channel)
+            await channel_obj.send(embed=embed)
+            followup_msg = f'Hey @here please leave a note explaining why this user was striked.'
+            await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
 
     @baduser.command()
     @commands.guild_only()
@@ -302,7 +311,7 @@ class BadUser(commands.Cog):
                 continue
 
             try:
-                ban_list = server.bans()
+                ban_list = await server.bans()
             except discord.Forbidden:
                 ban_list = AsyncIter([])
                 error_messages.append("Server '{}' refused access to ban list".format(server.name))
@@ -555,11 +564,6 @@ class BadUser(commands.Cog):
             except discord.Forbidden:
                 pass
 
-    @baduser.command(pass_context=True)
-    @checks.is_owner()
-    async def testban(self, ctx, user: discord.Member):
-        await self.record_bad_user(user, banned=True)
-
     async def record_bad_user(self, member, role=None, banned=False, guild=None):
         """Displays a record of information on new bad users. Timezones in PST."""
         if guild is None:
@@ -577,7 +581,7 @@ class BadUser(commands.Cog):
                 await channel_obj.send(embed=embed2)
             followup_msg = 'Hey @here please manually strike this user explaining why they are punished'
             await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
-            if not banned: 
+            if role: 
                 try:
                     await member.send(box(BadUserHelper.bad_role_text.format(role.name, guild.name)))
                     await channel_obj.send('User successfully notified')
