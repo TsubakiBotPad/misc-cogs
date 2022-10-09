@@ -17,16 +17,16 @@ Attempting to remove this role yourself, e.g. by leaving and rejoining the serve
                         **Nick**: {}
                         **ID**: {}
                         **Joined**: {}
-                        {}
-                        {}
+                        {}{}{}
                         '''.format(member.mention,
                             member.name,
             member.display_name,
             member.id,
             '<t:{}:f>'.format(math.floor(calendar.timegm(member.joined_at.timetuple()))) if isinstance(member, discord.Member) else 'N/A',
-            ("**Banned**: \N{HAMMER} BANNED" if banned else "**Role**: " + role.mention), 
-            (f"**Strikes**: {strikes}" if strikes is not None else "")))
-        embed.set_thumbnail(url=member.avatar_url)
+            ("**Banned**: \N{HAMMER} BANNED\n" if banned else ""),
+            (f"**Role**: {role.mention}\n" if role is not None else ""), 
+            (f"**Strikes**: {strikes}\n" if strikes is not None else "")))
+        embed.set_thumbnail(url=str(member.default_avatar))
         return embed
     
     def get_latest_messages_embed(latest_messages, member):
