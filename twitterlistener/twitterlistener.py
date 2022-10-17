@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import suppress
 import re
 from io import BytesIO
@@ -51,6 +52,8 @@ class TwitterListener(commands.Cog):
         send_embed = discord.Embed(description=new_msg)
         send_embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
         await channel.send(embed=send_embed)
+        # discord takes a few seconds to generate the embed for new posts
+        await asyncio.sleep(3)
         embeds = message.embeds
         for embed in embeds:
             if (embed.image):
