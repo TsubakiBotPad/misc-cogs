@@ -216,6 +216,7 @@ class OnlinePlot(commands.Cog):
         sp.yaxis.label.set_color(FG_COLOR)
         sp.tick_params(axis='x', colors=FG_COLOR)
         sp.tick_params(axis='y', colors=FG_COLOR)
+        sp.xticks(rotation=45)
         sp.spines['top'].set_color(FG_COLOR)
         sp.spines['left'].set_color(FG_COLOR)
         sp.spines['bottom'].set_color(FG_COLOR)
