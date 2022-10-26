@@ -31,11 +31,11 @@ class FancySay(commands.Cog):
         return
 
     @commands.group()
-    @commands.guild_only()
-    @checks.mod_or_permissions(manage_messages=True)
     async def fancysay(self, ctx):
         """Make the bot say fancy things (via embeds)."""
 
+    @commands.guild_only()
+    @checks.mod_or_permissions(manage_messages=True)
     @fancysay.command()
     async def pingrole(self, ctx, role: discord.Role, *, text):
         """[p]fancysay pingrole rolename this is the text to ping
@@ -73,8 +73,12 @@ class FancySay(commands.Cog):
 
     @fancysay.command()
     async def emoji(self, ctx, *, text):
-        """Speak the provided text as emojis, deleting the original request"""
-        await ctx.message.delete()
+        """Speak the provided text as emojis, deleting the original request if in a guild"""
+        if ctx.guild is not None:
+            if not ctx.author.guild_permissions.manage_messages:
+                await ctx.send("You can only use this command in DMs!")
+                return
+            await ctx.message.delete()
         new_msg = ""
         for char in text:
             if char.isalpha():
@@ -130,6 +134,8 @@ class FancySay(commands.Cog):
 
 
     @fancysay.command(aliases=['tdif'])
+    @commands.guild_only()
+    @checks.mod_or_permissions(manage_messages=True)
     @checks.bot_has_permissions(embed_links=True)
     async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
@@ -144,7 +150,7 @@ class FancySay(commands.Cog):
         e.g. say with only title and image:
         fancysay title_descirption_image_footer "My title" "" "xyz.com/image.png" ""
         """
-
+        
         embed = discord.Embed()
         if len(title):
             embed.title = title
