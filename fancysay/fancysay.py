@@ -134,8 +134,6 @@ class FancySay(commands.Cog):
 
 
     @fancysay.command(aliases=['tdif'])
-    @commands.guild_only()
-    @checks.mod_or_permissions(manage_messages=True)
     @checks.bot_has_permissions(embed_links=True)
     async def title_description_image_footer(self, ctx, title, description, image, footer):
         """[title] [description] [image_url] [footer_text]
@@ -150,6 +148,11 @@ class FancySay(commands.Cog):
         e.g. say with only title and image:
         fancysay title_descirption_image_footer "My title" "" "xyz.com/image.png" ""
         """
+        if ctx.guild is not None:
+            if not ctx.author.guild_permissions.manage_messages:
+                await ctx.send("You can only use this command in DMs!")
+                return
+            await ctx.message.delete()
         
         embed = discord.Embed()
         if len(title):
@@ -163,7 +166,6 @@ class FancySay(commands.Cog):
 
         try:
             await ctx.send(embed=embed)
-            await ctx.message.delete()
         except Exception as error:
             await ctx.send(box(error.text))
 
