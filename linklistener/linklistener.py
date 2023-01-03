@@ -7,6 +7,11 @@ from contextlib2 import suppress
 from discordmenu.embed.components import EmbedAuthor, EmbedFooter, EmbedMain
 from discordmenu.embed.view import EmbedView
 from redbot.core import commands
+from tsutils.menu.view.closable_embed import ClosableEmbedViewState
+from tsutils.query_settings.query_settings import QuerySettings
+
+from linklistener.menu.closable_embed import ClosableEmbedMenu
+from linklistener.view.link_listener_view import LinkListenerViewProps, LinkListenerView
 
 logger = logging.getLogger('red.misc-cogs.linklistener')
 
@@ -56,15 +61,11 @@ class LinkListener(commands.Cog):
             if ref_message.author == self.bot.user and ref_message.embeds:
                 return await message.channel.send(embeds=ref_message.embeds)
             return
-
-        await message.channel.send(embed=self.message_to_embed(ref_message, message.author),
-                                   reference=ref_message if ref_message.channel == message.channel else None,
-                                   mention_author=False)
-
-    def message_to_embed(self, message: discord.Message, requester: discord.User) -> discord.Embed:
-        return EmbedView(
-            embed_main=EmbedMain(description=message.content),
-            embed_author=EmbedAuthor(message.author.name, message.jump_url,
-                                     message.author.avatar.with_format("png").url),
-            embed_footer=EmbedFooter(f"Quoted by {requester}", icon_url=requester.avatar.url),
-        ).to_embed()
+        ctx = await self.bot.get_context(message)
+        menu = ClosableEmbedMenu.menu()
+        props = LinkListenerViewProps(ref_message.author.name, ref_message.jump_url, ref_message.author.avatar,
+                                      ref_message.content, message.author)
+        qs = await QuerySettings.extract_raw(message.author, self.bot, "")
+        state = ClosableEmbedViewState(message.author.id, ClosableEmbedMenu.MENU_TYPE, "", qs,
+                                       LinkListenerView.VIEW_TYPE, props)
+        return await menu.create(ctx, state)
