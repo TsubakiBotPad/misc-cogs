@@ -17,6 +17,8 @@ logger = logging.getLogger('red.misc-cogs.linklistener')
 
 LINK_REGEX = r'https?://discord.com/channels/(?:@me|\d+)/(\d+)/(\d+)'
 
+LINK_REGEX_IGNORE = '<' + LINK_REGEX + '>'
+
 
 class LinkListener(commands.Cog):
     """Turn message links into nice embeds"""
@@ -43,6 +45,9 @@ class LinkListener(commands.Cog):
             return
 
         if message.author.bot:
+            return
+
+        if re.search(LINK_REGEX_IGNORE, message.content):
             return
 
         if not re.search(LINK_REGEX, message.content):
