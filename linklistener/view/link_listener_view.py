@@ -1,12 +1,8 @@
-from discordmenu.embed.base import Box
-from discordmenu.embed.components import EmbedMain, EmbedField, EmbedAuthor, EmbedFooter
-from discordmenu.embed.text import Text
-from discordmenu.embed.view import EmbedView
-from discordmenu.emoji.emoji_cache import emoji_cache
-from discordmenu.intra_message_state import IntraMessageState
-from tsutils.menu.components.footers import embed_footer_with_state
-from tsutils.menu.view.closable_embed import ClosableEmbedViewState
 import discord
+from discordmenu.embed.components import EmbedMain, EmbedAuthor, EmbedFooter
+from discordmenu.embed.view import EmbedView
+from discordmenu.intra_message_state import IntraMessageState
+from tsutils.menu.view.closable_embed import ClosableEmbedViewState
 
 
 class LinkListenerViewProps:

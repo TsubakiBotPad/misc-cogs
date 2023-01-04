@@ -3,9 +3,6 @@ import re
 from io import BytesIO
 
 import discord
-from contextlib2 import suppress
-from discordmenu.embed.components import EmbedAuthor, EmbedFooter, EmbedMain
-from discordmenu.embed.view import EmbedView
 from redbot.core import commands
 from tsutils.menu.view.closable_embed import ClosableEmbedViewState
 from tsutils.query_settings.query_settings import QuerySettings
