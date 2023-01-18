@@ -588,7 +588,7 @@ class TimeCog(commands.Cog):
 
         msg = ("There are " + fmt_hrs_mins(delta.seconds).strip() +
                " until " + req_time.strftime('%-I:%M%p').lower() + " in " + now.strftime('%Z'))
-        await ctx.send(inline(msg))
+        await ctx.send(msg)
 
     async def exact_tartintodt(self, ctx, timestr, allowtat=True):
         user_timezone, set_tz = await self.get_timezone(ctx.author)
