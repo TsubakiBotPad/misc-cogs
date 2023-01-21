@@ -33,7 +33,7 @@ Attempting to remove this role yourself, e.g. by leaving and rejoining the serve
         if len(latest_messages) == 0:
             return None
         embed = discord.Embed()
-        all = "*Timestamps are PST/PDT*"
+        formatted_msgs = []
         while latest_messages:
             msg = latest_messages.pop()
             clean = msg.clean_content[:200] + ("..." if len(msg.clean_content)>200 else "")
@@ -42,11 +42,11 @@ Attempting to remove this role yourself, e.g. by leaving and rejoining the serve
                                             msg.jump_url,
                                             msg.channel.mention,
                                             clean)
-            if len(all + result) > 4000:
-                latest_messages.append(msg)
+            if len("\n".join(formatted_msgs) + result) > 3900:
                 break
-            all = all + "\n" + result
-        embed.description = all
+            formatted_msgs.append(result)
+        formatted_msgs.reverse()
+        embed.description = "*Timestamps are PST/PDT*\n" + "\n".join(formatted_msgs)
         return embed
     
     def get_timestamp(timestamp):
