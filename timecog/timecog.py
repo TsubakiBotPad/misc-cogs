@@ -273,7 +273,8 @@ class TimeCog(commands.Cog):
             if len(rm) > 3 and rm[3] != 0:
                 ftime += f" (in #{self.bot.get_channel(rm[3])})"
             o.append(str(c + 1) + ": " + ftime)
-        await ctx.send(box('\n'.join(o)))
+        for page in pagify('\n'.join(o)):
+            await ctx.send(box(page))
 
     @remindme.command(name="remove", aliases=["rm", "delete", "del"])
     async def remindme_remove(self, ctx, no: int):

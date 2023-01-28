@@ -1,28 +1,22 @@
 import asyncio
+import logging
+from collections import defaultdict, deque
+from datetime import datetime
+from io import BytesIO
 from typing import Optional
 
 import discord
-import logging
 import prettytable
-
-from collections import defaultdict
-from collections import deque
-from datetime import datetime
-from io import BytesIO
-
 from pytz import UTC
-from redbot.core import checks, commands, Config
+from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, inline, pagify
 from tsutils.cog_settings import CogSettings
 from tsutils.formatting import strip_right_multiline
 
 try:
-    import re2 as re
+    import regex as re
 except ImportError:
-    try:
-        import regex as re
-    except ImportError:
-        import re
+    import re
 
 logger = logging.getLogger('red.misc-cogs.automod')
 

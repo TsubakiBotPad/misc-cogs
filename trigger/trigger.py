@@ -9,12 +9,9 @@ from redbot.core import Config, checks, commands
 from redbot.core.utils.chat_formatting import box, pagify, escape
 
 try:
-    import re2 as re
+    import regex as re
 except ImportError:
-    try:
-        import regex as re
-    except ImportError:
-        import re
+    import re
 
 
 class TriggerError(Exception):
