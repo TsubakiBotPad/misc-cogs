@@ -409,7 +409,7 @@ class AutoMod(commands.Cog):
 
     @commands.Cog.listener('on_message')
     async def mod_message_images(self, message):
-        if message.author.id == self.bot.user.id or isinstance(message.channel, discord.DMChannel):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, (discord.DMChannel, discord.Thread)):
             return
         if not isinstance(message.author, discord.Member):
             return
