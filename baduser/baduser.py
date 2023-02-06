@@ -248,8 +248,6 @@ class BadUser(commands.Cog):
             embed = BadUserHelper.get_info_embed(user, title="Strike Added", strikes=strikes)
             channel_obj = guild.get_channel(update_channel)
             await channel_obj.send(embed=embed)
-            followup_msg = f'Hey @here please leave a note explaining why this user was striked.'
-            await channel_obj.send(followup_msg, allowed_mentions=discord.AllowedMentions(everyone=True))
 
     @baduser.command()
     @commands.guild_only()
