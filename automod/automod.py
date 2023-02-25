@@ -454,7 +454,7 @@ class AutoMod(commands.Cog):
                         pass
 
         self.channel_user_logs[key].clear()
-        msg = f"{message.author.mention} Upload multiple images to an imgur gallery #endimagespam"
+        msg = f"{message.author.mention} Upload multiple images to an imgbb album #endimagespam"
         await message.channel.send(msg)
 
     @commands.Cog.listener('on_message_edit')
