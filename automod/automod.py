@@ -64,6 +64,8 @@ the text will be deleted.
 You can see the configuration for the server using {0.prefix}automod list
 
 You can also prevent users from spamming images using {0.prefix}automod imagelimit
+
+Likewise, you can also prevent users from spamming embeds using {0.prefix}automod embedlimit
 """
 
 EMOJIS = {
@@ -91,10 +93,10 @@ class AutoMod(commands.Cog):
 
         self.config = Config.get_conf(self, identifier=4770700)
         self.config.register_guild(patterns={}, phrases={}, watched_users={}, watchdog_channel_id=None,
-                                   immune_role_ids=[])
+                                   immune_role_ids=[], embed_immune_role_ids=[])
         self.config.register_channel(whitelist=[], blacklist=[], autoemoji=[], image_only=False,
                                      image_limit=1, reset_message_count=LOGS_PER_CHANNEL_USER, image_reset_minutes=5,
-                                     imagelimit_enabled=False)
+                                     imagelimit_enabled=False, embedlimit_enabled=False, embed_limit=2)
 
         self.settings = AutoMod2Settings('automod2', bot)
         self.channel_user_logs = defaultdict(lambda: deque(maxlen=LOGS_PER_CHANNEL_USER))
@@ -292,8 +294,10 @@ class AutoMod(commands.Cog):
             image_limit = await self.config.channel(channel).image_limit()
             il_messages = await self.config.channel(channel).reset_message_count()
             il_mins = await self.config.channel(channel).image_reset_minutes()
+            embedlimit_enabled = await self.config.channel(channel).embedlimit_enabled()
+            embed_limit = await self.config.channel(channel).embed_limit()
 
-            if not (whitelists or blacklists or auto_emojis or imagelimit_enabled):
+            if not (whitelists or blacklists or auto_emojis or imagelimit_enabled or embedlimit_enabled):
                 continue
 
             output += f"\n#{channel.name}"
@@ -305,6 +309,8 @@ class AutoMod(commands.Cog):
                 output += f"\t\t{blacklist}\n"
             if imagelimit_enabled:
                 output += f"\n\tImage Limit: {image_limit} images per {il_messages} messages/{il_mins} minutes"
+            if embedlimit_enabled:
+                output += f"\n\tEmbed Limit: {embed_limit}"
             output += f"\n\tAuto Emojis: {', '.join(auto_emojis)}"
         for page in pagify(output):
             await ctx.send(box(page))
@@ -397,6 +403,75 @@ class AutoMod(commands.Cog):
         roles = await self.config.guild(ctx.guild).immune_role_ids()
         await ctx.send('\n'.join(role.mention for rid in roles if (role := ctx.guild.get_role(rid))),
                        allowed_mentions=discord.AllowedMentions(roles=False))
+
+    @automod.group()
+    @commands.guild_only()
+    @checks.mod_or_permissions(manage_guild=True)
+    async def embedlimit(self, ctx):
+        """Prevents users from spamming embeds in a channel."""
+    
+    @embedlimit.command(name='max')
+    async def el_max(self, ctx, channel: Optional[discord.TextChannel], limit: int):
+        """Set the max number of embeds that can be attached to a message"""
+        await self.config.channel(channel or ctx.channel).embed_limit.set(limit)
+        await ctx.tick()
+    
+    @embedlimit.command(name='enable')
+    async def el_enable(self, ctx, channel: Optional[discord.TextChannel], enabled: bool = True):
+        """Enable or disable embedlimit"""
+        await self.config.channel(channel or ctx.channel).embedlimit_enabled.set(enabled)
+        await ctx.tick()
+        
+    @embedlimit.group(name='immunerole')
+    async def embedimmunerole(self, ctx):
+        """Add or remove roles that are immune to embedlimit"""
+
+    @embedimmunerole.command(name='add')
+    async def el_ir_add(self, ctx, *roles: discord.Role):
+        """Add a role to the list of immune roles"""
+        for role in roles:
+            async with self.config.guild(ctx.guild).embed_immune_role_ids() as old_roles:
+                if role.id not in old_roles:
+                    old_roles.append(role.id)
+        await ctx.tick()
+
+    @embedimmunerole.command(name='remove', aliases=["rm", "delete", "del"])
+    async def el_ir_rm(self, ctx, *roles: discord.Role):
+        """Remove a role from the list of immune roles"""
+        for role in roles:
+            async with self.config.guild(ctx.guild).embed_immune_role_ids() as old_roles:
+                if role.id in old_roles:
+                    old_roles.remove(role.id)
+        await ctx.tick()
+
+    @embedimmunerole.command(name='list')
+    async def el_ir_list(self, ctx):
+        """List the immune roles"""
+        roles = await self.config.guild(ctx.guild).embed_immune_role_ids()
+        await ctx.send('\n'.join(role.mention for rid in roles if (role := ctx.guild.get_role(rid))),
+                       allowed_mentions=discord.AllowedMentions(roles=False))
+
+    @commands.Cog.listener('on_message')
+    async def mod_message_embeds(self, message):
+        if message.author.id == self.bot.user.id or isinstance(message.channel, (discord.DMChannel, discord.Thread)):
+            return
+        if not isinstance(message.author, discord.Member):
+            return
+        if message.channel.permissions_for(message.author).manage_messages:
+            return
+        immune_rids = await self.config.guild(message.guild).embed_immune_role_ids()
+        if any(role.id in immune_rids for role in message.author.roles):
+            return
+        embed_limit = await self.config.channel(message.channel).embed_limit()
+        if len(message.embeds) <= embed_limit:
+            return
+        
+        try:
+            await message.edit(suppress=True)
+        except Exception:
+            pass
+        msg = f"{message.author.mention} Wrap links **<like this>**; I've removed the attached embeds for you."
+        await message.channel.send(msg)
 
     @automod.command()
     @commands.guild_only()
