@@ -459,6 +459,8 @@ class AutoMod(commands.Cog):
             return
         if message.channel.permissions_for(message.author).manage_messages:
             return
+        if not await self.config.channel(message.channel).embedlimit_enabled():
+            return
         immune_rids = await self.config.guild(message.guild).embed_immune_role_ids()
         if any(role.id in immune_rids for role in message.author.roles):
             return
