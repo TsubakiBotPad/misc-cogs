@@ -26,7 +26,8 @@ Attempting to remove this role yourself, e.g. by leaving and rejoining the serve
             ("**Banned**: \N{HAMMER} BANNED\n" if banned else ""),
             (f"**Role**: {role.mention}\n" if role is not None else ""), 
             (f"**Strikes**: {strikes}\n" if strikes is not None else "")))
-        embed.set_thumbnail(url=str(member.default_avatar))
+        avatar = member.display_avatar.replace(static_format="png")
+        embed.set_thumbnail(url=avatar)
         return embed
     
     def get_latest_messages_embed(latest_messages, member):
