@@ -1,7 +1,7 @@
 import os
 import random
 import re
-from datetime import datetime
+import time
 from io import BytesIO
 from typing import Dict
 
@@ -29,9 +29,8 @@ class TsubakiGPT(commands.Cog):
         return
 
     def get_temperature(self) -> float:
-        now = datetime.now()
-        secs = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-        total_seconds = 24 * 60 * 60
+        secs = time.time() - 1680310800
+        total_seconds = 108000
         return 1.0 - secs*2/total_seconds
 
     def get_sentence(self, temperature: float, add_words: Dict[str, float], n: int) -> str:
@@ -49,7 +48,7 @@ class TsubakiGPT(commands.Cog):
                 ret[i] += random.choice('.!?') + ' '
         sentence = " ".join(ret)
         sentence = sentence[0].upper() + sentence[1:]
-        sentence = re.sub(r'[\.\?!] {2}[a-z]', lambda m: m.group().upper(), sentence)
+        sentence = re.sub(r'[.?!] {2}[a-z]', lambda m: m.group().upper(), sentence)
         sentence += random.choice('.!?')
         return sentence
 
