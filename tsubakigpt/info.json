@@ -1,0 +1,21 @@
+{
+  "author": [
+    "The Tsubaki Bot Team"
+  ],
+  "description": "Use bleeding-edge AI technology to have the bot respond to messages!",
+  "end_user_data_statement": "The most recent answer in each channel is stored.",
+  "install_msg": "Talk to me by saying Hello Tsubaki!",
+  "short": "Tsubaki AI",
+  "min_bot_version": "3.4.0",
+  "max_bot_version": "0.0.0",
+  "min_python_version": [
+    3,
+    8,
+    1
+  ],
+  "hidden": false,
+  "disabled": false,
+  "required_cogs": {},
+  "requirements": [],
+  "tags": []
+}
