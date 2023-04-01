@@ -56,7 +56,7 @@ class TsubakiGPT(commands.Cog):
     async def on_message(self, message: discord.Message):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
-        myname = message.guild.me.name.lower()
+        myname = message.guild.me.name.lower() if message.guild is not None else "tsubaki"
         if not (message.content.lower().startswith(f"hello {myname}")
                 or message.content.lower().startswith(f"hey {myname}")
                 or message.content.lower().startswith(f"hi {myname}")):
